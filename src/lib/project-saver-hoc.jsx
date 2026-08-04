@@ -6,9 +6,9 @@ import VM from 'scratch-vm';
 
 import collectMetadata from '../lib/collect-metadata';
 import log from '../lib/log';
-import storage from '../lib/storage';
 import dataURItoBlob from '../lib/data-uri-to-blob';
 import saveProjectToServer from '../lib/save-project-to-server';
+import saveAssetToServer from '../lib/save-asset-to-server';
 
 import {
     showAlertWithTimeout,
@@ -218,6 +218,9 @@ const ProjectSaverHOC = function (WrappedComponent) {
          */
         storeProject (projectId, requestParams) {
             requestParams = requestParams || {};
+            if (typeof requestParams.title === 'undefined') {
+                requestParams = Object.assign({}, requestParams, {title: this.props.reduxProjectTitle});
+            }
             this.clearAutoSaveTimeout();
             // Serialize VM state now before embarking on
             // the asynchronous journey of storing assets to
@@ -226,25 +229,20 @@ const ProjectSaverHOC = function (WrappedComponent) {
             // serialized project refers to a newer asset than what
             // we just finished saving).
             const savedVMState = this.props.vm.toJSON();
-            return Promise.all(this.props.vm.assets
-                .filter(asset => !asset.clean)
-                .map(
-                    asset => storage.store(
-                        asset.assetType,
-                        asset.dataFormat,
-                        asset.data,
-                        asset.assetId
-                    ).then(response => {
-                        // Asset servers respond with {status: ok} for successful POSTs
-                        if (response.status !== 'ok') {
-                            // Errors include a `code` property, e.g. "Forbidden"
-                            return Promise.reject(response.code);
-                        }
-                        asset.clean = true;
-                    })
-                )
-            )
-                .then(() => this.props.onUpdateProjectData(projectId, savedVMState, requestParams))
+            const dirtyAssets = this.props.vm.assets.filter(asset => !asset.clean);
+            // A diferencia del flujo original de scratch-www, acá el proyecto se guarda PRIMERO:
+            // nuestra API necesita el projectId en la URL de cada asset, y en un proyecto nuevo
+            // ese id recién existe después de este paso (nunca antes, como sí pasa con
+            // scratch.mit.edu). Ver docs/scratch-editor-integration.md, Fase 1, Paso 1.4.
+            return this.props.onUpdateProjectData(projectId, savedVMState, requestParams)
+                .then(response => {
+                    const id = response.id.toString();
+                    return Promise.all(dirtyAssets.map(
+                        asset => saveAssetToServer(id, asset).then(() => {
+                            asset.clean = true;
+                        })
+                    )).then(() => response);
+                })
                 .then(response => {
                     this.props.onSetProjectUnchanged();
                     const id = response.id.toString();

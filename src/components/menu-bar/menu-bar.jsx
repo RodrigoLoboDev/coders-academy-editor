@@ -41,8 +41,10 @@ import {
 } from '../../reducers/time-travel';
 import {
     autoUpdateProject,
+    createProject,
     getIsUpdating,
     getIsShowingProject,
+    getIsShowingWithoutId,
     manualUpdateProject,
     requestNewProject,
     remixProject,
@@ -217,7 +219,14 @@ class MenuBar extends React.Component {
         this.props.onRequestCloseFile();
     }
     handleClickSave () {
-        this.props.onClickSave();
+        // manualUpdateProject solo transiciona desde SHOWING_WITH_ID (proyecto cargado con un id
+        // real) — un proyecto en blanco recién abierto está en SHOWING_WITHOUT_ID y necesita
+        // createProject en su lugar, o el click no hace nada (bug encontrado probando en local).
+        if (this.props.isShowingWithoutId) {
+            this.props.onClickCreateNew();
+        } else {
+            this.props.onClickSave();
+        }
         this.props.onRequestCloseFile();
     }
     handleClickSaveAsCopy () {
@@ -887,6 +896,7 @@ MenuBar.propTypes = {
     isRtl: PropTypes.bool,
     isShared: PropTypes.bool,
     isShowingProject: PropTypes.bool,
+    isShowingWithoutId: PropTypes.bool,
     isTotallyNormal: PropTypes.bool,
     isUpdating: PropTypes.bool,
     locale: PropTypes.string.isRequired,
@@ -914,6 +924,7 @@ MenuBar.propTypes = {
     onClickLogo: PropTypes.func,
     onClickMode: PropTypes.func,
     onClickNew: PropTypes.func,
+    onClickCreateNew: PropTypes.func,
     onClickRemix: PropTypes.func,
     onClickSave: PropTypes.func,
     onClickSaveAsCopy: PropTypes.func,
@@ -964,6 +975,7 @@ const mapStateToProps = (state, ownProps) => {
         isRtl: state.locales.isRtl,
         isUpdating: getIsUpdating(loadingState),
         isShowingProject: getIsShowingProject(loadingState),
+        isShowingWithoutId: getIsShowingWithoutId(loadingState),
         locale: state.locales.locale,
         loginMenuOpen: loginMenuOpen(state),
         modeMenuOpen: modeMenuOpen(state),
@@ -1002,6 +1014,7 @@ const mapDispatchToProps = dispatch => ({
     onRequestCloseSettings: () => dispatch(closeSettingsMenu()),
     onClickNew: needSave => dispatch(requestNewProject(needSave)),
     onClickRemix: () => dispatch(remixProject()),
+    onClickCreateNew: () => dispatch(createProject()),
     onClickSave: () => dispatch(manualUpdateProject()),
     onClickSaveAsCopy: () => dispatch(saveProjectAsCopy()),
     onSeeCommunity: () => dispatch(setPlayer(true)),

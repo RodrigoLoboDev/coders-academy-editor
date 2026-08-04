@@ -53,7 +53,10 @@ const baseConfig = new ScratchWebpackConfigBuilder(
         'process.env.DEBUG': Boolean(process.env.DEBUG),
         'process.env.GA_ID': `"${process.env.GA_ID || 'UA-000000-01'}"`,
         'process.env.GTM_ENV_AUTH': `"${process.env.GTM_ENV_AUTH || ''}"`,
-        'process.env.GTM_ID': process.env.GTM_ID ? `"${process.env.GTM_ID}"` : null
+        'process.env.GTM_ID': process.env.GTM_ID ? `"${process.env.GTM_ID}"` : null,
+        // API privada de Coders Academy (apps/api). Sin prefijo NEXT_PUBLIC_ porque esto no es
+        // Next.js — es la misma idea que las env vars NEXT_PUBLIC_API_URL del resto del monorepo.
+        'process.env.API_URL': `"${process.env.API_URL || 'http://localhost:3001/api/v1'}"`
     }))
     .addPlugin(new CopyWebpackPlugin({
         patterns: [

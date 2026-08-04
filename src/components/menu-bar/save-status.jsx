@@ -6,6 +6,8 @@ import React from 'react';
 import InlineMessages from '../../containers/inline-messages.jsx';
 
 import {
+    createProject,
+    getIsShowingWithoutId,
     manualUpdateProject
 } from '../../reducers/project-state';
 
@@ -23,14 +25,16 @@ import styles from './save-status.css';
 const SaveStatus = ({
     alertsList,
     projectChanged,
-    onClickSave
+    isShowingWithoutId,
+    onClickSave,
+    onClickCreateNew
 }) => (
     filterInlineAlerts(alertsList).length > 0 ? (
         <InlineMessages />
     ) : projectChanged && (
         <div
             className={styles.saveNow}
-            onClick={onClickSave}
+            onClick={isShowingWithoutId ? onClickCreateNew : onClickSave}
         >
             <FormattedMessage
                 defaultMessage="Save Now"
@@ -42,17 +46,24 @@ const SaveStatus = ({
 
 SaveStatus.propTypes = {
     alertsList: PropTypes.arrayOf(PropTypes.object),
+    isShowingWithoutId: PropTypes.bool,
+    onClickCreateNew: PropTypes.func,
     onClickSave: PropTypes.func,
     projectChanged: PropTypes.bool
 };
 
 const mapStateToProps = state => ({
     alertsList: state.scratchGui.alerts.alertsList,
-    projectChanged: state.scratchGui.projectChanged
+    projectChanged: state.scratchGui.projectChanged,
+    // manualUpdateProject solo transiciona desde SHOWING_WITH_ID — un proyecto en blanco recién
+    // abierto está en SHOWING_WITHOUT_ID y necesita createProject en su lugar (bug encontrado
+    // probando en local: el click no hacía nada, ni error ni request de red).
+    isShowingWithoutId: getIsShowingWithoutId(state.scratchGui.projectState.loadingState)
 });
 
 const mapDispatchToProps = dispatch => ({
-    onClickSave: () => dispatch(manualUpdateProject())
+    onClickSave: () => dispatch(manualUpdateProject()),
+    onClickCreateNew: () => dispatch(createProject())
 });
 
 export default connect(

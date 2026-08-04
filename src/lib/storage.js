@@ -10,6 +10,12 @@ class Storage extends ScratchStorage {
     constructor () {
         super();
         this.cacheDefaultProject();
+        // md5 -> url de Cloudinary, poblado por fetch-project-from-server.js antes de que vm
+        // resuelva los costumes/sonidos de un proyecto cargado. Ver getAssetGetConfig más abajo.
+        this.assetMap = new Map();
+    }
+    setAssetMap (map) {
+        this.assetMap = map;
     }
     addOfficialScratchWebStores () {
         this.addWebStore(
@@ -59,7 +65,13 @@ class Storage extends ScratchStorage {
         this.assetHost = assetHost;
     }
     getAssetGetConfig (asset) {
-        return `${this.assetHost}/internalapi/asset/${asset.assetId}.${asset.dataFormat}/get/`;
+        // Resuelve por md5 contra el mapa que dejó fetch-project-from-server.js para el proyecto
+        // actual — nuestra API no tiene (ni necesita) un endpoint "traer asset por id", los
+        // assets propios del proyecto se sirven directo desde Cloudinary. Si no está en el mapa
+        // (ej. proyecto libre recién creado, sin recargar), devolver false hace que
+        // WebHelper.load() lo trate como "no encontrado" en vez de pegarle a una URL rota.
+        const url = this.assetMap.get(asset.assetId);
+        return url || false;
     }
     getAssetCreateConfig (asset) {
         return {

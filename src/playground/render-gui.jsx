@@ -7,9 +7,7 @@ import GUI from '../containers/gui.jsx';
 import HashParserHOC from '../lib/hash-parser-hoc.jsx';
 import log from '../lib/log.js';
 
-const onClickLogo = () => {
-    window.location = 'https://scratch.mit.edu';
-};
+const onClickLogo = () => {};
 
 const handleTelemetryModalCancel = () => {
     log('User canceled telemetry modal');
@@ -42,6 +40,16 @@ export default appTarget => {
     // TODO a hack for testing the backpack, allow backpack host to be set by url param
     const backpackHostMatches = window.location.href.match(/[?&]backpack_host=([^&]*)&?/);
     const backpackHost = backpackHostMatches ? backpackHostMatches[1] : null;
+
+    // TEMPORAL — mismo patrón de hook por query param, mientras no existe el flujo real de código
+    // de acceso + búsqueda de alumno (Fase 2, docs/scratch-editor-integration.md del monorepo
+    // privado). studentId/projectId van a dejar de leerse de la URL cuando se construya la
+    // pantalla real — ver ese documento para el estado del plan.
+    const studentIdMatches = window.location.href.match(/[?&]studentId=([^&]*)&?/);
+    const devStudentId = studentIdMatches ? studentIdMatches[1] : null;
+    const projectIdMatches = window.location.href.match(/[?&]projectId=([^&]*)&?/);
+    const devProjectId = projectIdMatches ? projectIdMatches[1] : null;
+    const apiScratchProjectsHost = `${process.env.API_URL}/scratch-projects/${devStudentId}`;
 
     const scratchDesktopMatches = window.location.href.match(/[?&]isScratchDesktop=([^&]+)/);
     let simulateScratchDesktop;
@@ -78,7 +86,10 @@ export default appTarget => {
                 backpackVisible
                 showComingSoon
                 backpackHost={backpackHost}
-                canSave={false}
+                canSave={Boolean(devStudentId)}
+                projectHost={apiScratchProjectsHost}
+                assetHost={apiScratchProjectsHost}
+                projectId={devProjectId}
                 onClickLogo={onClickLogo}
             />,
         appTarget);

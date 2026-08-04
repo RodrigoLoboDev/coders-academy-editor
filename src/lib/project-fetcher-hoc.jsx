@@ -7,6 +7,7 @@ import {connect} from 'react-redux';
 import {setProjectUnchanged} from '../reducers/project-changed';
 import {
     LoadingStates,
+    defaultProjectId,
     getIsCreatingNew,
     getIsFetchingWithId,
     getIsLoading,
@@ -22,6 +23,7 @@ import {
 
 import log from './log';
 import storage from './storage';
+import fetchProjectFromServer from './fetch-project-from-server';
 
 /* Higher Order Component to provide behavior for loading projects by id. If
  * there's no id, the default project is loaded.
@@ -72,16 +74,27 @@ const ProjectFetcherHOC = function (WrappedComponent) {
             }
         }
         fetchProject (projectId, loadingState) {
-            return storage
-                .load(storage.AssetType.Project, projectId, storage.DataFormat.JSON)
-                .then(projectAsset => {
-                    if (projectAsset) {
-                        this.props.onFetchedProjectData(projectAsset.data, loadingState);
-                    } else {
-                        // Treat failure to load as an error
-                        // Throw to be caught by catch later on
-                        throw new Error('Could not find project');
-                    }
+            if (projectId === defaultProjectId) {
+                // El proyecto en blanco (id sentinela '0') viene embebido en el build — nunca pasa
+                // por la red, se resuelve del builtinHelper cacheado por storage.js al arrancar.
+                return storage
+                    .load(storage.AssetType.Project, projectId, storage.DataFormat.JSON)
+                    .then(projectAsset => {
+                        if (projectAsset) {
+                            this.props.onFetchedProjectData(projectAsset.data, loadingState);
+                        } else {
+                            throw new Error('Could not find project');
+                        }
+                    })
+                    .catch(err => {
+                        this.props.onError(err);
+                        log.error(err);
+                    });
+            }
+            // Proyecto real, guardado en la API de Coders Academy — ver fetch-project-from-server.js.
+            return fetchProjectFromServer(projectId)
+                .then(projectJsonString => {
+                    this.props.onFetchedProjectData(projectJsonString, loadingState);
                 })
                 .catch(err => {
                     this.props.onError(err);
