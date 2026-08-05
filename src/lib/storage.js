@@ -2,6 +2,38 @@ import {ScratchStorage} from 'scratch-storage';
 
 import defaultProject from './default-project';
 
+// scratch-storage intenta primero un Worker (FetchWorkerTool) para pedir assets, y recién si eso
+// falla cae a fetch() normal (FetchTool) — ninguna de las dos clases está exportada públicamente
+// desde el paquete, así que no se puede forzar el fallback importándolas. En nuestro entorno el
+// worker nunca responde (ni resuelve ni rechaza, sin ningún request de red visible siquiera) y
+// cuelga cualquier cosa que use el mecanismo genérico de assets para siempre — encontrado
+// probando "agregar sprite de la biblioteca", que se quedaba sin hacer nada y sin error.
+// Reemplazo mínimo con fetch() directo, mismo patrón que ya usan con éxito
+// fetch-project-from-server.js/save-asset-to-server.js.
+class SimpleFetchTool {
+    get isGetSupported () {
+        return true;
+    }
+    get (reqConfig) {
+        const {url, ...options} = typeof reqConfig === 'string' ? {url: reqConfig} : reqConfig;
+        return fetch(url, Object.assign({method: 'GET'}, options)).then(result => {
+            if (result.ok) return result.arrayBuffer().then(b => new Uint8Array(b));
+            if (result.status === 404) return null;
+            return Promise.reject(result.status);
+        });
+    }
+    get isSendSupported () {
+        return true;
+    }
+    send (reqConfig) {
+        const {url, withCredentials, ...options} = reqConfig;
+        return fetch(url, Object.assign({credentials: withCredentials ? 'include' : 'omit'}, options)).then(response => {
+            if (response.ok) return response.text();
+            return Promise.reject(response.status);
+        });
+    }
+}
+
 /**
  * Wrapper for ScratchStorage which adds default web sources.
  * @todo make this more configurable
@@ -9,6 +41,8 @@ import defaultProject from './default-project';
 class Storage extends ScratchStorage {
     constructor () {
         super();
+        this.webHelper.assetTool = new SimpleFetchTool();
+        this.webHelper.projectTool = new SimpleFetchTool();
         this.cacheDefaultProject();
         // md5 -> url de Cloudinary, poblado por fetch-project-from-server.js antes de que vm
         // resuelva los costumes/sonidos de un proyecto cargado. Ver getAssetGetConfig más abajo.
@@ -65,13 +99,19 @@ class Storage extends ScratchStorage {
         this.assetHost = assetHost;
     }
     getAssetGetConfig (asset) {
-        // Resuelve por md5 contra el mapa que dejó fetch-project-from-server.js para el proyecto
-        // actual — nuestra API no tiene (ni necesita) un endpoint "traer asset por id", los
-        // assets propios del proyecto se sirven directo desde Cloudinary. Si no está en el mapa
-        // (ej. proyecto libre recién creado, sin recargar), devolver false hace que
-        // WebHelper.load() lo trate como "no encontrado" en vez de pegarle a una URL rota.
-        const url = this.assetMap.get(asset.assetId);
-        return url || false;
+        // Primero, assets propios del proyecto actual (dibujos/sonidos que subió el alumno) —
+        // resuelve por md5 contra el mapa que dejó fetch-project-from-server.js. Nuestra API no
+        // tiene (ni necesita) un endpoint "traer asset por id", esos se sirven directo desde
+        // Cloudinary.
+        const ownUrl = this.assetMap.get(asset.assetId);
+        if (ownUrl) return ownUrl;
+        // Si no es nuestro, es de la biblioteca integrada de sprites/disfraces/sonidos — el
+        // scratch-gui original NUNCA la bundlea localmente, siempre la pide en vivo a los
+        // servidores de Scratch (esto ya pasaba antes de todos nuestros cambios, no es algo nuevo
+        // que agregamos). Bug encontrado probando: al apuntar todo el storage a nuestra propia
+        // API, este fallback se rompió sin querer y agregar un sprite de la biblioteca dejaba de
+        // funcionar en silencio.
+        return `https://assets.scratch.mit.edu/internalapi/asset/${asset.assetId}.${asset.dataFormat}/get/`;
     }
     getAssetCreateConfig (asset) {
         return {
