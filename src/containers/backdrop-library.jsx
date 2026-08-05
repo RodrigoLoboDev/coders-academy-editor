@@ -22,20 +22,24 @@ const messages = defineMessages({
     }
 });
 
-// rotationCenter fijo (480,360) = mitad de un archivo de 960x720px (2x el escenario 480x360) con
-// bitmapResolution 2 — misma convención que usan los fondos default de Scratch (ver Arctic en
+// SVG (vectorial, recomendado): viewBox 480x360 (tamaño real del escenario), bitmapResolution 1,
+// centro (240,180). PNG (bitmap): archivo 960x720 (2x el escenario) con bitmapResolution 2, centro
+// (480,360) — misma convención que usan los fondos default de Scratch (ver Arctic en
 // backdrops.json). Especificación de arte entregada al admin en docs/scratch-editor-integration.md.
-const sharedAssetToBackdropItem = asset => ({
-    name: asset.name,
-    tags: ['coders-academy'],
-    rawURL: asset.cloudinaryUrl,
-    assetId: asset.md5,
-    bitmapResolution: 2,
-    dataFormat: asset.dataFormat,
-    md5ext: `${asset.md5}.${asset.dataFormat}`,
-    rotationCenterX: 480,
-    rotationCenterY: 360
-});
+const sharedAssetToBackdropItem = asset => {
+    const isSvg = asset.dataFormat === 'svg';
+    return {
+        name: asset.name,
+        tags: ['coders-academy'],
+        rawURL: asset.cloudinaryUrl,
+        assetId: asset.md5,
+        bitmapResolution: isSvg ? 1 : 2,
+        dataFormat: asset.dataFormat,
+        md5ext: `${asset.md5}.${asset.dataFormat}`,
+        rotationCenterX: isSvg ? 240 : 480,
+        rotationCenterY: isSvg ? 180 : 360
+    };
+};
 
 class BackdropLibrary extends React.Component {
     constructor (props) {

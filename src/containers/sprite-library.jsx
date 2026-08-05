@@ -26,29 +26,36 @@ const messages = defineMessages({
 
 // Convierte un SharedScratchAsset (assetType "costume") en un objeto "sprite" completo, mismo
 // formato que espera vm.addSprite() — un solo disfraz, sin sonidos ni bloques. rotationCenter fijo
-// en el centro del lienzo (600x600, ver docs/scratch-editor-integration.md Fase 3): el personaje
-// puede no ocupar el lienzo completo, pero el centro geométrico es una aproximación razonable sin
+// en el centro del lienzo/viewBox (ver docs/scratch-editor-integration.md Fase 3): el personaje
+// puede no ocupar el área completa, pero el centro geométrico es una aproximación razonable sin
 // pedirle al admin que lo calcule a mano.
-const sharedAssetToSpriteItem = asset => ({
-    name: asset.name,
-    tags: ['coders-academy'],
-    // Miniatura del selector — ver el fix en components/library/library.jsx: nuestro md5 no
-    // existe en el CDN de Scratch, así que la miniatura necesita la URL real de Cloudinary.
-    rawURL: asset.cloudinaryUrl,
-    isStage: false,
-    variables: {},
-    costumes: [{
-        assetId: asset.md5,
+// SVG (vectorial, formato recomendado — mismo que usa la biblioteca default de Scratch) no
+// necesita el truco "diseñar al doble" que sí hace falta en bitmaps: viewBox 300x300,
+// bitmapResolution 1, centro (150,150). PNG (bitmap) sigue la convención 2x: lienzo 600x600,
+// bitmapResolution 2, centro (300,300) — mismo tamaño final en el escenario en ambos casos.
+const sharedAssetToSpriteItem = asset => {
+    const isSvg = asset.dataFormat === 'svg';
+    return {
         name: asset.name,
-        bitmapResolution: 2,
-        md5ext: `${asset.md5}.${asset.dataFormat}`,
-        dataFormat: asset.dataFormat,
-        rotationCenterX: 300,
-        rotationCenterY: 300
-    }],
-    sounds: [],
-    blocks: {}
-});
+        tags: ['coders-academy'],
+        // Miniatura del selector — ver el fix en components/library/library.jsx: nuestro md5 no
+        // existe en el CDN de Scratch, así que la miniatura necesita la URL real de Cloudinary.
+        rawURL: asset.cloudinaryUrl,
+        isStage: false,
+        variables: {},
+        costumes: [{
+            assetId: asset.md5,
+            name: asset.name,
+            bitmapResolution: isSvg ? 1 : 2,
+            md5ext: `${asset.md5}.${asset.dataFormat}`,
+            dataFormat: asset.dataFormat,
+            rotationCenterX: isSvg ? 150 : 300,
+            rotationCenterY: isSvg ? 150 : 300
+        }],
+        sounds: [],
+        blocks: {}
+    };
+};
 
 class SpriteLibrary extends React.PureComponent {
     constructor (props) {
