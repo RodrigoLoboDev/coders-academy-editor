@@ -9,7 +9,7 @@ import storage from './storage';
 export default function saveThumbnailToServer (projectId, blob) {
     const url = `${storage.projectHost}/${projectId}/thumbnail`;
     return fetch(url, {
-        method: 'post',
+        method: 'POST',
         headers: {'Content-Type': 'image/png'},
         body: blob
     }).then(response => {

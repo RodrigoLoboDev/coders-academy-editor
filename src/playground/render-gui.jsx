@@ -93,6 +93,7 @@ export default appTarget => {
                 projectId={devProjectId}
                 onClickLogo={onClickLogo}
                 onUpdateProjectThumbnail={saveThumbnailToServer}
+                autoSaveIntervalSecs={90}
             />,
         appTarget);
 };

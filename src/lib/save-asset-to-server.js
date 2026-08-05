@@ -19,7 +19,7 @@ export default function saveAssetToServer (projectId, asset) {
     const assetType = ASSET_TYPE_NAMES[asset.assetType.name] || 'costume';
     const url = `${storage.assetHost}/${projectId}/assets/${assetType}`;
     return fetch(url, {
-        method: 'post',
+        method: 'POST',
         headers: {'Content-Type': asset.assetType.contentType},
         body: asset.data
     }).then(response => {
