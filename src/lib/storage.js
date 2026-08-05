@@ -47,9 +47,16 @@ class Storage extends ScratchStorage {
         // md5 -> url de Cloudinary, poblado por fetch-project-from-server.js antes de que vm
         // resuelva los costumes/sonidos de un proyecto cargado. Ver getAssetGetConfig más abajo.
         this.assetMap = new Map();
+        // md5 -> url de Cloudinary de los assets institucionales compartidos (Fase 3), poblado una
+        // sola vez al levantar el editor (fetch-shared-scratch-assets.js) — independiente del
+        // proyecto que esté abierto, a diferencia de assetMap de arriba.
+        this.sharedAssetMap = new Map();
     }
     setAssetMap (map) {
         this.assetMap = map;
+    }
+    setSharedAssetMap (map) {
+        this.sharedAssetMap = map;
     }
     addOfficialScratchWebStores () {
         this.addWebStore(
@@ -105,6 +112,10 @@ class Storage extends ScratchStorage {
         // Cloudinary.
         const ownUrl = this.assetMap.get(asset.assetId);
         if (ownUrl) return ownUrl;
+        // Segundo, biblioteca institucional compartida de Coders Academy (Fase 3) — sprites/
+        // fondos/sonidos propios subidos desde /admin/scratch-assets, resueltos igual por md5.
+        const sharedUrl = this.sharedAssetMap.get(asset.assetId);
+        if (sharedUrl) return sharedUrl;
         // Si no es nuestro, es de la biblioteca integrada de sprites/disfraces/sonidos — el
         // scratch-gui original NUNCA la bundlea localmente, siempre la pide en vivo a los
         // servidores de Scratch (esto ya pasaba antes de todos nuestros cambios, no es algo nuevo

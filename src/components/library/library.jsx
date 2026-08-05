@@ -198,9 +198,14 @@ class LibraryComponent extends React.Component {
             extensionId={data.extensionId}
             featured={data.featured}
             hidden={data.hidden}
-            iconMd5={data.costumes ? data.costumes[0].md5ext : data.md5ext}
+            // data.rawURL (biblioteca institucional de Coders Academy, Fase 3) tiene prioridad:
+            // el md5 de nuestros assets no existe en el CDN de Scratch, a diferencia del md5 de
+            // la biblioteca default — sin este chequeo la miniatura pediría una URL rota. Se
+            // desactiva también la rotación de íconos por disfraz (mismo motivo: cada frame
+            // rotado arma su URL con icon.md5ext directo, sin pasar por iconRawURL).
+            iconMd5={data.rawURL ? null : (data.costumes ? data.costumes[0].md5ext : data.md5ext)}
             iconRawURL={data.rawURL}
-            icons={data.costumes}
+            icons={data.rawURL ? null : data.costumes}
             id={key}
             insetIconURL={data.insetIconURL}
             internetConnectionRequired={data.internetConnectionRequired}
