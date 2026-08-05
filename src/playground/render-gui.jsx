@@ -99,6 +99,13 @@ const PlaygroundApp = ({WrappedGui}) => {
     }
 
     const apiScratchProjectsHost = `${process.env.API_URL}/scratch-projects/${student.id}`;
+    // ProjectFetcherHOC (containers/project-fetcher-hoc.jsx) solo despacha setProjectId en su
+    // constructor si projectId no es null/undefined/'' — con projectId=null (nuestro "crear
+    // nuevo") nunca dispara nada, y sin HashParserHOC (sacado en el Paso 2.2, ver más abajo) ya no
+    // hay ningún otro lado que dispare la carga del proyecto en blanco por defecto: ni el gato ni
+    // el Stage aparecían. Se traduce null a '0' (defaultProjectId, sentinela hardcodeado en
+    // reducers/project-state.js) para que sí dispare esa carga — mismo id que usaba HashParserHOC.
+    const effectiveProjectId = projectId === null ? '0' : projectId;
 
     return (
         <React.Fragment>
@@ -119,7 +126,7 @@ const PlaygroundApp = ({WrappedGui}) => {
                 canSave
                 projectHost={apiScratchProjectsHost}
                 assetHost={apiScratchProjectsHost}
-                projectId={projectId}
+                projectId={effectiveProjectId}
                 onClickLogo={onClickLogo}
                 onUpdateProjectThumbnail={saveThumbnailToServer}
                 autoSaveIntervalSecs={90}
