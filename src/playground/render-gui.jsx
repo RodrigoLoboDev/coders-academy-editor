@@ -1,13 +1,26 @@
 import React, {useState} from 'react';
 import ReactDOM from 'react-dom';
-import {compose} from 'redux';
 
 import AppStateHOC from '../lib/app-state-hoc.jsx';
 import GUI from '../containers/gui.jsx';
-import HashParserHOC from '../lib/hash-parser-hoc.jsx';
 import log from '../lib/log.js';
 import saveThumbnailToServer from '../lib/save-thumbnail-to-server';
 import AccessGate from '../components/access-gate/access-gate.jsx';
+import ProjectPicker from '../components/project-picker/project-picker.jsx';
+
+// Sobrevive un refresh accidental de la página sin perder al alumno ya identificado (el código de
+// acceso ya se guarda aparte, ver access-gate.jsx) — se borra solo al cerrar la pestaña/navegador,
+// mismo criterio de "barrera de sesión, no de seguridad" que el resto del flujo de acceso.
+const STUDENT_SESSION_KEY = 'ca_editor_student';
+
+const readStoredStudent = () => {
+    try {
+        const raw = sessionStorage.getItem(STUDENT_SESSION_KEY);
+        return raw ? JSON.parse(raw) : null;
+    } catch {
+        return null;
+    }
+};
 
 const onClickLogo = () => {};
 
@@ -47,16 +60,42 @@ const badgeButtonStyle = {
 };
 
 /*
- * Wraps <WrappedGui> con la pantalla de código de acceso + búsqueda de alumno (Fase 2,
- * docs/scratch-editor-integration.md del monorepo privado). Después de seleccionar un alumno, solo
- * se guarda/muestra su nombre de pila de acá en adelante — el nombre completo solo existe durante
- * la búsqueda dentro de AccessGate.
+ * Wraps <WrappedGui> con la pantalla de código de acceso + búsqueda de alumno + selector de
+ * proyectos (Fase 2, docs/scratch-editor-integration.md del monorepo privado). Después de
+ * seleccionar un alumno, solo se guarda/muestra su nombre de pila de acá en adelante — el nombre
+ * completo solo existe durante la búsqueda dentro de AccessGate.
  */
 const PlaygroundApp = ({WrappedGui}) => {
-    const [student, setStudent] = useState(null);
+    const [student, setStudent] = useState(readStoredStudent);
+    // undefined: todavía no se eligió — muestra el ProjectPicker. null: "crear nuevo" (proyecto en
+    // blanco). string: id de un proyecto existente a continuar.
+    const [projectId, setProjectId] = useState(undefined);
+
+    const handleSelectStudent = (id, firstName) => {
+        const newStudent = {id, firstName};
+        sessionStorage.setItem(STUDENT_SESSION_KEY, JSON.stringify(newStudent));
+        setStudent(newStudent);
+    };
+
+    const handleChangeStudent = () => {
+        sessionStorage.removeItem(STUDENT_SESSION_KEY);
+        setStudent(null);
+        setProjectId(undefined);
+    };
 
     if (!student) {
-        return <AccessGate onSelectStudent={(id, firstName) => setStudent({id, firstName})} />;
+        return <AccessGate onSelectStudent={handleSelectStudent} />;
+    }
+
+    if (typeof projectId === 'undefined') {
+        return (
+            <ProjectPicker
+                studentId={student.id}
+                onChangeStudent={handleChangeStudent}
+                onCreateNew={() => setProjectId(null)}
+                onSelectProject={id => setProjectId(id)}
+            />
+        );
     }
 
     const apiScratchProjectsHost = `${process.env.API_URL}/scratch-projects/${student.id}`;
@@ -68,7 +107,7 @@ const PlaygroundApp = ({WrappedGui}) => {
                 <button
                     style={badgeButtonStyle}
                     type="button"
-                    onClick={() => setStudent(null)}
+                    onClick={handleChangeStudent}
                 >
                     Cambiar
                 </button>
@@ -80,6 +119,7 @@ const PlaygroundApp = ({WrappedGui}) => {
                 canSave
                 projectHost={apiScratchProjectsHost}
                 assetHost={apiScratchProjectsHost}
+                projectId={projectId}
                 onClickLogo={onClickLogo}
                 onUpdateProjectThumbnail={saveThumbnailToServer}
                 autoSaveIntervalSecs={90}
@@ -96,13 +136,17 @@ const PlaygroundApp = ({WrappedGui}) => {
 export default appTarget => {
     GUI.setAppElement(appTarget);
 
-    // note that redux's 'compose' function is just being used as a general utility to make
-    // the hierarchy of HOC constructor calls clearer here; it has nothing to do with redux's
-    // ability to compose reducers.
-    const WrappedGui = compose(
-        AppStateHOC,
-        HashParserHOC
-    )(GUI);
+    // Sin HashParserHOC a propósito: ese HOC del fork original lee el id de proyecto del #hash de
+    // la URL (mecanismo legacy del playground de scratch-www) y en su componentDidMount despacha
+    // "no hay hash, cargá el proyecto en blanco" incondicionalmente — pisando el projectId real que
+    // le pasamos por prop (ver PlaygroundApp) justo cuando empieza a cargar. Bug real encontrado en
+    // el Paso 2.2: elegir un proyecto ya guardado se quedaba colgado para siempre en "Cargando
+    // proyecto"/"Creando el proyecto" superpuestos — nuestro fetch real llegaba bien (sin error de
+    // red), pero el reducer de project-state ya había pisado el loadingState a FETCHING_NEW_DEFAULT
+    // por el hash vacío, así que el DONE_FETCHING_WITH_ID de nuestro fetch quedaba descartado en
+    // silencio. No usamos URLs con #hash para elegir proyecto — nuestro propio AccessGate +
+    // ProjectPicker ya cumplen ese rol — así que este HOC no aporta nada acá, solo rompe.
+    const WrappedGui = AppStateHOC(GUI);
 
     const scratchDesktopMatches = window.location.href.match(/[?&]isScratchDesktop=([^&]+)/);
     let simulateScratchDesktop;
