@@ -1,0 +1,116 @@
+.backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, #1a1aad 0%, #2b2be0 100%);
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.card {
+    width: 100%;
+    max-width: 420px;
+    margin: 16px;
+    padding: 32px;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+}
+
+.title {
+    margin: 0 0 8px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #1a1aad;
+}
+
+.subtitle {
+    margin: 0 0 24px;
+    font-size: 0.95rem;
+    color: #575e75;
+}
+
+.input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    font-size: 1.1rem;
+    border: 2px solid #d9d9e6;
+    border-radius: 8px;
+    outline: none;
+}
+
+.input:focus {
+    border-color: #1a1aad;
+}
+
+.button {
+    width: 100%;
+    margin-top: 16px;
+    padding: 12px 14px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #ffffff;
+    background: #1a1aad;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.error {
+    margin-top: 12px;
+    color: #e04040;
+    font-size: 0.9rem;
+}
+
+.resultsList {
+    margin-top: 16px;
+    max-height: 240px;
+    overflow-y: auto;
+    border: 1px solid #e5e5f0;
+    border-radius: 8px;
+}
+
+.resultItem {
+    width: 100%;
+    padding: 12px 14px;
+    background: none;
+    border: none;
+    border-bottom: 1px solid #e5e5f0;
+    text-align: left;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.resultItem:last-child {
+    border-bottom: none;
+}
+
+.resultItem:hover {
+    background: #f4f4fb;
+}
+
+.hint {
+    margin-top: 16px;
+    font-size: 0.85rem;
+    color: #9696b8;
+    text-align: center;
+}
+
+.backLink {
+    margin-top: 16px;
+    background: none;
+    border: none;
+    padding: 0;
+    color: #1a1aad;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: underline;
+}

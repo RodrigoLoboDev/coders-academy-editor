@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import ReactDOM from 'react-dom';
 import {compose} from 'redux';
 
@@ -7,6 +7,7 @@ import GUI from '../containers/gui.jsx';
 import HashParserHOC from '../lib/hash-parser-hoc.jsx';
 import log from '../lib/log.js';
 import saveThumbnailToServer from '../lib/save-thumbnail-to-server';
+import AccessGate from '../components/access-gate/access-gate.jsx';
 
 const onClickLogo = () => {};
 
@@ -20,6 +21,71 @@ const handleTelemetryModalOptIn = () => {
 
 const handleTelemetryModalOptOut = () => {
     log('User opted out of telemetry');
+};
+
+const badgeStyle = {
+    position: 'fixed',
+    top: 6,
+    right: 12,
+    zIndex: 1001,
+    fontSize: '0.8rem',
+    color: '#575e75',
+    background: '#f4f4fb',
+    padding: '4px 10px',
+    borderRadius: 12
+};
+
+const badgeButtonStyle = {
+    marginLeft: 8,
+    background: 'none',
+    border: 'none',
+    color: '#1a1aad',
+    textDecoration: 'underline',
+    cursor: 'pointer',
+    fontSize: '0.8rem',
+    padding: 0
+};
+
+/*
+ * Wraps <WrappedGui> con la pantalla de código de acceso + búsqueda de alumno (Fase 2,
+ * docs/scratch-editor-integration.md del monorepo privado). Después de seleccionar un alumno, solo
+ * se guarda/muestra su nombre de pila de acá en adelante — el nombre completo solo existe durante
+ * la búsqueda dentro de AccessGate.
+ */
+const PlaygroundApp = ({WrappedGui}) => {
+    const [student, setStudent] = useState(null);
+
+    if (!student) {
+        return <AccessGate onSelectStudent={(id, firstName) => setStudent({id, firstName})} />;
+    }
+
+    const apiScratchProjectsHost = `${process.env.API_URL}/scratch-projects/${student.id}`;
+
+    return (
+        <React.Fragment>
+            <div style={badgeStyle}>
+                {student.firstName}
+                <button
+                    style={badgeButtonStyle}
+                    type="button"
+                    onClick={() => setStudent(null)}
+                >
+                    Cambiar
+                </button>
+            </div>
+            <WrappedGui
+                canEditTitle
+                backpackVisible
+                showComingSoon
+                canSave
+                projectHost={apiScratchProjectsHost}
+                assetHost={apiScratchProjectsHost}
+                onClickLogo={onClickLogo}
+                onUpdateProjectThumbnail={saveThumbnailToServer}
+                autoSaveIntervalSecs={90}
+            />
+        </React.Fragment>
+    );
 };
 
 /*
@@ -37,20 +103,6 @@ export default appTarget => {
         AppStateHOC,
         HashParserHOC
     )(GUI);
-
-    // TODO a hack for testing the backpack, allow backpack host to be set by url param
-    const backpackHostMatches = window.location.href.match(/[?&]backpack_host=([^&]*)&?/);
-    const backpackHost = backpackHostMatches ? backpackHostMatches[1] : null;
-
-    // TEMPORAL — mismo patrón de hook por query param, mientras no existe el flujo real de código
-    // de acceso + búsqueda de alumno (Fase 2, docs/scratch-editor-integration.md del monorepo
-    // privado). studentId/projectId van a dejar de leerse de la URL cuando se construya la
-    // pantalla real — ver ese documento para el estado del plan.
-    const studentIdMatches = window.location.href.match(/[?&]studentId=([^&]*)&?/);
-    const devStudentId = studentIdMatches ? studentIdMatches[1] : null;
-    const projectIdMatches = window.location.href.match(/[?&]projectId=([^&]*)&?/);
-    const devProjectId = projectIdMatches ? projectIdMatches[1] : null;
-    const apiScratchProjectsHost = `${process.env.API_URL}/scratch-projects/${devStudentId}`;
 
     const scratchDesktopMatches = window.location.href.match(/[?&]isScratchDesktop=([^&]+)/);
     let simulateScratchDesktop;
@@ -82,18 +134,6 @@ export default appTarget => {
                 onTelemetryModalOptIn={handleTelemetryModalOptIn}
                 onTelemetryModalOptOut={handleTelemetryModalOptOut}
             /> :
-            <WrappedGui
-                canEditTitle
-                backpackVisible
-                showComingSoon
-                backpackHost={backpackHost}
-                canSave={Boolean(devStudentId)}
-                projectHost={apiScratchProjectsHost}
-                assetHost={apiScratchProjectsHost}
-                projectId={devProjectId}
-                onClickLogo={onClickLogo}
-                onUpdateProjectThumbnail={saveThumbnailToServer}
-                autoSaveIntervalSecs={90}
-            />,
+            <PlaygroundApp WrappedGui={WrappedGui} />,
         appTarget);
 };
