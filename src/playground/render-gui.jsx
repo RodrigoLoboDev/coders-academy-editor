@@ -9,6 +9,7 @@ import storage from '../lib/storage';
 import AccessGate from '../components/access-gate/access-gate.jsx';
 import ProjectPicker from '../components/project-picker/project-picker.jsx';
 import TemplatePicker from '../components/template-picker/template-picker.jsx';
+import PublicPlayer from '../components/public-player/public-player.jsx';
 
 // Sobrevive un refresh accidental de la página sin perder al alumno ya identificado (el código de
 // acceso ya se guarda aparte, ver access-gate.jsx) — se borra solo al cerrar la pestaña/navegador,
@@ -230,6 +231,20 @@ export default appTarget => {
     // silencio. No usamos URLs con #hash para elegir proyecto — nuestro propio AccessGate +
     // ProjectPicker ya cumplen ese rol — así que este HOC no aporta nada acá, solo rompe.
     const WrappedGui = AppStateHOC(GUI);
+
+    // Fase 5 — vista pública de solo lectura, sin AccessGate/login: /jugar/:projectId. No hay
+    // react-router en esta app (todo el resto del flujo ya es un state machine simple dentro de
+    // <PlaygroundApp>, ver comentario ahí), así que el path se lee directo de window.location acá,
+    // antes de decidir qué árbol montar. webpack.config.js tiene devServer.historyApiFallback para
+    // que esta ruta cargue bien en dev — el mismo rewrite hace falta en el hosting final (Fase 7).
+    const jugarMatch = window.location.pathname.match(/^\/jugar\/([^/]+)\/?$/);
+    if (jugarMatch) {
+        ReactDOM.render(
+            <PublicPlayer WrappedGui={WrappedGui} projectId={jugarMatch[1]} onClickLogo={onClickLogo} />,
+            appTarget
+        );
+        return;
+    }
 
     const scratchDesktopMatches = window.location.href.match(/[?&]isScratchDesktop=([^&]+)/);
     let simulateScratchDesktop;

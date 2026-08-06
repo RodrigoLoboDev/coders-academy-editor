@@ -118,6 +118,13 @@ const distConfig = baseConfig.clone()
 const buildConfig = baseConfig.clone()
     .enableDevServer(process.env.PORT || 8601)
     .merge({
+        // Fase 5 — la vista pública /jugar/:projectId no usa react-router: render-gui.jsx lee
+        // window.location.pathname en el primer render. Sin este fallback, abrir esa URL directo
+        // (o refrescarla) en el dev server tira 404 porque no existe ningún archivo real en esa
+        // ruta — el mismo criterio va a hacer falta en Vercel (Fase 7, rewrite a index.html).
+        devServer: {
+            historyApiFallback: true
+        },
         entry: {
             gui: './src/playground/index.jsx',
             blocksonly: './src/playground/blocks-only.jsx',

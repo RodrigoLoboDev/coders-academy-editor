@@ -62,12 +62,66 @@
     border: 2px solid transparent;
     border-radius: 12px;
     overflow: hidden;
-    cursor: pointer;
     text-align: left;
 }
 
 .projectCard:hover {
     border-color: #1a1aad;
+}
+
+.projectCardMain {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+}
+
+.projectActions {
+    display: flex;
+    border-top: 1px solid #d9d9e6;
+}
+
+.publishButton {
+    flex: 1;
+    padding: 8px 6px;
+    font-size: 0.72rem;
+    font-weight: bold;
+    color: #1a1aad;
+    background: #e8e8fb;
+    border: none;
+    cursor: pointer;
+}
+
+.publishButton:hover {
+    background: #d9d9f5;
+}
+
+.publishButton:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.playLink {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 10px;
+    font-size: 0.72rem;
+    font-weight: bold;
+    color: #ffffff;
+    background: #00c97a;
+    border: none;
+    border-left: 1px solid #d9d9e6;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.playLink:hover {
+    background: #00b06a;
 }
 
 .thumb {
