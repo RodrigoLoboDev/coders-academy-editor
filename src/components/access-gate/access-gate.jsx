@@ -9,14 +9,18 @@ import styles from './access-gate.css';
 // seguridad real: este repo es público (AGPL) y el valor viaja igual en el bundle compilado, y el
 // buscador de alumnos (GET /students/search) ya es un endpoint público sin auth. Ver
 // docs/scratch-editor-integration.md (monorepo privado) para el porqué completo.
+//
+// El docente NO pasa por este código — ver handleChooseTeacher más abajo. Decisión tomada con el
+// usuario (06/08/2026): pensando en una mejora futura del código de alumno (rotativo, con
+// vencimiento por clase, creado desde /admin), atar al docente a "el código de hoy" no tendría
+// sentido — un docente arma/edita plantillas en cualquier momento, no solo durante una clase en
+// curso, y ya tiene una barrera real (login) que un código compartido no mejora en nada.
 const CODE_SESSION_KEY = 'ca_editor_access_code_ok';
 
 const normalizeCode = value => value.trim().toUpperCase();
 
 const AccessGate = ({onSelectStudent, onTeacherLogin}) => {
-    const [step, setStep] = useState(
-        () => (sessionStorage.getItem(CODE_SESSION_KEY) === '1' ? 'role' : 'code')
-    );
+    const [step, setStep] = useState('role');
     const [code, setCode] = useState('');
     const [codeError, setCodeError] = useState(null);
 
@@ -30,12 +34,17 @@ const AccessGate = ({onSelectStudent, onTeacherLogin}) => {
     const [teacherError, setTeacherError] = useState(null);
     const [teacherLoading, setTeacherLoading] = useState(false);
 
+    const handleChooseStudent = () => {
+        // Si ya pasó el código en esta misma pestaña/sesión, no se lo vuelve a pedir.
+        setStep(sessionStorage.getItem(CODE_SESSION_KEY) === '1' ? 'search' : 'code');
+    };
+
     const handleCodeSubmit = e => {
         e.preventDefault();
         if (normalizeCode(code) === normalizeCode(process.env.ACCESS_CODE || '')) {
             sessionStorage.setItem(CODE_SESSION_KEY, '1');
             setCodeError(null);
-            setStep('role');
+            setStep('search');
         } else {
             setCodeError('Código incorrecto. Pedile el código a tu profe.');
         }
@@ -85,6 +94,28 @@ const AccessGate = ({onSelectStudent, onTeacherLogin}) => {
         return () => clearTimeout(timeoutId);
     }, [query, step]);
 
+    if (step === 'role') {
+        return (
+            <div className={styles.backdrop}>
+                <div className={styles.card}>
+                    <h1 className={styles.title}>👋 ¡Hola!</h1>
+                    <p className={styles.subtitle}>¿Sos alumno o docente?</p>
+                    <button className={styles.button} type="button" onClick={handleChooseStudent}>
+                        🎒 Soy alumno
+                    </button>
+                    <button
+                        className={styles.button}
+                        style={{marginTop: 10, background: '#575e75'}}
+                        type="button"
+                        onClick={() => setStep('teacherLogin')}
+                    >
+                        🍎 Soy docente
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     if (step === 'code') {
         return (
             <div className={styles.backdrop}>
@@ -105,27 +136,8 @@ const AccessGate = ({onSelectStudent, onTeacherLogin}) => {
                         </button>
                     </form>
                     {codeError && <p className={styles.error}>{codeError}</p>}
-                </div>
-            </div>
-        );
-    }
-
-    if (step === 'role') {
-        return (
-            <div className={styles.backdrop}>
-                <div className={styles.card}>
-                    <h1 className={styles.title}>👋 ¡Hola!</h1>
-                    <p className={styles.subtitle}>¿Sos alumno o docente?</p>
-                    <button className={styles.button} type="button" onClick={() => setStep('search')}>
-                        🎒 Soy alumno
-                    </button>
-                    <button
-                        className={styles.button}
-                        style={{marginTop: 10, background: '#575e75'}}
-                        type="button"
-                        onClick={() => setStep('teacherLogin')}
-                    >
-                        🍎 Soy docente
+                    <button className={styles.backLink} type="button" onClick={() => setStep('role')}>
+                        Volver
                     </button>
                 </div>
             </div>
