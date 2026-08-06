@@ -13,9 +13,9 @@ const CODE_SESSION_KEY = 'ca_editor_access_code_ok';
 
 const normalizeCode = value => value.trim().toUpperCase();
 
-const AccessGate = ({onSelectStudent}) => {
+const AccessGate = ({onSelectStudent, onTeacherLogin}) => {
     const [step, setStep] = useState(
-        () => (sessionStorage.getItem(CODE_SESSION_KEY) === '1' ? 'search' : 'code')
+        () => (sessionStorage.getItem(CODE_SESSION_KEY) === '1' ? 'role' : 'code')
     );
     const [code, setCode] = useState('');
     const [codeError, setCodeError] = useState(null);
@@ -25,15 +25,44 @@ const AccessGate = ({onSelectStudent}) => {
     const [isSearching, setIsSearching] = useState(false);
     const [searchError, setSearchError] = useState(null);
 
+    const [teacherEmail, setTeacherEmail] = useState('');
+    const [teacherPassword, setTeacherPassword] = useState('');
+    const [teacherError, setTeacherError] = useState(null);
+    const [teacherLoading, setTeacherLoading] = useState(false);
+
     const handleCodeSubmit = e => {
         e.preventDefault();
         if (normalizeCode(code) === normalizeCode(process.env.ACCESS_CODE || '')) {
             sessionStorage.setItem(CODE_SESSION_KEY, '1');
             setCodeError(null);
-            setStep('search');
+            setStep('role');
         } else {
             setCodeError('Código incorrecto. Pedile el código a tu profe.');
         }
+    };
+
+    const handleTeacherSubmit = e => {
+        e.preventDefault();
+        setTeacherLoading(true);
+        setTeacherError(null);
+        fetch(`${process.env.API_URL}/auth/login`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({email: teacherEmail.trim(), password: teacherPassword})
+        })
+            .then(response => {
+                if (!response.ok) throw new Error(response.status);
+                return response.json();
+            })
+            .then(({token, user}) => {
+                if (user.role !== 'TEACHER' && user.role !== 'ADMIN') {
+                    setTeacherError('Esta cuenta no tiene permisos de docente.');
+                    return;
+                }
+                onTeacherLogin(token, user);
+            })
+            .catch(() => setTeacherError('Email o contraseña incorrectos.'))
+            .finally(() => setTeacherLoading(false));
     };
 
     useEffect(() => {
@@ -81,6 +110,68 @@ const AccessGate = ({onSelectStudent}) => {
         );
     }
 
+    if (step === 'role') {
+        return (
+            <div className={styles.backdrop}>
+                <div className={styles.card}>
+                    <h1 className={styles.title}>👋 ¡Hola!</h1>
+                    <p className={styles.subtitle}>¿Sos alumno o docente?</p>
+                    <button className={styles.button} type="button" onClick={() => setStep('search')}>
+                        🎒 Soy alumno
+                    </button>
+                    <button
+                        className={styles.button}
+                        style={{marginTop: 10, background: '#575e75'}}
+                        type="button"
+                        onClick={() => setStep('teacherLogin')}
+                    >
+                        🍎 Soy docente
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (step === 'teacherLogin') {
+        return (
+            <div className={styles.backdrop}>
+                <div className={styles.card}>
+                    <h1 className={styles.title}>🍎 Ingreso docente</h1>
+                    <p className={styles.subtitle}>Usá tu mismo usuario del panel de Coders Academy.</p>
+                    <form onSubmit={handleTeacherSubmit}>
+                        <input
+                            autoFocus
+                            className={styles.input}
+                            placeholder="Email"
+                            type="email"
+                            value={teacherEmail}
+                            onChange={e => setTeacherEmail(e.target.value)}
+                        />
+                        <input
+                            className={styles.input}
+                            placeholder="Contraseña"
+                            style={{marginTop: 10}}
+                            type="password"
+                            value={teacherPassword}
+                            onChange={e => setTeacherPassword(e.target.value)}
+                        />
+                        <button
+                            className={styles.button}
+                            disabled={teacherLoading || !teacherEmail.trim() || !teacherPassword}
+                            type="submit"
+                        >
+                            {teacherLoading ? 'Ingresando…' : 'Ingresar'}
+                        </button>
+                    </form>
+                    {teacherError && <p className={styles.error}>{teacherError}</p>}
+                    <button className={styles.backLink} type="button" onClick={() => setStep('role')}>
+                        Volver
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className={styles.backdrop}>
             <div className={styles.card}>
@@ -113,13 +204,17 @@ const AccessGate = ({onSelectStudent}) => {
                 {!isSearching && query.trim().length >= 2 && results.length === 0 && !searchError && (
                     <p className={styles.hint}>No encontramos a nadie con ese nombre.</p>
                 )}
+                <button className={styles.backLink} type="button" onClick={() => setStep('role')}>
+                    Volver
+                </button>
             </div>
         </div>
     );
 };
 
 AccessGate.propTypes = {
-    onSelectStudent: PropTypes.func.isRequired
+    onSelectStudent: PropTypes.func.isRequired,
+    onTeacherLogin: PropTypes.func.isRequired
 };
 
 export default AccessGate;

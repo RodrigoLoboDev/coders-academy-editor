@@ -28,7 +28,12 @@ export default function saveProjectToServer (projectId, vmState, params) {
         // Bug real encontrado recién probando el autosave, curl no lo reproducía (curl -X siempre
         // manda el string tal cual, no hay normalización de por medio que oculte la diferencia).
         method: creatingProject ? 'POST' : 'PATCH',
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+            'Content-Type': 'application/json',
+            // Modo docente (Fase 4) — /admin/scratch-templates/* exige JwtAuthGuard, a diferencia
+            // de /scratch-projects/* que es público. Sin token acá (modo alumno), no se manda.
+            ...(storage.authToken && {Authorization: `Bearer ${storage.authToken}`})
+        },
         body: JSON.stringify(body)
     }).then(response => {
         if (!response.ok) {

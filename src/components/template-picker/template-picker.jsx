@@ -1,0 +1,223 @@
+import React, {useEffect, useState} from 'react';
+import PropTypes from 'prop-types';
+
+import styles from './template-picker.css';
+
+const formatDate = isoString => new Date(isoString).toLocaleDateString('es-AR', {
+    day: 'numeric',
+    month: 'short'
+});
+
+// Lienzo vacío mínimo (solo Stage, sin sprites ni sonidos) — arranque real de una plantilla nueva.
+// A diferencia del alumno, el docente no parte del gato/proyecto default embebido (ese vive solo
+// localmente vía storage.js, pensado para SHOWING_WITHOUT_ID, no para crear un registro real de
+// entrada) — acá la plantilla ya existe como fila real desde el vamos, así que el JSON inicial se
+// arma a mano, mínimo pero válido.
+// Bug real encontrado probando: un Stage con costumes:[] (sin ningún fondo) hace que scratch-vm
+// tire "Non-ascii character in FixedAsciiString" al cargarlo — mensaje engañoso (viene de
+// scratch-sb1-converter, formato viejísimo), la causa real es currentCostume:0 apuntando a un
+// array vacío. Fix: usar el mismo fondo blanco default que trae scratch-gui (mismo assetId que
+// default-project/project-data.js), que ya resuelve bien contra el CDN de Scratch vía el fallback
+// de getAssetGetConfig en storage.js — no hace falta subir un asset propio para esto.
+const blankTemplateProjectJson = () => ({
+    targets: [{
+        isStage: true,
+        name: 'Stage',
+        variables: {},
+        lists: {},
+        broadcasts: {},
+        blocks: {},
+        comments: {},
+        currentCostume: 0,
+        costumes: [{
+            assetId: 'cd21514d0531fdffb22204e0ec5ed84a',
+            name: 'backdrop1',
+            md5ext: 'cd21514d0531fdffb22204e0ec5ed84a.svg',
+            dataFormat: 'svg',
+            rotationCenterX: 240,
+            rotationCenterY: 180
+        }],
+        sounds: [],
+        volume: 100,
+        layerOrder: 0,
+        tempo: 60,
+        videoTransparency: 50,
+        videoState: 'on',
+        textToSpeechLanguage: null
+    }],
+    monitors: [],
+    extensions: [],
+    meta: {semver: '3.0.0', vm: '2.3.0', agent: ''}
+});
+
+const NewTemplateForm = ({onCreate, onCancel, creating, error}) => {
+    const [title, setTitle] = useState('');
+    const [story, setStory] = useState('');
+    const [objective, setObjective] = useState('');
+
+    const handleSubmit = e => {
+        e.preventDefault();
+        onCreate({title: title.trim(), story: story.trim(), objective: objective.trim()});
+    };
+
+    return (
+        <form onSubmit={handleSubmit}>
+            <label className={styles.label} htmlFor="template-title">Título</label>
+            <input
+                autoFocus
+                className={styles.input}
+                id="template-title"
+                placeholder="Ej: El rescate del robot"
+                type="text"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+            />
+            <label className={styles.label} htmlFor="template-story">Relato (el juego, la historia, el cuento)</label>
+            <textarea
+                className={styles.textarea}
+                id="template-story"
+                placeholder="Ej: Un robot quedó atrapado en una cueva y necesita tu ayuda para salir."
+                value={story}
+                onChange={e => setStory(e.target.value)}
+            />
+            <label className={styles.label} htmlFor="template-objective">Objetivo / misión</label>
+            <textarea
+                className={styles.textarea}
+                id="template-objective"
+                placeholder="Ej: Programá al robot para que llegue hasta la salida sin chocar con las paredes."
+                value={objective}
+                onChange={e => setObjective(e.target.value)}
+            />
+            <button
+                className={styles.newButton}
+                disabled={creating || !title.trim() || !story.trim() || !objective.trim()}
+                type="submit"
+            >
+                {creating ? 'Creando…' : '✅ Crear y empezar a armarla'}
+            </button>
+            {error && <p className={styles.error}>{error}</p>}
+            <button className={styles.backLink} type="button" onClick={onCancel}>
+                Cancelar
+            </button>
+        </form>
+    );
+};
+
+NewTemplateForm.propTypes = {
+    creating: PropTypes.bool.isRequired,
+    error: PropTypes.string,
+    onCancel: PropTypes.func.isRequired,
+    onCreate: PropTypes.func.isRequired
+};
+
+/*
+ * Selector de plantillas para el docente — análogo a ProjectPicker, pero contra
+ * /admin/scratch-templates (requiere token de docente/admin) en vez de /scratch-projects/:studentId.
+ */
+const TemplatePicker = ({token, onSelectTemplate, onLogout}) => {
+    const [templates, setTemplates] = useState(null);
+    const [error, setError] = useState(null);
+    const [creatingNew, setCreatingNew] = useState(false);
+    const [createError, setCreateError] = useState(null);
+    const [submitting, setSubmitting] = useState(false);
+
+    useEffect(() => {
+        fetch(`${process.env.API_URL}/admin/scratch-templates`, {
+            headers: {Authorization: `Bearer ${token}`}
+        })
+            .then(response => {
+                if (!response.ok) throw new Error(response.status);
+                return response.json();
+            })
+            .then(setTemplates)
+            .catch(() => setError('No se pudieron cargar las plantillas.'));
+    }, [token]);
+
+    const handleCreate = ({title, story, objective}) => {
+        setSubmitting(true);
+        setCreateError(null);
+        fetch(`${process.env.API_URL}/admin/scratch-templates`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({title, story, objective, projectJson: blankTemplateProjectJson()})
+        })
+            .then(response => {
+                if (!response.ok) throw new Error(response.status);
+                return response.json();
+            })
+            .then(template => onSelectTemplate(template.id))
+            .catch(() => setCreateError('No se pudo crear la plantilla.'))
+            .finally(() => setSubmitting(false));
+    };
+
+    if (creatingNew) {
+        return (
+            <div className={styles.backdrop}>
+                <div className={styles.card}>
+                    <h1 className={styles.title}>🍎 Nueva plantilla</h1>
+                    <p className={styles.subtitle}>Completá el título, el relato y la misión — después armás el proyecto en el editor.</p>
+                    <NewTemplateForm
+                        creating={submitting}
+                        error={createError}
+                        onCancel={() => setCreatingNew(false)}
+                        onCreate={handleCreate}
+                    />
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className={styles.backdrop}>
+            <div className={styles.card}>
+                <h1 className={styles.title}>🍎 Tus plantillas</h1>
+                <p className={styles.subtitle}>Elegí una para seguir armándola, o creá una nueva.</p>
+                <button className={styles.newButton} type="button" onClick={() => setCreatingNew(true)}>
+                    ➕ Crear plantilla nueva
+                </button>
+                {error && <p className={styles.error}>{error}</p>}
+                {templates === null && !error && <p className={styles.hint}>Cargando…</p>}
+                {templates && templates.length === 0 && (
+                    <p className={styles.hint}>Todavía no hay plantillas.</p>
+                )}
+                {templates && templates.length > 0 && (
+                    <div className={styles.grid}>
+                        {templates.map(template => (
+                            <button
+                                key={template.id}
+                                className={styles.templateCard}
+                                type="button"
+                                onClick={() => onSelectTemplate(template.id)}
+                            >
+                                {template.thumbnailUrl ? (
+                                    <img alt="" className={styles.thumb} src={template.thumbnailUrl} />
+                                ) : (
+                                    <div className={styles.thumbPlaceholder}>🍎</div>
+                                )}
+                                <span className={styles.templateTitle}>{template.title}</span>
+                                <span className={styles.templateStory}>{template.story}</span>
+                                <span className={styles.templateStory}>{formatDate(template.updatedAt)}</span>
+                            </button>
+                        ))}
+                    </div>
+                )}
+                <button className={styles.backLink} type="button" onClick={onLogout}>
+                    Cerrar sesión
+                </button>
+            </div>
+        </div>
+    );
+};
+
+TemplatePicker.propTypes = {
+    onLogout: PropTypes.func.isRequired,
+    onSelectTemplate: PropTypes.func.isRequired,
+    token: PropTypes.string.isRequired
+};
+
+// exportado para reuso/tests puntuales del skeleton de proyecto en blanco
+export {blankTemplateProjectJson};
+export default TemplatePicker;

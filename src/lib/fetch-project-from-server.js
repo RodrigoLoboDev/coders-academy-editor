@@ -9,7 +9,8 @@ import storage from './storage';
  * @return {Promise<string>} - el projectJson como string, listo para vm.loadProject().
  */
 export default function fetchProjectFromServer (projectId) {
-    return fetch(`${storage.projectHost}/${projectId}`)
+    const headers = storage.authToken ? {Authorization: `Bearer ${storage.authToken}`} : {};
+    return fetch(`${storage.projectHost}/${projectId}`, {headers})
         .then(response => {
             if (!response.ok) {
                 throw new Error(`No se pudo cargar el proyecto (${response.status})`);

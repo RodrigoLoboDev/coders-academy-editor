@@ -20,7 +20,10 @@ export default function saveAssetToServer (projectId, asset) {
     const url = `${storage.assetHost}/${projectId}/assets/${assetType}`;
     return fetch(url, {
         method: 'POST',
-        headers: {'Content-Type': asset.assetType.contentType},
+        headers: {
+            'Content-Type': asset.assetType.contentType,
+            ...(storage.authToken && {Authorization: `Bearer ${storage.authToken}`})
+        },
         body: asset.data
     }).then(response => {
         if (!response.ok) {

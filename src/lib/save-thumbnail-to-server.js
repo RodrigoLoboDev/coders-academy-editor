@@ -10,7 +10,10 @@ export default function saveThumbnailToServer (projectId, blob) {
     const url = `${storage.projectHost}/${projectId}/thumbnail`;
     return fetch(url, {
         method: 'POST',
-        headers: {'Content-Type': 'image/png'},
+        headers: {
+            'Content-Type': 'image/png',
+            ...(storage.authToken && {Authorization: `Bearer ${storage.authToken}`})
+        },
         body: blob
     }).then(response => {
         if (!response.ok) {

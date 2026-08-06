@@ -5,17 +5,32 @@ import AppStateHOC from '../lib/app-state-hoc.jsx';
 import GUI from '../containers/gui.jsx';
 import log from '../lib/log.js';
 import saveThumbnailToServer from '../lib/save-thumbnail-to-server';
+import storage from '../lib/storage';
 import AccessGate from '../components/access-gate/access-gate.jsx';
 import ProjectPicker from '../components/project-picker/project-picker.jsx';
+import TemplatePicker from '../components/template-picker/template-picker.jsx';
 
 // Sobrevive un refresh accidental de la página sin perder al alumno ya identificado (el código de
 // acceso ya se guarda aparte, ver access-gate.jsx) — se borra solo al cerrar la pestaña/navegador,
 // mismo criterio de "barrera de sesión, no de seguridad" que el resto del flujo de acceso.
 const STUDENT_SESSION_KEY = 'ca_editor_student';
+// Mismo criterio para el docente (Fase 4) — acá sí importa la seguridad real (es un token JWT
+// válido de /admin), pero el criterio de "se borra al cerrar la pestaña" sigue siendo el correcto:
+// es una compu compartida del aula, no el dispositivo personal del docente.
+const TEACHER_SESSION_KEY = 'ca_editor_teacher';
 
 const readStoredStudent = () => {
     try {
         const raw = sessionStorage.getItem(STUDENT_SESSION_KEY);
+        return raw ? JSON.parse(raw) : null;
+    } catch {
+        return null;
+    }
+};
+
+const readStoredTeacher = () => {
+    try {
+        const raw = sessionStorage.getItem(TEACHER_SESSION_KEY);
         return raw ? JSON.parse(raw) : null;
     } catch {
         return null;
@@ -60,16 +75,18 @@ const badgeButtonStyle = {
 };
 
 /*
- * Wraps <WrappedGui> con la pantalla de código de acceso + búsqueda de alumno + selector de
- * proyectos (Fase 2, docs/scratch-editor-integration.md del monorepo privado). Después de
- * seleccionar un alumno, solo se guarda/muestra su nombre de pila de acá en adelante — el nombre
- * completo solo existe durante la búsqueda dentro de AccessGate.
+ * Wraps <WrappedGui> con la pantalla de código de acceso + búsqueda de alumno/login docente +
+ * selector de proyectos/plantillas (Fases 2 y 4, docs/scratch-editor-integration.md del monorepo
+ * privado). Después de seleccionar un alumno, solo se guarda/muestra su nombre de pila de acá en
+ * adelante — el nombre completo solo existe durante la búsqueda dentro de AccessGate.
  */
 const PlaygroundApp = ({WrappedGui}) => {
     const [student, setStudent] = useState(readStoredStudent);
-    // undefined: todavía no se eligió — muestra el ProjectPicker. null: "crear nuevo" (proyecto en
-    // blanco). string: id de un proyecto existente a continuar.
+    const [teacher, setTeacher] = useState(readStoredTeacher);
+    // undefined: todavía no se eligió — muestra el picker correspondiente. null (solo alumno):
+    // "crear nuevo" (proyecto en blanco). string: id de un proyecto/plantilla existente.
     const [projectId, setProjectId] = useState(undefined);
+    const [templateId, setTemplateId] = useState(undefined);
 
     const handleSelectStudent = (id, firstName) => {
         const newStudent = {id, firstName};
@@ -83,9 +100,68 @@ const PlaygroundApp = ({WrappedGui}) => {
         setProjectId(undefined);
     };
 
-    if (!student) {
-        return <AccessGate onSelectStudent={handleSelectStudent} />;
+    const handleTeacherLogin = (token, user) => {
+        const newTeacher = {token, name: user.name};
+        sessionStorage.setItem(TEACHER_SESSION_KEY, JSON.stringify(newTeacher));
+        storage.setAuthToken(token);
+        setTeacher(newTeacher);
+    };
+
+    const handleTeacherLogout = () => {
+        sessionStorage.removeItem(TEACHER_SESSION_KEY);
+        storage.setAuthToken(null);
+        setTeacher(null);
+        setTemplateId(undefined);
+    };
+
+    if (!student && !teacher) {
+        return <AccessGate onSelectStudent={handleSelectStudent} onTeacherLogin={handleTeacherLogin} />;
     }
+
+    // ── Modo docente ──────────────────────────────────────────────────────
+    if (teacher) {
+        storage.setAuthToken(teacher.token);
+
+        if (typeof templateId === 'undefined') {
+            return (
+                <TemplatePicker
+                    token={teacher.token}
+                    onLogout={handleTeacherLogout}
+                    onSelectTemplate={id => setTemplateId(id)}
+                />
+            );
+        }
+
+        const apiScratchTemplatesHost = `${process.env.API_URL}/admin/scratch-templates`;
+        return (
+            <React.Fragment>
+                <div style={badgeStyle}>
+                    {teacher.name}
+                    <button style={badgeButtonStyle} type="button" onClick={() => setTemplateId(undefined)}>
+                        Mis plantillas
+                    </button>
+                    <button style={badgeButtonStyle} type="button" onClick={handleTeacherLogout}>
+                        Cerrar sesión
+                    </button>
+                </div>
+                <WrappedGui
+                    canEditTitle
+                    backpackVisible
+                    showComingSoon
+                    canSave
+                    projectHost={apiScratchTemplatesHost}
+                    assetHost={apiScratchTemplatesHost}
+                    projectId={templateId}
+                    onClickLogo={onClickLogo}
+                    onUpdateProjectThumbnail={saveThumbnailToServer}
+                    autoSaveIntervalSecs={90}
+                />
+            </React.Fragment>
+        );
+    }
+
+    // ── Modo alumno ───────────────────────────────────────────────────────
+    storage.setAuthToken(null);
 
     if (typeof projectId === 'undefined') {
         return (

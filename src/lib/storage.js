@@ -51,6 +51,15 @@ class Storage extends ScratchStorage {
         // sola vez al levantar el editor (fetch-shared-scratch-assets.js) — independiente del
         // proyecto que esté abierto, a diferencia de assetMap de arriba.
         this.sharedAssetMap = new Map();
+        // Token de docente/admin (Fase 4) — null en modo alumno. Los endpoints de
+        // /admin/scratch-templates/* requieren JwtAuthGuard+TeacherOrAdminGuard, a diferencia de
+        // /scratch-projects/*, que son públicos. Mismas 4 funciones de fetch/save sirven para
+        // ambos casos (mismas formas de URL, ver render-gui.jsx) — adjuntan este header solo si
+        // está seteado.
+        this.authToken = null;
+    }
+    setAuthToken (token) {
+        this.authToken = token;
     }
     setAssetMap (map) {
         this.assetMap = map;
