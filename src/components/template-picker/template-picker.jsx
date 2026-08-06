@@ -110,6 +110,216 @@ NewTemplateForm.propTypes = {
     onCreate: PropTypes.func.isRequired
 };
 
+// Paso 4.5 — panel de asignación por plantilla: comisión completa (alumnos activos de esa
+// comisión, resuelto server-side, ver ScratchTemplatesService.assign) o alumno individual por
+// nombre (mismo buscador debounced que access-gate.jsx). Vive en un modal propio en vez de una
+// página nueva de /admin — la plantilla y su asignación son un flujo exclusivo del docente dentro
+// del propio editor, no del panel admin del monorepo.
+const AssignPanel = ({token, templateId, templateTitle, onClose}) => {
+    const [commissions, setCommissions] = useState(null);
+    const [commissionsError, setCommissionsError] = useState(null);
+    const [selectedCommissionId, setSelectedCommissionId] = useState('');
+
+    const [assignments, setAssignments] = useState(null);
+    const [assignmentsError, setAssignmentsError] = useState(null);
+
+    const [query, setQuery] = useState('');
+    const [results, setResults] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
+
+    const [assigning, setAssigning] = useState(false);
+    const [assignError, setAssignError] = useState(null);
+    const [assignSuccess, setAssignSuccess] = useState(null);
+
+    const authHeaders = {Authorization: `Bearer ${token}`};
+
+    const loadAssignments = () => {
+        fetch(`${process.env.API_URL}/admin/scratch-templates/${templateId}/assignments`, {
+            headers: authHeaders
+        })
+            .then(response => {
+                if (!response.ok) throw new Error(response.status);
+                return response.json();
+            })
+            .then(setAssignments)
+            .catch(() => setAssignmentsError('No se pudieron cargar las asignaciones.'));
+    };
+
+    useEffect(() => {
+        fetch(`${process.env.API_URL}/commissions`, {headers: authHeaders})
+            .then(response => {
+                if (!response.ok) throw new Error(response.status);
+                return response.json();
+            })
+            .then(setCommissions)
+            .catch(() => setCommissionsError('No se pudieron cargar las comisiones.'));
+        loadAssignments();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [templateId]);
+
+    useEffect(() => {
+        if (query.trim().length < 2) {
+            setResults([]);
+            return;
+        }
+        setIsSearching(true);
+        const timeoutId = setTimeout(() => {
+            fetch(`${process.env.API_URL}/students/search?q=${encodeURIComponent(query.trim())}`)
+                .then(response => {
+                    if (!response.ok) throw new Error(response.status);
+                    return response.json();
+                })
+                .then(setResults)
+                .catch(() => setResults([]))
+                .finally(() => setIsSearching(false));
+        }, 300);
+        return () => clearTimeout(timeoutId);
+    }, [query]);
+
+    const doAssign = body => {
+        setAssigning(true);
+        setAssignError(null);
+        setAssignSuccess(null);
+        fetch(`${process.env.API_URL}/admin/scratch-templates/${templateId}/assign`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', ...authHeaders},
+            body: JSON.stringify(body)
+        })
+            .then(response => {
+                if (!response.ok) throw new Error(response.status);
+                return response.json();
+            })
+            .then(result => {
+                setAssignSuccess(`Asignado a ${result.count} alumno${result.count === 1 ? '' : 's'}.`);
+                loadAssignments();
+            })
+            .catch(() => setAssignError('No se pudo asignar.'))
+            .finally(() => setAssigning(false));
+    };
+
+    const handleAssignCommission = () => {
+        if (!selectedCommissionId) return;
+        doAssign({commissionId: selectedCommissionId});
+    };
+
+    const handleAssignStudent = student => {
+        doAssign({studentIds: [student.id]});
+        setQuery('');
+        setResults([]);
+    };
+
+    const handleRemoveAssignment = assignmentId => {
+        fetch(`${process.env.API_URL}/admin/scratch-template-assignments/${assignmentId}`, {
+            method: 'DELETE',
+            headers: authHeaders
+        })
+            .then(() => loadAssignments())
+            .catch(() => setAssignmentsError('No se pudo quitar la asignación.'));
+    };
+
+    return (
+        <div className={styles.backdrop} onClick={onClose}>
+            <div className={styles.card} onClick={e => e.stopPropagation()}>
+                <h1 className={styles.title}>👥 Asignar</h1>
+                <p className={styles.subtitle}>{templateTitle}</p>
+
+                <label className={styles.label} htmlFor="assign-commission">Por comisión</label>
+                {commissionsError && <p className={styles.error}>{commissionsError}</p>}
+                {commissions && (
+                    <>
+                        <select
+                            className={styles.input}
+                            id="assign-commission"
+                            value={selectedCommissionId}
+                            onChange={e => setSelectedCommissionId(e.target.value)}
+                        >
+                            <option value="">Elegí una comisión…</option>
+                            {commissions.map(commission => (
+                                <option key={commission.id} value={commission.id}>{commission.name}</option>
+                            ))}
+                        </select>
+                        <button
+                            className={styles.newButton}
+                            disabled={assigning || !selectedCommissionId}
+                            style={{marginBottom: 20}}
+                            type="button"
+                            onClick={handleAssignCommission}
+                        >
+                            Asignar a toda la comisión
+                        </button>
+                    </>
+                )}
+
+                <label className={styles.label} htmlFor="assign-student">Por alumno individual</label>
+                <input
+                    className={styles.input}
+                    id="assign-student"
+                    placeholder="Buscá por nombre y apellido"
+                    type="text"
+                    value={query}
+                    onChange={e => setQuery(e.target.value)}
+                />
+                {isSearching && <p className={styles.hint}>Buscando…</p>}
+                {results.length > 0 && (
+                    <div className={styles.resultsList}>
+                        {results.map(student => (
+                            <button
+                                key={student.id}
+                                className={styles.resultItem}
+                                disabled={assigning}
+                                type="button"
+                                onClick={() => handleAssignStudent(student)}
+                            >
+                                {student.firstName} {student.lastName}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                {assignError && <p className={styles.error}>{assignError}</p>}
+                {assignSuccess && <p className={styles.success}>{assignSuccess}</p>}
+
+                <p className={styles.label} style={{marginTop: 20}}>Ya asignada a</p>
+                {assignmentsError && <p className={styles.error}>{assignmentsError}</p>}
+                {assignments === null && !assignmentsError && <p className={styles.hint}>Cargando…</p>}
+                {assignments && assignments.length === 0 && (
+                    <p className={styles.hint}>Todavía no está asignada a nadie.</p>
+                )}
+                {assignments && assignments.length > 0 && (
+                    <div className={styles.assignmentsList}>
+                        {assignments.map(assignment => (
+                            <div key={assignment.id} className={styles.assignmentRow}>
+                                <span>
+                                    {assignment.student.firstName} {assignment.student.lastName}
+                                    {assignment.commission && ` · ${assignment.commission.name}`}
+                                </span>
+                                <button
+                                    className={styles.removeButton}
+                                    type="button"
+                                    onClick={() => handleRemoveAssignment(assignment.id)}
+                                >
+                                    Quitar
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                <button className={styles.backLink} type="button" onClick={onClose}>
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    );
+};
+
+AssignPanel.propTypes = {
+    onClose: PropTypes.func.isRequired,
+    templateId: PropTypes.string.isRequired,
+    templateTitle: PropTypes.string.isRequired,
+    token: PropTypes.string.isRequired
+};
+
 /*
  * Selector de plantillas para el docente — análogo a ProjectPicker, pero contra
  * /admin/scratch-templates (requiere token de docente/admin) en vez de /scratch-projects/:studentId.
@@ -120,6 +330,7 @@ const TemplatePicker = ({token, onSelectTemplate, onLogout}) => {
     const [creatingNew, setCreatingNew] = useState(false);
     const [createError, setCreateError] = useState(null);
     const [submitting, setSubmitting] = useState(false);
+    const [assigningTemplate, setAssigningTemplate] = useState(null);
 
     useEffect(() => {
         fetch(`${process.env.API_URL}/admin/scratch-templates`, {
@@ -186,21 +397,29 @@ const TemplatePicker = ({token, onSelectTemplate, onLogout}) => {
                 {templates && templates.length > 0 && (
                     <div className={styles.grid}>
                         {templates.map(template => (
-                            <button
-                                key={template.id}
-                                className={styles.templateCard}
-                                type="button"
-                                onClick={() => onSelectTemplate(template.id)}
-                            >
-                                {template.thumbnailUrl ? (
-                                    <img alt="" className={styles.thumb} src={template.thumbnailUrl} />
-                                ) : (
-                                    <div className={styles.thumbPlaceholder}>🍎</div>
-                                )}
-                                <span className={styles.templateTitle}>{template.title}</span>
-                                <span className={styles.templateStory}>{template.story}</span>
-                                <span className={styles.templateStory}>{formatDate(template.updatedAt)}</span>
-                            </button>
+                            <div key={template.id} className={styles.templateCard}>
+                                <button
+                                    className={styles.templateCardMain}
+                                    type="button"
+                                    onClick={() => onSelectTemplate(template.id)}
+                                >
+                                    {template.thumbnailUrl ? (
+                                        <img alt="" className={styles.thumb} src={template.thumbnailUrl} />
+                                    ) : (
+                                        <div className={styles.thumbPlaceholder}>🍎</div>
+                                    )}
+                                    <span className={styles.templateTitle}>{template.title}</span>
+                                    <span className={styles.templateStory}>{template.story}</span>
+                                    <span className={styles.templateStory}>{formatDate(template.updatedAt)}</span>
+                                </button>
+                                <button
+                                    className={styles.assignButton}
+                                    type="button"
+                                    onClick={() => setAssigningTemplate(template)}
+                                >
+                                    👥 Asignar
+                                </button>
+                            </div>
                         ))}
                     </div>
                 )}
@@ -208,6 +427,14 @@ const TemplatePicker = ({token, onSelectTemplate, onLogout}) => {
                     Cerrar sesión
                 </button>
             </div>
+            {assigningTemplate && (
+                <AssignPanel
+                    templateId={assigningTemplate.id}
+                    templateTitle={assigningTemplate.title}
+                    token={token}
+                    onClose={() => setAssigningTemplate(null)}
+                />
+            )}
         </div>
     );
 };
