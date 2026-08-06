@@ -24,8 +24,8 @@ const messages = defineMessages({
     }
 });
 
-// Convierte un SharedScratchAsset (assetType "costume") en un objeto "sprite" completo, mismo
-// formato que espera vm.addSprite() — un solo disfraz, sin sonidos ni bloques. rotationCenter fijo
+// Un SharedScratchAsset (assetType "costume") se convierte en un "costume" individual dentro de
+// un sprite — no en un sprite propio, ver groupCostumesIntoSprites más abajo. rotationCenter fijo
 // en el centro del lienzo/viewBox (ver docs/scratch-editor-integration.md Fase 3): el personaje
 // puede no ocupar el área completa, pero el centro geométrico es una aproximación razonable sin
 // pedirle al admin que lo calcule a mano.
@@ -33,28 +33,59 @@ const messages = defineMessages({
 // necesita el truco "diseñar al doble" que sí hace falta en bitmaps: viewBox 300x300,
 // bitmapResolution 1, centro (150,150). PNG (bitmap) sigue la convención 2x: lienzo 600x600,
 // bitmapResolution 2, centro (300,300) — mismo tamaño final en el escenario en ambos casos.
-const sharedAssetToSpriteItem = asset => {
+const sharedAssetToCostume = asset => {
     const isSvg = asset.dataFormat === 'svg';
     return {
+        assetId: asset.md5,
+        name: asset.name,
+        bitmapResolution: isSvg ? 1 : 2,
+        md5ext: `${asset.md5}.${asset.dataFormat}`,
+        dataFormat: asset.dataFormat,
+        rotationCenterX: isSvg ? 150 : 300,
+        rotationCenterY: isSvg ? 150 : 300
+    };
+};
+
+// Agrupa varios SharedScratchAsset con el mismo spriteGroup en un solo sprite con varios
+// disfraces (ej. pose1/pose2 del mismo personaje) — antes de este fix, cada archivo subido se
+// mostraba como un sprite propio de un solo disfraz, gap real encontrado por el usuario probando
+// con arte real de 2+ poses por personaje. Los que no tienen spriteGroup siguen siendo un sprite
+// de un solo disfraz (compatibilidad con lo ya subido antes de este cambio).
+const groupCostumesIntoSprites = costumeAssets => {
+    const grouped = new Map(); // spriteGroup -> array de assets (ya vienen ordenados por costumeOrder)
+    const standalone = [];
+    costumeAssets.forEach(asset => {
+        if (asset.spriteGroup) {
+            if (!grouped.has(asset.spriteGroup)) grouped.set(asset.spriteGroup, []);
+            grouped.get(asset.spriteGroup).push(asset);
+        } else {
+            standalone.push(asset);
+        }
+    });
+
+    const groupedSprites = Array.from(grouped.entries()).map(([spriteGroup, assets]) => ({
+        name: spriteGroup,
+        tags: ['coders-academy'],
+        rawURL: assets[0].cloudinaryUrl,
+        isStage: false,
+        variables: {},
+        costumes: assets.map(sharedAssetToCostume),
+        sounds: [],
+        blocks: {}
+    }));
+
+    const standaloneSprites = standalone.map(asset => ({
         name: asset.name,
         tags: ['coders-academy'],
-        // Miniatura del selector — ver el fix en components/library/library.jsx: nuestro md5 no
-        // existe en el CDN de Scratch, así que la miniatura necesita la URL real de Cloudinary.
         rawURL: asset.cloudinaryUrl,
         isStage: false,
         variables: {},
-        costumes: [{
-            assetId: asset.md5,
-            name: asset.name,
-            bitmapResolution: isSvg ? 1 : 2,
-            md5ext: `${asset.md5}.${asset.dataFormat}`,
-            dataFormat: asset.dataFormat,
-            rotationCenterX: isSvg ? 150 : 300,
-            rotationCenterY: isSvg ? 150 : 300
-        }],
+        costumes: [sharedAssetToCostume(asset)],
         sounds: [],
         blocks: {}
-    };
+    }));
+
+    return groupedSprites.concat(standaloneSprites);
 };
 
 class SpriteLibrary extends React.PureComponent {
@@ -68,7 +99,7 @@ class SpriteLibrary extends React.PureComponent {
     componentDidMount () {
         fetchSharedScratchAssets().then(assets => {
             const costumes = assets.filter(a => a.assetType === 'costume');
-            this.setState({sharedItems: costumes.map(sharedAssetToSpriteItem)});
+            this.setState({sharedItems: groupCostumesIntoSprites(costumes)});
         });
     }
     handleItemSelect (item) {
