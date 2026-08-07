@@ -83,6 +83,17 @@ const baseConfig = new ScratchWebpackConfigBuilder(
                 context: 'node_modules/scratch-vm/dist/web',
                 from: 'extension-worker.{js,js.map}',
                 noErrorOnMissing: true
+            },
+            {
+                // scratch-storage carga este worker en runtime desde 'chunks/fetch-worker.<hash>.js'
+                // (ver dist/web/scratch-storage.js) — sin copiarlo, el archivo no existe en el build
+                // estático y el navegador recibe el index.html del rewrite de SPA en su lugar
+                // (Vercel), que al ejecutarse como JS tira "Unexpected token '<'". No se notaba en
+                // el dev server local porque ahí webpack sirve node_modules igual sin este paso.
+                context: 'node_modules/scratch-storage/dist/web/chunks',
+                from: 'fetch-worker.*.js',
+                to: 'chunks/',
+                noErrorOnMissing: true
             }
         ]
     }));
