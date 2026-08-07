@@ -159,7 +159,6 @@ const PlaygroundApp = ({WrappedGui}) => {
                     projectId={templateId}
                     onClickLogo={onClickLogo}
                     onUpdateProjectThumbnail={saveThumbnailToServer}
-                    autoSaveIntervalSecs={90}
                 />
             </React.Fragment>
         );
@@ -210,7 +209,6 @@ const PlaygroundApp = ({WrappedGui}) => {
                 projectId={effectiveProjectId}
                 onClickLogo={onClickLogo}
                 onUpdateProjectThumbnail={saveThumbnailToServer}
-                autoSaveIntervalSecs={90}
             />
         </React.Fragment>
     );

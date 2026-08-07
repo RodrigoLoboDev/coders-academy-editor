@@ -74,9 +74,14 @@ const ProjectSaverHOC = function (WrappedComponent) {
                 this.reportTelemetryEvent('projectDidLoad');
             }
 
-            if (this.props.projectChanged && !prevProps.projectChanged) {
-                this.scheduleAutoSave();
-            }
+            // Autosave periódico deshabilitado a propósito (decisión Coders Academy, 07/08/2026):
+            // el guardado real pasa únicamente por el botón "Guardar ahora" del menú (dispatch de
+            // `manualUpdateProject()` en menu-bar.jsx / save-status.jsx), un flujo totalmente
+            // separado de este HOC. Antes, cualquier cambio disparaba `scheduleAutoSave()` acá y
+            // guardaba solo con que el alumno/docente dejara de tocar el proyecto por
+            // `autoSaveIntervalSecs` segundos — se saca esa llamada (no se borra
+            // scheduleAutoSave/tryToAutoSave ni el reducer de timeout, quedan sin uso pero
+            // documentados acá por si se necesita reactivar el mecanismo en el futuro).
             if (this.props.isUpdating && !prevProps.isUpdating) {
                 this.updateProjectToStorage();
             }
