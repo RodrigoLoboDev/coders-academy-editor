@@ -119,6 +119,7 @@ const GUIComponent = props => {
         onTelemetryModalCancel,
         onTelemetryModalOptIn,
         onTelemetryModalOptOut,
+        rightContent,
         showComingSoon,
         soundsTabVisible,
         stageSizeMode,
@@ -250,6 +251,7 @@ const GUIComponent = props => {
                     onShare={onShare}
                     onStartSelectingFileUpload={onStartSelectingFileUpload}
                     onToggleLoginOpen={onToggleLoginOpen}
+                    rightContent={rightContent}
                 />
                 <Box className={styles.bodyWrapper}>
                     <Box className={styles.flexWrapper}>
@@ -438,6 +440,10 @@ GUIComponent.propTypes = {
     onTelemetryModalOptOut: PropTypes.func,
     onToggleLoginOpen: PropTypes.func,
     renderLogin: PropTypes.func,
+    // Sesión 32 — contenido libre que se agrega al final de la barra (nombre del alumno/docente +
+    // acciones de sesión), reemplaza al badge flotante que vivía fuera de <WrappedGui> en
+    // render-gui.jsx. Pasa de acá directo a <MenuBar rightContent={...} />.
+    rightContent: PropTypes.node,
     showComingSoon: PropTypes.bool,
     soundsTabVisible: PropTypes.bool,
     stageSizeMode: PropTypes.oneOf(Object.keys(STAGE_SIZE_MODES)),

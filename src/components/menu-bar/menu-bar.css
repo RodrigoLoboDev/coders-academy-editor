@@ -164,6 +164,12 @@
     margin: 0 0 0 .25rem;
 }
 
+/* Sesión 32 — toggle de modo oscuro adentro de la barra, ver dark-mode-toggle.jsx */
+.dark-mode-toggle-icon {
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
 .account-nav-menu, .mystuff-button {
     padding: 0 .25rem;
     display: flex;

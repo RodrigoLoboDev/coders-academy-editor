@@ -10,7 +10,6 @@ import AccessGate from '../components/access-gate/access-gate.jsx';
 import ProjectPicker from '../components/project-picker/project-picker.jsx';
 import TemplatePicker from '../components/template-picker/template-picker.jsx';
 import PublicPlayer from '../components/public-player/public-player.jsx';
-import {isDarkMode} from '../lib/dark-mode';
 
 // Sobrevive un refresh accidental de la página sin perder al alumno ya identificado (el código de
 // acceso ya se guarda aparte, ver access-gate.jsx) — se borra solo al cerrar la pestaña/navegador,
@@ -53,26 +52,25 @@ const handleTelemetryModalOptOut = () => {
     log('User opted out of telemetry');
 };
 
-// Constantes calculadas una sola vez al cargar el módulo — el toggle de modo oscuro (Fase 6, ver
-// lib/dark-mode.js) fuerza un reload completo de la página al cambiar, así que estas nunca quedan
-// desactualizadas dentro de una misma sesión.
-const badgeStyle = {
-    position: 'fixed',
-    top: 6,
-    right: 12,
-    zIndex: 1001,
+// Sesión 32 — nombre del alumno/docente + acciones de sesión, ahora vive DENTRO de la barra del
+// editor (prop `rightContent` de <WrappedGui>, ver menu-bar.jsx) en vez de flotar como badge fuera
+// de ella. La barra tiene texto blanco siempre (`.menu-bar { color: $ui-white }` en menu-bar.css),
+// en los dos temas — a diferencia del badge flotante viejo, acá no hace falta condicionar el color
+// según `isDarkMode()`.
+const sessionInfoStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    padding: '0 12px',
     fontSize: '0.8rem',
-    color: isDarkMode() ? '#e8edff' : '#575e75',
-    background: isDarkMode() ? '#1a2340' : '#f4f4fb',
-    padding: '4px 10px',
-    borderRadius: 12
+    color: '#ffffff',
+    whiteSpace: 'nowrap'
 };
 
-const badgeButtonStyle = {
-    marginLeft: 8,
+const sessionButtonStyle = {
+    marginLeft: 10,
     background: 'none',
     border: 'none',
-    color: isDarkMode() ? '#8a95ff' : '#1a1aad',
+    color: '#ffffff',
     textDecoration: 'underline',
     cursor: 'pointer',
     fontSize: '0.8rem',
@@ -99,11 +97,18 @@ const PlaygroundApp = ({WrappedGui}) => {
         setStudent(newStudent);
     };
 
-    const handleChangeStudent = () => {
+    // Sesión 32 — antes se llamaba "cambiar de alumno" y era la única salida disponible desde
+    // ambas pantallas (badge del editor y botón de ProjectPicker). Ahora es exclusivamente "salir
+    // del todo, volver a la pantalla de rol" — usada solo desde el botón "Salir" de ProjectPicker.
+    // Para volver a los proyectos del MISMO alumno sin salir de la sesión, ver
+    // handleBackToProjects más abajo (nuevo, usado desde la barra del editor).
+    const handleExitToStart = () => {
         sessionStorage.removeItem(STUDENT_SESSION_KEY);
         setStudent(null);
         setProjectId(undefined);
     };
+
+    const handleBackToProjects = () => setProjectId(undefined);
 
     const handleTeacherLogin = (token, user) => {
         const newTeacher = {token, name: user.name};
@@ -138,29 +143,29 @@ const PlaygroundApp = ({WrappedGui}) => {
         }
 
         const apiScratchTemplatesHost = `${process.env.API_URL}/admin/scratch-templates`;
+        const teacherRightContent = (
+            <div style={sessionInfoStyle}>
+                {teacher.name}
+                <button style={sessionButtonStyle} type="button" onClick={() => setTemplateId(undefined)}>
+                    Mis plantillas
+                </button>
+                <button style={sessionButtonStyle} type="button" onClick={handleTeacherLogout}>
+                    Cerrar sesión
+                </button>
+            </div>
+        );
         return (
-            <React.Fragment>
-                <div style={badgeStyle}>
-                    {teacher.name}
-                    <button style={badgeButtonStyle} type="button" onClick={() => setTemplateId(undefined)}>
-                        Mis plantillas
-                    </button>
-                    <button style={badgeButtonStyle} type="button" onClick={handleTeacherLogout}>
-                        Cerrar sesión
-                    </button>
-                </div>
-                <WrappedGui
-                    canEditTitle
-                    backpackVisible
-                    showComingSoon
-                    canSave
-                    projectHost={apiScratchTemplatesHost}
-                    assetHost={apiScratchTemplatesHost}
-                    projectId={templateId}
-                    onClickLogo={onClickLogo}
-                    onUpdateProjectThumbnail={saveThumbnailToServer}
-                />
-            </React.Fragment>
+            <WrappedGui
+                canEditTitle
+                backpackVisible
+                canSave
+                projectHost={apiScratchTemplatesHost}
+                assetHost={apiScratchTemplatesHost}
+                projectId={templateId}
+                rightContent={teacherRightContent}
+                onClickLogo={onClickLogo}
+                onUpdateProjectThumbnail={saveThumbnailToServer}
+            />
         );
     }
 
@@ -171,8 +176,8 @@ const PlaygroundApp = ({WrappedGui}) => {
         return (
             <ProjectPicker
                 studentId={student.id}
-                onChangeStudent={handleChangeStudent}
                 onCreateNew={() => setProjectId(null)}
+                onExit={handleExitToStart}
                 onSelectProject={id => setProjectId(id)}
             />
         );
@@ -187,30 +192,27 @@ const PlaygroundApp = ({WrappedGui}) => {
     // reducers/project-state.js) para que sí dispare esa carga — mismo id que usaba HashParserHOC.
     const effectiveProjectId = projectId === null ? '0' : projectId;
 
+    const studentRightContent = (
+        <div style={sessionInfoStyle}>
+            {student.firstName}
+            <button style={sessionButtonStyle} type="button" onClick={handleBackToProjects}>
+                Volver a mis proyectos
+            </button>
+        </div>
+    );
+
     return (
-        <React.Fragment>
-            <div style={badgeStyle}>
-                {student.firstName}
-                <button
-                    style={badgeButtonStyle}
-                    type="button"
-                    onClick={handleChangeStudent}
-                >
-                    Cambiar
-                </button>
-            </div>
-            <WrappedGui
-                canEditTitle
-                backpackVisible
-                showComingSoon
-                canSave
-                projectHost={apiScratchProjectsHost}
-                assetHost={apiScratchProjectsHost}
-                projectId={effectiveProjectId}
-                onClickLogo={onClickLogo}
-                onUpdateProjectThumbnail={saveThumbnailToServer}
-            />
-        </React.Fragment>
+        <WrappedGui
+            canEditTitle
+            backpackVisible
+            canSave
+            projectHost={apiScratchProjectsHost}
+            assetHost={apiScratchProjectsHost}
+            projectId={effectiveProjectId}
+            rightContent={studentRightContent}
+            onClickLogo={onClickLogo}
+            onUpdateProjectThumbnail={saveThumbnailToServer}
+        />
     );
 };
 

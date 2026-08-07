@@ -19,7 +19,7 @@ const formatDate = isoString => new Date(isoString).toLocaleDateString('es-AR', 
 // window.location.origin ya apunta al puerto correcto del propio webpack-dev-server.
 const publicPlayUrl = projectId => `${window.location.origin}/jugar/${projectId}`;
 
-const ProjectPicker = ({studentId, onSelectProject, onCreateNew, onChangeStudent}) => {
+const ProjectPicker = ({studentId, onSelectProject, onCreateNew, onExit}) => {
     const [projects, setProjects] = useState(null);
     const [error, setError] = useState(null);
     const [togglingId, setTogglingId] = useState(null);
@@ -106,8 +106,11 @@ const ProjectPicker = ({studentId, onSelectProject, onCreateNew, onChangeStudent
                         ))}
                     </div>
                 )}
-                <button className={styles.backLink} type="button" onClick={onChangeStudent}>
-                    No soy yo, cambiar de alumno
+                {/* Sesión 32 — antes "No soy yo, cambiar de alumno" (buscaba otro alumno sin
+                salir de la sesión). Ahora es una salida completa: vuelve a la pantalla inicial
+                de rol (¿sos alumno o docente?), ver handleExitToStart en render-gui.jsx. */}
+                <button className={styles.backLink} type="button" onClick={onExit}>
+                    🚪 Salir
                 </button>
             </div>
         </div>
@@ -115,8 +118,8 @@ const ProjectPicker = ({studentId, onSelectProject, onCreateNew, onChangeStudent
 };
 
 ProjectPicker.propTypes = {
-    onChangeStudent: PropTypes.func.isRequired,
     onCreateNew: PropTypes.func.isRequired,
+    onExit: PropTypes.func.isRequired,
     onSelectProject: PropTypes.func.isRequired,
     studentId: PropTypes.string.isRequired
 };

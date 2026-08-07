@@ -10,14 +10,15 @@ import ReactDOM from 'react-dom';
 import AppStateHOC from '../lib/app-state-hoc.jsx';
 import BrowserModalComponent from '../components/browser-modal/browser-modal.jsx';
 import supportedBrowser from '../lib/supported-browser';
-import {initDarkMode, mountDarkModeToggle} from '../lib/dark-mode';
+import {initDarkMode} from '../lib/dark-mode';
 
 import styles from './index.css';
 
 // Fase 6 — antes de montar cualquier árbol de React: deja el atributo data-theme y la cookie de
-// colores de bloques ya seteados para el primer render (ver lib/dark-mode.js).
+// colores de bloques ya seteados para el primer render (ver lib/dark-mode.js). El botón de
+// toggle ya no se monta acá afuera (sesión 32) — vive adentro de la barra del editor, ver
+// components/menu-bar/dark-mode-toggle.jsx.
 initDarkMode();
-mountDarkModeToggle();
 
 const appTarget = document.createElement('div');
 appTarget.className = styles.app;
