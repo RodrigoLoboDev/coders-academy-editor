@@ -256,3 +256,67 @@
     cursor: pointer;
     text-decoration: underline;
 }
+
+/* Fase 6 — modo oscuro (ver src/lib/dark-mode.js) */
+:global([data-theme="dark"]) .card {
+    background: #161e33;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+:global([data-theme="dark"]) .title,
+:global([data-theme="dark"]) .backLink {
+    color: #8a95ff;
+}
+
+:global([data-theme="dark"]) .subtitle,
+:global([data-theme="dark"]) .hint,
+:global([data-theme="dark"]) .templateStory,
+:global([data-theme="dark"]) .assignmentRow {
+    color: #9aa6c2;
+}
+
+:global([data-theme="dark"]) .templateCard {
+    background: #1a2340;
+}
+
+:global([data-theme="dark"]) .templateTitle {
+    color: #e8edff;
+}
+
+:global([data-theme="dark"]) .assignButton {
+    color: #8a95ff;
+    background: rgba(138, 149, 255, 0.12);
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+:global([data-theme="dark"]) .assignButton:hover {
+    background: rgba(138, 149, 255, 0.2);
+}
+
+:global([data-theme="dark"]) .thumb,
+:global([data-theme="dark"]) .thumbPlaceholder {
+    background: #0f1629;
+}
+
+:global([data-theme="dark"]) .resultItem,
+:global([data-theme="dark"]) .assignmentRow {
+    background: #1a2340;
+}
+
+:global([data-theme="dark"]) .resultItem {
+    color: #e8edff;
+}
+
+:global([data-theme="dark"]) .resultItem:hover {
+    background: #232d52;
+}
+
+:global([data-theme="dark"]) .input {
+    background: #0f1629;
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #e8edff;
+}
+
+:global([data-theme="dark"]) .label {
+    color: #8a95ff;
+}

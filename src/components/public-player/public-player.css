@@ -70,3 +70,21 @@
     overflow: auto;
     background: #e8e8f5;
 }
+
+/* Fase 6 — modo oscuro (ver src/lib/dark-mode.js) */
+:global([data-theme="dark"]) .card {
+    background: #161e33;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+:global([data-theme="dark"]) .title {
+    color: #8a95ff;
+}
+
+:global([data-theme="dark"]) .subtitle {
+    color: #9aa6c2;
+}
+
+:global([data-theme="dark"]) .stageArea {
+    background: #0f1629;
+}

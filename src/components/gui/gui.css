@@ -317,3 +317,11 @@ $fade-out-distance: 15px;
 :global(.ReactModal__Body--open) {
     overflow: hidden;
 }
+
+/* Fase 6 (docs/scratch-editor-integration.md, monorepo privado) — modo oscuro "híbrido": solo el
+   chrome principal (este wrapper + menu-bar.css), no cada panel interno del editor (paleta de
+   bloques, lista de sprites, etc. quedan con su fondo claro original — alcance acordado con el
+   usuario para no encarar el refactor completo a variables CSS que eso requeriría). */
+:global([data-theme="dark"]) .page-wrapper {
+    background: #0f1629;
+}

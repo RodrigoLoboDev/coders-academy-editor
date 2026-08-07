@@ -10,8 +10,14 @@ import ReactDOM from 'react-dom';
 import AppStateHOC from '../lib/app-state-hoc.jsx';
 import BrowserModalComponent from '../components/browser-modal/browser-modal.jsx';
 import supportedBrowser from '../lib/supported-browser';
+import {initDarkMode, mountDarkModeToggle} from '../lib/dark-mode';
 
 import styles from './index.css';
+
+// Fase 6 — antes de montar cualquier árbol de React: deja el atributo data-theme y la cookie de
+// colores de bloques ya seteados para el primer render (ver lib/dark-mode.js).
+initDarkMode();
+mountDarkModeToggle();
 
 const appTarget = document.createElement('div');
 appTarget.className = styles.app;

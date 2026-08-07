@@ -1,12 +1,15 @@
 import cookie from 'cookie';
 
-import {DEFAULT_THEME, HIGH_CONTRAST_THEME} from '.';
+import {DEFAULT_THEME, HIGH_CONTRAST_THEME, DARK_THEME} from '.';
 
 const PREFERS_HIGH_CONTRAST_QUERY = '(prefers-contrast: more)';
 const COOKIE_KEY = 'scratchtheme';
 
-// Dark mode isn't enabled yet
-const isValidTheme = theme => [DEFAULT_THEME, HIGH_CONTRAST_THEME].includes(theme);
+// Fase 6 (docs/scratch-editor-integration.md, monorepo privado) — el tema "dark" de colores de
+// bloques ya venía escrito en el fork original (lib/themes/dark/) pero excluido acá y en
+// ThemeMenu.enabledThemes. Lo habilitamos solo para el recoloreo de bloques — el chrome
+// (menú/paneles) se oscurece aparte via lib/dark-mode.js, no por este mecanismo.
+const isValidTheme = theme => [DEFAULT_THEME, HIGH_CONTRAST_THEME, DARK_THEME].includes(theme);
 
 const systemPreferencesTheme = () => {
     if (window.matchMedia && window.matchMedia(PREFERS_HIGH_CONTRAST_QUERY).matches) return HIGH_CONTRAST_THEME;

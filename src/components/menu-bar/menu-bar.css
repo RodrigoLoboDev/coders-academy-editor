@@ -236,3 +236,9 @@
         margin-right: 0;
     }
 }
+
+/* Fase 6 (docs/scratch-editor-integration.md, monorepo privado) — modo oscuro "híbrido", ver
+   src/lib/dark-mode.js y la nota de alcance en gui.css */
+:global([data-theme="dark"]) .menu-bar {
+    background-color: #1a1aad;
+}

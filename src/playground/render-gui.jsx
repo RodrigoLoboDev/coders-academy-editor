@@ -10,6 +10,7 @@ import AccessGate from '../components/access-gate/access-gate.jsx';
 import ProjectPicker from '../components/project-picker/project-picker.jsx';
 import TemplatePicker from '../components/template-picker/template-picker.jsx';
 import PublicPlayer from '../components/public-player/public-player.jsx';
+import {isDarkMode} from '../lib/dark-mode';
 
 // Sobrevive un refresh accidental de la página sin perder al alumno ya identificado (el código de
 // acceso ya se guarda aparte, ver access-gate.jsx) — se borra solo al cerrar la pestaña/navegador,
@@ -52,14 +53,17 @@ const handleTelemetryModalOptOut = () => {
     log('User opted out of telemetry');
 };
 
+// Constantes calculadas una sola vez al cargar el módulo — el toggle de modo oscuro (Fase 6, ver
+// lib/dark-mode.js) fuerza un reload completo de la página al cambiar, así que estas nunca quedan
+// desactualizadas dentro de una misma sesión.
 const badgeStyle = {
     position: 'fixed',
     top: 6,
     right: 12,
     zIndex: 1001,
     fontSize: '0.8rem',
-    color: '#575e75',
-    background: '#f4f4fb',
+    color: isDarkMode() ? '#e8edff' : '#575e75',
+    background: isDarkMode() ? '#1a2340' : '#f4f4fb',
     padding: '4px 10px',
     borderRadius: 12
 };
@@ -68,7 +72,7 @@ const badgeButtonStyle = {
     marginLeft: 8,
     background: 'none',
     border: 'none',
-    color: '#1a1aad',
+    color: isDarkMode() ? '#8a95ff' : '#1a1aad',
     textDecoration: 'underline',
     cursor: 'pointer',
     fontSize: '0.8rem',
