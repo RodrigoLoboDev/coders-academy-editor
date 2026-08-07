@@ -1,5 +1,6 @@
-import React, {useState} from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom';
+import {BrowserRouter, Routes, Route, Navigate, useNavigate, useParams} from 'react-router-dom';
 
 import AppStateHOC from '../lib/app-state-hoc.jsx';
 import GUI from '../containers/gui.jsx';
@@ -52,9 +53,9 @@ const handleTelemetryModalOptOut = () => {
     log('User opted out of telemetry');
 };
 
-// Sesión 32 — nombre del alumno/docente + acciones de sesión, ahora vive DENTRO de la barra del
-// editor (prop `rightContent` de <WrappedGui>, ver menu-bar.jsx) en vez de flotar como badge fuera
-// de ella. La barra tiene texto blanco siempre (`.menu-bar { color: $ui-white }` en menu-bar.css),
+// Sesión 32 — nombre del alumno/docente + acciones de sesión vive DENTRO de la barra del editor
+// (prop `rightContent` de <WrappedGui>, ver menu-bar.jsx) en vez de flotar como badge fuera de
+// ella. La barra tiene texto blanco siempre (`.menu-bar { color: $ui-white }` en menu-bar.css),
 // en los dos temas — a diferencia del badge flotante viejo, acá no hace falta condicionar el color
 // según `isDarkMode()`.
 const sessionInfoStyle = {
@@ -77,144 +78,218 @@ const sessionButtonStyle = {
     padding: 0
 };
 
+// Sesión 33 — routing real con react-router (docs/scratch-editor-integration.md, monorepo
+// privado). Antes todo el flujo (AccessGate → picker → editor) era una state machine adentro de
+// un solo componente, sin tocar nunca la URL — el navegador siempre mostraba
+// crear.codersacademy.com.ar sin importar la pantalla. Ahora cada pantalla tiene su propia ruta:
+// no cambia la lógica de sesión (sigue en sessionStorage, sobrevive un refresh), solo se le suma
+// una URL real por encima — permite compartir/recargar en la pantalla en la que estás y usar
+// atrás/adelante del navegador. El catch-all de Vercel (vercel.json) y `historyApiFallback` del
+// dev server (webpack.config.js) ya cubrían esto de antes, no hizo falta tocar infra.
+const PATHS = {
+    role: '/',
+    projects: '/proyectos',
+    editor: id => `/editor/${id}`,
+    templates: '/docente/plantillas',
+    template: id => `/docente/plantilla/${id}`
+};
+
 /*
- * Wraps <WrappedGui> con la pantalla de código de acceso + búsqueda de alumno/login docente +
- * selector de proyectos/plantillas (Fases 2 y 4, docs/scratch-editor-integration.md del monorepo
- * privado). Después de seleccionar un alumno, solo se guarda/muestra su nombre de pila de acá en
- * adelante — el nombre completo solo existe durante la búsqueda dentro de AccessGate.
+ * Pantalla inicial: si ya hay sesión de alumno o docente guardada (refresh, o volver con
+ * atrás/adelante del navegador), redirige directo a su picker en vez de mostrar el rol de nuevo.
  */
-const PlaygroundApp = ({WrappedGui}) => {
-    const [student, setStudent] = useState(readStoredStudent);
-    const [teacher, setTeacher] = useState(readStoredTeacher);
-    // undefined: todavía no se eligió — muestra el picker correspondiente. null (solo alumno):
-    // "crear nuevo" (proyecto en blanco). string: id de un proyecto/plantilla existente.
-    const [projectId, setProjectId] = useState(undefined);
-    const [templateId, setTemplateId] = useState(undefined);
+const RoleRoute = () => {
+    const navigate = useNavigate();
+    const student = readStoredStudent();
+    const teacher = readStoredTeacher();
+
+    if (student) return <Navigate replace to={PATHS.projects} />;
+    if (teacher) return <Navigate replace to={PATHS.templates} />;
 
     const handleSelectStudent = (id, firstName) => {
-        const newStudent = {id, firstName};
-        sessionStorage.setItem(STUDENT_SESSION_KEY, JSON.stringify(newStudent));
-        setStudent(newStudent);
+        sessionStorage.setItem(STUDENT_SESSION_KEY, JSON.stringify({id, firstName}));
+        navigate(PATHS.projects);
     };
-
-    // Sesión 32 — antes se llamaba "cambiar de alumno" y era la única salida disponible desde
-    // ambas pantallas (badge del editor y botón de ProjectPicker). Ahora es exclusivamente "salir
-    // del todo, volver a la pantalla de rol" — usada solo desde el botón "Salir" de ProjectPicker.
-    // Para volver a los proyectos del MISMO alumno sin salir de la sesión, ver
-    // handleBackToProjects más abajo (nuevo, usado desde la barra del editor).
-    const handleExitToStart = () => {
-        sessionStorage.removeItem(STUDENT_SESSION_KEY);
-        setStudent(null);
-        setProjectId(undefined);
-    };
-
-    const handleBackToProjects = () => setProjectId(undefined);
 
     const handleTeacherLogin = (token, user) => {
-        const newTeacher = {token, name: user.name};
-        sessionStorage.setItem(TEACHER_SESSION_KEY, JSON.stringify(newTeacher));
+        sessionStorage.setItem(TEACHER_SESSION_KEY, JSON.stringify({token, name: user.name}));
         storage.setAuthToken(token);
-        setTeacher(newTeacher);
+        navigate(PATHS.templates);
     };
 
-    const handleTeacherLogout = () => {
-        sessionStorage.removeItem(TEACHER_SESSION_KEY);
-        storage.setAuthToken(null);
-        setTeacher(null);
-        setTemplateId(undefined);
-    };
+    return <AccessGate onSelectStudent={handleSelectStudent} onTeacherLogin={handleTeacherLogin} />;
+};
 
-    if (!student && !teacher) {
-        return <AccessGate onSelectStudent={handleSelectStudent} onTeacherLogin={handleTeacherLogin} />;
-    }
+/*
+ * Guarda de ruta: sin sesión del rol pedido, vuelve a "/" en vez de mostrar la pantalla rota
+ * (ej. entrar directo a /editor/xyz por URL sin haber elegido alumno antes).
+ */
+const RequireStudent = ({children}) => {
+    const student = readStoredStudent();
+    if (!student) return <Navigate replace to={PATHS.role} />;
+    return children(student);
+};
 
-    // ── Modo docente ──────────────────────────────────────────────────────
-    if (teacher) {
-        storage.setAuthToken(teacher.token);
+const RequireTeacher = ({children}) => {
+    const teacher = readStoredTeacher();
+    if (!teacher) return <Navigate replace to={PATHS.role} />;
+    storage.setAuthToken(teacher.token);
+    return children(teacher);
+};
 
-        if (typeof templateId === 'undefined') {
-            return (
-                <TemplatePicker
-                    token={teacher.token}
-                    onLogout={handleTeacherLogout}
-                    onSelectTemplate={id => setTemplateId(id)}
-                />
-            );
-        }
-
-        const apiScratchTemplatesHost = `${process.env.API_URL}/admin/scratch-templates`;
-        const teacherRightContent = (
-            <div style={sessionInfoStyle}>
-                {teacher.name}
-                <button style={sessionButtonStyle} type="button" onClick={() => setTemplateId(undefined)}>
-                    Mis plantillas
-                </button>
-                <button style={sessionButtonStyle} type="button" onClick={handleTeacherLogout}>
-                    Cerrar sesión
-                </button>
-            </div>
-        );
-        return (
-            <WrappedGui
-                canEditTitle
-                backpackVisible
-                canSave
-                projectHost={apiScratchTemplatesHost}
-                assetHost={apiScratchTemplatesHost}
-                projectId={templateId}
-                rightContent={teacherRightContent}
-                onClickLogo={onClickLogo}
-                onUpdateProjectThumbnail={saveThumbnailToServer}
-            />
-        );
-    }
-
-    // ── Modo alumno ───────────────────────────────────────────────────────
-    storage.setAuthToken(null);
-
-    if (typeof projectId === 'undefined') {
-        return (
-            <ProjectPicker
-                studentId={student.id}
-                onCreateNew={() => setProjectId(null)}
-                onExit={handleExitToStart}
-                onSelectProject={id => setProjectId(id)}
-            />
-        );
-    }
-
-    const apiScratchProjectsHost = `${process.env.API_URL}/scratch-projects/${student.id}`;
-    // ProjectFetcherHOC (containers/project-fetcher-hoc.jsx) solo despacha setProjectId en su
-    // constructor si projectId no es null/undefined/'' — con projectId=null (nuestro "crear
-    // nuevo") nunca dispara nada, y sin HashParserHOC (sacado en el Paso 2.2, ver más abajo) ya no
-    // hay ningún otro lado que dispare la carga del proyecto en blanco por defecto: ni el gato ni
-    // el Stage aparecían. Se traduce null a '0' (defaultProjectId, sentinela hardcodeado en
-    // reducers/project-state.js) para que sí dispare esa carga — mismo id que usaba HashParserHOC.
-    const effectiveProjectId = projectId === null ? '0' : projectId;
-
-    const studentRightContent = (
-        <div style={sessionInfoStyle}>
-            {student.firstName}
-            <button style={sessionButtonStyle} type="button" onClick={handleBackToProjects}>
-                Volver a mis proyectos
-            </button>
-        </div>
-    );
-
+const ProjectsRoute = () => {
+    const navigate = useNavigate();
     return (
-        <WrappedGui
-            canEditTitle
-            backpackVisible
-            canSave
-            projectHost={apiScratchProjectsHost}
-            assetHost={apiScratchProjectsHost}
-            projectId={effectiveProjectId}
-            rightContent={studentRightContent}
-            onClickLogo={onClickLogo}
-            onUpdateProjectThumbnail={saveThumbnailToServer}
-        />
+        <RequireStudent>
+            {student => (
+                <ProjectPicker
+                    studentId={student.id}
+                    onCreateNew={() => navigate(PATHS.editor('nuevo'))}
+                    onExit={() => {
+                        sessionStorage.removeItem(STUDENT_SESSION_KEY);
+                        navigate(PATHS.role);
+                    }}
+                    onSelectProject={id => navigate(PATHS.editor(id))}
+                />
+            )}
+        </RequireStudent>
     );
 };
+
+const StudentEditorRoute = ({WrappedGui}) => {
+    const navigate = useNavigate();
+    const {projectId} = useParams();
+
+    return (
+        <RequireStudent>
+            {student => {
+                const apiScratchProjectsHost = `${process.env.API_URL}/scratch-projects/${student.id}`;
+                // ProjectFetcherHOC (containers/project-fetcher-hoc.jsx) solo despacha
+                // setProjectId en su constructor si projectId no es null/undefined/'' — 'nuevo'
+                // (nuestro slug de URL para "crear proyecto en blanco") se traduce acá a '0'
+                // (defaultProjectId, sentinela hardcodeado en reducers/project-state.js) para que
+                // sí dispare esa carga. Mismo id que usaba el viejo HashParserHOC, ver más abajo
+                // por qué no se usa ese HOC.
+                const effectiveProjectId = projectId === 'nuevo' ? '0' : projectId;
+
+                const studentRightContent = (
+                    <div style={sessionInfoStyle}>
+                        {student.firstName}
+                        <button
+                            style={sessionButtonStyle}
+                            type="button"
+                            onClick={() => navigate(PATHS.projects)}
+                        >
+                            Volver a mis proyectos
+                        </button>
+                    </div>
+                );
+
+                return (
+                    <WrappedGui
+                        canEditTitle
+                        backpackVisible
+                        canSave
+                        projectHost={apiScratchProjectsHost}
+                        assetHost={apiScratchProjectsHost}
+                        projectId={effectiveProjectId}
+                        rightContent={studentRightContent}
+                        onClickLogo={onClickLogo}
+                        onUpdateProjectThumbnail={saveThumbnailToServer}
+                    />
+                );
+            }}
+        </RequireStudent>
+    );
+};
+
+const TemplatesRoute = () => {
+    const navigate = useNavigate();
+    return (
+        <RequireTeacher>
+            {teacher => (
+                <TemplatePicker
+                    token={teacher.token}
+                    onLogout={() => {
+                        sessionStorage.removeItem(TEACHER_SESSION_KEY);
+                        storage.setAuthToken(null);
+                        navigate(PATHS.role);
+                    }}
+                    onSelectTemplate={id => navigate(PATHS.template(id))}
+                />
+            )}
+        </RequireTeacher>
+    );
+};
+
+const TeacherEditorRoute = ({WrappedGui}) => {
+    const navigate = useNavigate();
+    const {templateId} = useParams();
+
+    return (
+        <RequireTeacher>
+            {teacher => {
+                const apiScratchTemplatesHost = `${process.env.API_URL}/admin/scratch-templates`;
+                const teacherRightContent = (
+                    <div style={sessionInfoStyle}>
+                        {teacher.name}
+                        <button
+                            style={sessionButtonStyle}
+                            type="button"
+                            onClick={() => navigate(PATHS.templates)}
+                        >
+                            Mis plantillas
+                        </button>
+                        <button
+                            style={sessionButtonStyle}
+                            type="button"
+                            onClick={() => {
+                                sessionStorage.removeItem(TEACHER_SESSION_KEY);
+                                storage.setAuthToken(null);
+                                navigate(PATHS.role);
+                            }}
+                        >
+                            Cerrar sesión
+                        </button>
+                    </div>
+                );
+
+                return (
+                    <WrappedGui
+                        canEditTitle
+                        backpackVisible
+                        canSave
+                        projectHost={apiScratchTemplatesHost}
+                        assetHost={apiScratchTemplatesHost}
+                        projectId={templateId}
+                        rightContent={teacherRightContent}
+                        onClickLogo={onClickLogo}
+                        onUpdateProjectThumbnail={saveThumbnailToServer}
+                    />
+                );
+            }}
+        </RequireTeacher>
+    );
+};
+
+const PublicPlayerRoute = ({WrappedGui}) => {
+    const {projectId} = useParams();
+    return <PublicPlayer WrappedGui={WrappedGui} projectId={projectId} onClickLogo={onClickLogo} />;
+};
+
+const PlaygroundRouter = ({WrappedGui}) => (
+    <BrowserRouter>
+        <Routes>
+            <Route element={<RoleRoute />} path={PATHS.role} />
+            <Route element={<ProjectsRoute />} path={PATHS.projects} />
+            <Route element={<StudentEditorRoute WrappedGui={WrappedGui} />} path="/editor/:projectId" />
+            <Route element={<TemplatesRoute />} path={PATHS.templates} />
+            <Route element={<TeacherEditorRoute WrappedGui={WrappedGui} />} path="/docente/plantilla/:templateId" />
+            <Route element={<PublicPlayerRoute WrappedGui={WrappedGui} />} path="/jugar/:projectId" />
+            <Route element={<Navigate replace to={PATHS.role} />} path="*" />
+        </Routes>
+    </BrowserRouter>
+);
 
 /*
  * Render the GUI playground. This is a separate function because importing anything
@@ -227,28 +302,14 @@ export default appTarget => {
     // Sin HashParserHOC a propósito: ese HOC del fork original lee el id de proyecto del #hash de
     // la URL (mecanismo legacy del playground de scratch-www) y en su componentDidMount despacha
     // "no hay hash, cargá el proyecto en blanco" incondicionalmente — pisando el projectId real que
-    // le pasamos por prop (ver PlaygroundApp) justo cuando empieza a cargar. Bug real encontrado en
-    // el Paso 2.2: elegir un proyecto ya guardado se quedaba colgado para siempre en "Cargando
-    // proyecto"/"Creando el proyecto" superpuestos — nuestro fetch real llegaba bien (sin error de
-    // red), pero el reducer de project-state ya había pisado el loadingState a FETCHING_NEW_DEFAULT
-    // por el hash vacío, así que el DONE_FETCHING_WITH_ID de nuestro fetch quedaba descartado en
-    // silencio. No usamos URLs con #hash para elegir proyecto — nuestro propio AccessGate +
-    // ProjectPicker ya cumplen ese rol — así que este HOC no aporta nada acá, solo rompe.
+    // le pasamos por prop justo cuando empieza a cargar. Bug real encontrado en el Paso 2.2: elegir
+    // un proyecto ya guardado se quedaba colgado para siempre en "Cargando proyecto"/"Creando el
+    // proyecto" superpuestos — nuestro fetch real llegaba bien (sin error de red), pero el reducer
+    // de project-state ya había pisado el loadingState a FETCHING_NEW_DEFAULT por el hash vacío, así
+    // que el DONE_FETCHING_WITH_ID de nuestro fetch quedaba descartado en silencio. Nuestro propio
+    // AccessGate + ProjectPicker + el router (sesión 33) ya cumplen el rol de elegir proyecto por
+    // URL — este HOC no aporta nada acá, solo rompe.
     const WrappedGui = AppStateHOC(GUI);
-
-    // Fase 5 — vista pública de solo lectura, sin AccessGate/login: /jugar/:projectId. No hay
-    // react-router en esta app (todo el resto del flujo ya es un state machine simple dentro de
-    // <PlaygroundApp>, ver comentario ahí), así que el path se lee directo de window.location acá,
-    // antes de decidir qué árbol montar. webpack.config.js tiene devServer.historyApiFallback para
-    // que esta ruta cargue bien en dev — el mismo rewrite hace falta en el hosting final (Fase 7).
-    const jugarMatch = window.location.pathname.match(/^\/jugar\/([^/]+)\/?$/);
-    if (jugarMatch) {
-        ReactDOM.render(
-            <PublicPlayer WrappedGui={WrappedGui} projectId={jugarMatch[1]} onClickLogo={onClickLogo} />,
-            appTarget
-        );
-        return;
-    }
 
     const scratchDesktopMatches = window.location.href.match(/[?&]isScratchDesktop=([^&]+)/);
     let simulateScratchDesktop;
@@ -280,6 +341,6 @@ export default appTarget => {
                 onTelemetryModalOptIn={handleTelemetryModalOptIn}
                 onTelemetryModalOptOut={handleTelemetryModalOptOut}
             /> :
-            <PlaygroundApp WrappedGui={WrappedGui} />,
+            <PlaygroundRouter WrappedGui={WrappedGui} />,
         appTarget);
 };
