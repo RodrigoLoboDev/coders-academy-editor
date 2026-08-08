@@ -6,6 +6,17 @@
  */
 export default function (vm, useCatBlocks) {
     const ScratchBlocks = useCatBlocks ? require('cat-blocks') : require('scratch-blocks');
+
+    // Sesión 34 — parche en runtime, no en node_modules (se perdería en cualquier reinstalación).
+    // scratch-blocks trae hardcodeado `Toolbox.prototype.width = 310` (= 250px del flyout de
+    // bloques + 60px de la barra de categorías, ver node_modules/scratch-blocks/core/toolbox.js) —
+    // nunca se recalcula solo a partir del DOM/CSS real. Al ensanchar la barra de categorías de
+    // 60px a 80px (.scratchCategoryMenu en gui.css) ese total quedó desactualizado: el flyout de
+    // bloques seguía posicionándose asumiendo un ancho de barra viejo, tapando ~20px de bloques.
+    // Si el ancho de .scratchCategoryMenu vuelve a cambiar, este número tiene que cambiar junto
+    // (250 + ancho real de la barra en px).
+    ScratchBlocks.Toolbox.prototype.width = 330;
+
     const jsonForMenuBlock = function (name, menuOptionsFn, colors, start) {
         return {
             message0: '%1',

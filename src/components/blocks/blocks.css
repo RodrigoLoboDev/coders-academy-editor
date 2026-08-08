@@ -88,9 +88,16 @@
     Shrink category font to fit "My Blocks" for now.
     Probably will need different solutions for language support later, so
     make the change here instead of in scratch-blocks.
+
+    Sesión 34 — esta es la regla real que manda sobre el tamaño de letra de las categorías
+    (Movimiento/Apariencia/...), no la de gui.css (.scratchCategoryMenu { font-size }), que tiene
+    menos especificidad (1 clase vs. 2 acá) y por eso nunca tuvo efecto visual pese a varios
+    intentos subiendo su valor — encontrado recién por el usuario inspeccionando con DevTools.
+    0.65rem (original) → 0.85rem, valor confirmado a ojo por el usuario en el propio inspector
+    antes de aplicarlo acá.
 */
 .blocks :global(.scratchCategoryMenuItemLabel) {
-    font-size: 0.65rem;
+    font-size: 0.85rem;
 }
 
 .blocks :global(.blocklyMinimalBody) {

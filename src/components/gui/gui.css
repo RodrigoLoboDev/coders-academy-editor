@@ -229,7 +229,11 @@
 }
 
 .extension-button-container {
-    width: 3.75rem;
+    /* Sesión 34 — ancho sincronizado a mano con .scratchCategoryMenu más abajo en este mismo
+       archivo (60px→80px): el comentario original ("To match scratch-block vertical toolbox
+       borders") ya dejaba claro que este valor tiene que coincidir con el ancho real de la barra
+       de categorías, si uno cambia el otro tiene que cambiar igual. */
+    width: 5rem;
     height: 3.25rem;
     position: absolute;
     bottom: 0;
@@ -352,4 +356,64 @@ $fade-out-distance: 15px;
    :global() apuntando directo a esa clase. */
 :global([data-theme="dark"] .blocklyFlyoutLabelText) {
     fill: #ffffff;
+}
+
+/* Sesión 34 — sidebar de categorías (Movimiento/Apariencia/Sonido/...). Mismo mecanismo que el
+   label de arriba: no es React, lo dibuja scratch-blocks con su propio CSS inyectado en runtime
+   (node_modules/scratch-blocks/core/css.js,
+   .scratchCategoryMenu/.scratchCategoryMenuItem/.scratchCategoryItemBubble/.scratchCategoryItemIcon).
+   Ancho de la barra 60px→80px — con la letra más grande (el tamaño real se controla en
+   src/components/blocks/blocks.css, `.blocks :global(.scratchCategoryMenuItemLabel)` — esa regla
+   tiene más especificidad que cualquier font-size que se ponga acá sobre .scratchCategoryMenu,
+   por más que se herede por cascada normalmente; varios intentos de subir el tamaño desde ACÁ no
+   tuvieron ningún efecto visual hasta que el usuario encontró la regla real por DevTools), texto
+   como "Operadores" no entraba en los 60px originales sin cortarse. El botón de extensiones al
+   pie de la barra (.extension-button-container, más arriba en este archivo) se sincronizó a mano
+   al mismo ancho. No depende de data-theme, aplica en los dos modos. */
+:global(.scratchCategoryMenu) {
+    width: 80px;
+}
+
+/* Cada nombre de categoría con el mismo color que su propio círculo — antes todos compartían un
+   solo color de texto plano ($colour_toolboxText). node_modules/scratch-blocks/core/toolbox.js
+   agrega una clase única por categoría (`scratchCategoryId-<id>`) al div de cada ítem, y el texto
+   vive en un div hijo `.scratchCategoryMenuItemLabel` — eso permite apuntar a cada uno por
+   separado. Colores = los mismos "primary" de cada categoría en
+   src/lib/themes/default/index.js (iguales en los dos temas, blocks no cambian entre modos, ver
+   más arriba en este mismo archivo). El id de la categoría (ej. "variables") no siempre coincide
+   con la clave del tema (ej. "data") — mapeo hecho a mano contra src/lib/make-toolbox-xml.js. */
+:global(.scratchCategoryId-motion .scratchCategoryMenuItemLabel) {
+    color: #4c97ff;
+}
+
+:global(.scratchCategoryId-looks .scratchCategoryMenuItemLabel) {
+    color: #9966ff;
+}
+
+:global(.scratchCategoryId-sound .scratchCategoryMenuItemLabel) {
+    color: #cf63cf;
+}
+
+:global(.scratchCategoryId-events .scratchCategoryMenuItemLabel) {
+    color: #ffbf00;
+}
+
+:global(.scratchCategoryId-control .scratchCategoryMenuItemLabel) {
+    color: #ffab19;
+}
+
+:global(.scratchCategoryId-sensing .scratchCategoryMenuItemLabel) {
+    color: #5cb1d6;
+}
+
+:global(.scratchCategoryId-operators .scratchCategoryMenuItemLabel) {
+    color: #59c059;
+}
+
+:global(.scratchCategoryId-variables .scratchCategoryMenuItemLabel) {
+    color: #ff8c1a;
+}
+
+:global(.scratchCategoryId-myBlocks .scratchCategoryMenuItemLabel) {
+    color: #ff6680;
 }
