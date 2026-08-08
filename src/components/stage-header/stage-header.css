@@ -78,3 +78,12 @@
 [dir="rtl"] .stage-button-icon {
     transform: scaleX(-1);
 }
+
+/* Sesión 34 — solo el fondo de la franja detrás del menú del escenario cambia. Los botones
+   (.stage-button, .stage-size-row) se dejan sin tocar a propósito: son botones, y los íconos SVG
+   (icon--fullscreen.svg, icon--large/small-stage.svg) están coloreados en gris/violeta oscuro
+   fijo — se volverían ilegibles sobre un fondo oscuro sin re-exportar esos archivos, que no hace
+   falta si el botón en sí queda igual en los dos modos. */
+:global([data-theme="dark"]) .stage-header-wrapper-overlay {
+    background-color: #1f1f1f;
+}

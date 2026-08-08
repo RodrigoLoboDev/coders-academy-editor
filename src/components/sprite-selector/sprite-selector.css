@@ -125,3 +125,10 @@
     background: black;
     filter: opacity(15%) brightness(0%);
 }
+
+/* Sesión 34 — solo el panel que contiene los sprites cambia de fondo; cada tarjeta de sprite
+   (sprite-selector-item.css) se deja sin tocar a propósito, mismo criterio que el resto de la
+   sesión ("los sprites... eso no se afecta"). */
+:global([data-theme="dark"]) .sprite-selector {
+    background-color: #1f1f1f;
+}

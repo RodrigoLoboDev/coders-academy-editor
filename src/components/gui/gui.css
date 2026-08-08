@@ -318,10 +318,38 @@ $fade-out-distance: 15px;
     overflow: hidden;
 }
 
-/* Fase 6 (docs/scratch-editor-integration.md, monorepo privado) — modo oscuro "híbrido": solo el
-   chrome principal (este wrapper + menu-bar.css), no cada panel interno del editor (paleta de
-   bloques, lista de sprites, etc. quedan con su fondo claro original — alcance acordado con el
-   usuario para no encarar el refactor completo a variables CSS que eso requeriría). */
-:global([data-theme="dark"]) .page-wrapper {
-    background: #0f1629;
+/* Sesión 34 — modo oscuro ampliado a todos los paneles del editor (antes solo el chrome
+   principal, ver Fase 6 en docs/scratch-editor-integration.md). Alcance explícito: cambian los
+   FONDOS (workspace de bloques, escenario, lista de sprites, biblioteca/tutoriales) y el TEXTO
+   sobre esos fondos — los bloques en sí, los botones y las imágenes de los sprites NO cambian
+   (ver src/lib/themes/dark/index.js para el fix de los colores de bloques).
+   Paso 2 — paleta re-alineada a los tonos reales de mBlock (analizados pixel a pixel desde una
+   captura, ver docs/scratch-editor-integration.md): marco/recesado #000000, panel base #1F1F1F,
+   superficie elevada #363636, texto #E5E5E5. Reemplaza los navys (#0F1629/#1C2440) usados en la
+   primera pasada de esta misma sesión — esos quedan solo en la barra superior propia (mismo
+   criterio: la barra es marca, el editor en sí sigue la paleta neutra de mBlock). */
+:global([data-theme="dark"]) .body-wrapper {
+    background-color: #1f1f1f;
+}
+
+:global([data-theme="dark"]) .tab {
+    background-color: #000000;
+    color: #b3b3b3;
+}
+
+:global([data-theme="dark"]) .tab:hover {
+    background-color: #141414;
+}
+
+:global([data-theme="dark"]) .tab.is-selected {
+    background-color: #1f1f1f;
+}
+
+/* El nombre de categoría que aparece arriba de los bloques al abrir el cajón (ej. "Movimiento") no
+   es un componente de React — lo dibuja scratch-blocks directamente como texto SVG, con su propio
+   CSS inyectado en tiempo de ejecución (node_modules/scratch-blocks/core/css.js,
+   .blocklyFlyoutLabelText, fill fijo #575E75). No se puede tocar como el resto de este archivo, vía
+   :global() apuntando directo a esa clase. */
+:global([data-theme="dark"] .blocklyFlyoutLabelText) {
+    fill: #ffffff;
 }

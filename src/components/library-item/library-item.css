@@ -203,3 +203,12 @@
 [dir="rtl"] .coming-soon-text {
     transform: translate(calc(-2 * $space), calc(2 * $space));
 }
+
+/* Sesión 34 — mismo criterio que sprite-selector-item.css: la tarjeta (fondo/borde/texto) cambia,
+   la imagen del sprite/disfraz/fondo dentro de la tarjeta no se toca. Cubre el modal "Elige un
+   objeto"/"Elige un fondo"/"Elige una extensión", que comparten este mismo componente. */
+:global([data-theme="dark"]) .library-item {
+    background: #363636;
+    color: #e5e5e5;
+    border-color: rgba(255, 255, 255, 0.15);
+}

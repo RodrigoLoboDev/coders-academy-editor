@@ -73,3 +73,30 @@
 .sprite-input {
     width: 8rem;
 }
+
+/* Sesión 34 (paso 2) — gap real encontrado al comparar contra mBlock: este panel (nombre del
+   objeto, x/y, Mostrar, Tamaño, Dirección) seguía blanco puro en modo oscuro, `background-color:
+   white` hardcodeado, nunca apareció en el grep de $ui-primary/secondary/tertiary de la ronda
+   anterior. No es "el sprite" en sí (esa imagen vive aparte, sin tocar) — es un panel de
+   propiedades con texto e inputs, igual que el resto de los paneles ya oscurecidos. Los inputs de
+   adentro (x, y, tamaño, dirección) usan la superficie elevada (#363636), mismo criterio que
+   mBlock para sus campos editables. */
+:global([data-theme="dark"]) .sprite-info {
+    background-color: #1f1f1f;
+    color: #e5e5e5;
+}
+
+/* Selector de elemento nativo (`input`), no de clase — `.input-form` (forms/input.css) es otro
+   módulo CSS, su nombre real en el DOM sale hasheado por css-loader y no se puede referenciar
+   como string literal acá. `input` como tag siempre matchea sin importar qué clase tenga. */
+:global([data-theme="dark"]) .sprite-info input {
+    background-color: #363636;
+    color: #e5e5e5;
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+:global([data-theme="dark"]) .rotation-select {
+    background-color: #363636;
+    color: #e5e5e5;
+    border-color: rgba(255, 255, 255, 0.15);
+}

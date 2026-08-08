@@ -1,78 +1,95 @@
+/*
+ * Sesión 34 — los colores de categoría (primary/secondary/tertiary/quaternary) de cada bloque se
+ * igualaron a los de `../default/index.js`: a pedido explícito del usuario, los bloques en sí NO
+ * cambian entre modo claro/oscuro, solo los fondos (workspace/toolbox/flyout) y el texto. Antes
+ * el tema "dark" que trae scratch-gui de fábrica sí recoloreaba cada categoría a un tono casi
+ * negro (ej. motion.primary pasaba de "#4C97FF" a "#0F1E33") — eso quedó descartado acá.
+ */
 const blockColors = {
     motion: {
-        primary: '#0F1E33',
-        secondary: '#4C4C4C',
-        tertiary: '#4C97FF',
-        quaternary: '#4C97FF'
+        primary: '#4C97FF',
+        secondary: '#4280D7',
+        tertiary: '#3373CC',
+        quaternary: '#3373CC'
     },
     looks: {
-        primary: '#1E1433',
-        secondary: '#4C4C4C',
-        tertiary: '#9966FF',
-        quaternary: '#9966FF'
+        primary: '#9966FF',
+        secondary: '#855CD6',
+        tertiary: '#774DCB',
+        quaternary: '#774DCB'
     },
     sounds: {
-        primary: '#291329',
-        secondary: '#4C4C4C',
-        tertiary: '#CF63CF',
-        quaternary: '#CF63CF'
+        primary: '#CF63CF',
+        secondary: '#C94FC9',
+        tertiary: '#BD42BD',
+        quaternary: '#BD42BD'
     },
     control: {
-        primary: '#332205',
-        secondary: '#4C4C4C',
-        tertiary: '#FFAB19',
-        quaternary: '#FFAB19'
+        primary: '#FFAB19',
+        secondary: '#EC9C13',
+        tertiary: '#CF8B17',
+        quaternary: '#CF8B17'
     },
     event: {
-        primary: '#332600',
-        secondary: '#4C4C4C',
-        tertiary: '#FFBF00',
-        quaternary: '#FFBF00'
+        primary: '#FFBF00',
+        secondary: '#E6AC00',
+        tertiary: '#CC9900',
+        quaternary: '#CC9900'
     },
     sensing: {
-        primary: '#12232A',
-        secondary: '#4C4C4C',
-        tertiary: '#5CB1D6',
-        quaternary: '#5CB1D6'
+        primary: '#5CB1D6',
+        secondary: '#47A8D1',
+        tertiary: '#2E8EB8',
+        quaternary: '#2E8EB8'
     },
     pen: {
-        primary: '#03251C',
-        secondary: '#4C4C4C',
-        tertiary: '#0fBD8C',
-        quaternary: '#0fBD8C'
+        primary: '#0fBD8C',
+        secondary: '#0DA57A',
+        tertiary: '#0B8E69',
+        quaternary: '#0B8E69'
     },
     operators: {
-        primary: '#112611',
-        secondary: '#4C4C4C',
-        tertiary: '#59C059',
-        quaternary: '#59C059'
+        primary: '#59C059',
+        secondary: '#46B946',
+        tertiary: '#389438',
+        quaternary: '#389438'
     },
     data: {
-        primary: '#331C05',
-        secondary: '#4C4C4C',
-        tertiary: '#FF8C1A',
-        quaternary: '#FF8C1A'
+        primary: '#FF8C1A',
+        secondary: '#FF8000',
+        tertiary: '#DB6E00',
+        quaternary: '#DB6E00'
     },
     data_lists: {
-        primary: '#331405',
-        secondary: '#4C4C4C',
-        tertiary: '#FF661A',
-        quaternary: '#FF661A'
+        primary: '#FF661A',
+        secondary: '#FF5500',
+        tertiary: '#E64D00',
+        quaternary: '#E64D00'
     },
     more: {
-        primary: '#331419',
-        secondary: '#4C4C4C',
-        tertiary: '#FF6680',
-        quaternary: '#FF6680'
+        primary: '#FF6680',
+        secondary: '#FF4D6A',
+        tertiary: '#FF3355',
+        quaternary: '#FF3355'
     },
-    text: 'rgba(255, 255, 255, .7)',
-    textFieldText: '#E5E5E5',
-    workspace: '#121212',
-    toolboxSelected: '#4C4C4C',
+    // Igual que default (#FFFFFF) — antes era un blanco 70% opaco, la única diferencia real entre
+    // ambos temas era esta línea ya que los bloques quedan idénticos.
+    text: '#FFFFFF',
+    // textField/textFieldText: el cuadrito editable dentro de un bloque (ej. el "10" de "mover 10
+    // pasos") — a pedido del usuario, siempre fondo blanco y letra oscura, igual que default,
+    // nunca el gris oscuro que traía el tema "dark" de fábrica. Mismo criterio que el resto de
+    // "los bloques no cambian": esto es parte del bloque, no del fondo del workspace.
+    textFieldText: '#575E75',
+    // Sesión 34 (paso 2) — tonos alineados a los de mBlock (analizados pixel a pixel desde una
+    // captura real, ver docs/scratch-editor-integration.md): panel base #1F1F1F, superficie
+    // elevada/interactiva #363636. Antes era #121212/#4C4C4C, un gris ligeramente distinto sin
+    // relación con ninguna referencia concreta.
+    workspace: '#1f1f1f',
+    toolboxSelected: '#363636',
     toolboxText: '#E5E5E5',
-    toolbox: '#121212',
-    flyout: '#121212',
-    textField: '#4C4C4C',
+    toolbox: '#1f1f1f',
+    flyout: '#1f1f1f',
+    textField: '#FFFFFF',
     menuHover: 'rgba(255, 255, 255, 0.3)'
 };
 

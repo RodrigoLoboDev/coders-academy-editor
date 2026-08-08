@@ -117,3 +117,25 @@ $header-height: calc($stage-menu-height - 2px);
     90% { box-shadow: 0 0 10px #7fff1e; }
     100% { box-shadow: none; }
 }
+
+/* Sesión 34 — la tarjeta "Escenario" (selector de fondo) se había dejado sin tocar a propósito,
+   tratándola igual que una tarjeta de sprite ("los sprites no cambian"). El usuario aclaró que acá
+   sí debe cambiar — es el panel donde se eligen los fondos, no el fondo en sí. La miniatura del
+   fondo actual (.costume-canvas) se deja sin tocar, esa sí es el equivalente a la imagen de un
+   sprite. El estado "seleccionado" (.header con $looks-secondary) no se toca, ya es nuestro azul
+   propio en los dos modos. */
+:global([data-theme="dark"]) .stage-selector {
+    background-color: #1f1f1f;
+    color: #e5e5e5;
+}
+
+:global([data-theme="dark"]) .header {
+    background-color: #1f1f1f;
+    color: #e5e5e5;
+}
+
+:global([data-theme="dark"]) .header-title,
+:global([data-theme="dark"]) .count,
+:global([data-theme="dark"]) .label {
+    color: #e5e5e5;
+}

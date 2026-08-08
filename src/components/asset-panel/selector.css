@@ -83,3 +83,16 @@ $fade-out-distance: 100px;
     background: white;
     filter: opacity(15%) brightness(0%);
 }
+
+/* Sesión 34 — panel de disfraces/sonidos (Costumes/Sounds). Cada tile individual (asset-panel-item)
+   se deja sin tocar, mismo criterio que sprites. Los botones de abajo (.new-buttons) no cambian —
+   son botones — pero el degradé que los precede sí, porque no es un botón, es el mismo fondo del
+   panel difuminado a transparente (estaba hardcodeado en gris claro, quedaría como una mancha
+   clara sobre el panel oscuro si no se actualiza junto con .wrapper). */
+:global([data-theme="dark"]) .wrapper {
+    background: #1f1f1f;
+}
+
+:global([data-theme="dark"]) .new-buttons:before {
+    background: linear-gradient(rgba(31, 31, 31, 0), rgba(31, 31, 31, 1));
+}

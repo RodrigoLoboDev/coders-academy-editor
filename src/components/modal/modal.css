@@ -168,3 +168,14 @@ $sides: 20rem;
 [dir="rtl"] .help-button {
     padding-left: 0;
 }
+
+/* Sesión 34 — el header de la barra del modal (.header) usa $looks-secondary, ya es nuestro azul
+   eléctrico propio en los dos modos, no hace falta tocarlo. Solo el modal a pantalla completa
+   (biblioteca/tutoriales) — el resto de los modales del fork (prompts, conexión, telemetría, etc.)
+   quedan fuera de esta ronda, siguen con fondo claro en los dos modos, así que su texto NO se
+   puede tocar acá sin volverlo ilegible (texto claro sobre fondo claro). Scopeado a
+   `.full-screen` a propósito, no a `.modal-content` en general. */
+:global([data-theme="dark"]) .modal-content.full-screen {
+    background-color: #1f1f1f;
+    color: #e5e5e5;
+}

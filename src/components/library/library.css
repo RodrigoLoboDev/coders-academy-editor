@@ -86,3 +86,14 @@
     align-items: center;
     justify-content: center;
 }
+
+/* Sesión 34 — biblioteca (sprites/disfraces/fondos/extensiones) y "Tutoriales" comparten este
+   mismo componente (Library). Cada tarjeta individual (library-item.css) se deja sin tocar, mismo
+   criterio que los sprites. */
+:global([data-theme="dark"]) .library-scroll-grid {
+    background: #1f1f1f;
+}
+
+:global([data-theme="dark"]) .library-category-title {
+    color: #e5e5e5;
+}

@@ -121,3 +121,26 @@
 [dir="rtl"] .number {
     right: 0.15rem;
 }
+
+/* Sesión 34 — cambio de decisión a pedido del usuario: antes se dejaba cada tarjeta de sprite sin
+   tocar (mismo criterio que "los sprites no cambian"). Ahora sí cambia la tarjeta (fondo, borde,
+   texto) — la imagen del sprite en sí (.sprite-image) sigue sin tocarse, es el dibujo real del
+   personaje. Es una regla de CSS sobre el componente, no algo por-sprite: aplica igual a
+   cualquier sprite que se agregue después, no hace falta nada especial por sprite nuevo.
+   Superficie elevada (#363636, mismo tono que los inputs) en vez de blanco — tanto para la
+   tarjeta sin seleccionar como la seleccionada/hover, la selección se sigue viendo por el borde
+   azul (`$looks-secondary`), no hace falta un segundo tono de fondo para distinguirla. */
+:global([data-theme="dark"]) .sprite-selector-item {
+    background: #363636;
+    color: #e5e5e5;
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+:global([data-theme="dark"]) .sprite-selector-item.is-selected,
+:global([data-theme="dark"]) .sprite-selector-item:hover {
+    background: #363636;
+}
+
+:global([data-theme="dark"]) .sprite-info {
+    color: #e5e5e5;
+}
