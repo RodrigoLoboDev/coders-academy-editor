@@ -1,3 +1,9 @@
+/*
+ * Sesión 34 — mismo reskin de marca que access-gate.css (navy + indigo/ámbar + robot JEN), 100%
+ * desktop sin breakpoints mobile (compus del aula). Ya no respeta el toggle de modo oscuro del
+ * editor (`data-theme`) — ver el comentario largo en access-gate.css para el porqué completo.
+ */
+
 .backdrop {
     position: fixed;
     inset: 0;
@@ -5,221 +11,444 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(180deg, #1a1aad 0%, #2b2be0 100%);
+    padding: 24px;
+    background: #0a0f1c;
+    background-image:
+        radial-gradient(900px 520px at 8% -8%, rgba(108, 123, 255, 0.16), transparent 60%),
+        radial-gradient(820px 520px at 96% 0%, rgba(255, 176, 46, 0.1), transparent 55%),
+        radial-gradient(circle, rgba(255, 255, 255, 0.05) 1.1px, transparent 1.1px);
+    background-size: auto, auto, 24px 24px;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    overflow-y: auto;
-    padding: 16px;
 }
 
 .card {
+    display: flex;
+    flex-direction: column;
     width: 100%;
-    max-width: 640px;
-    margin: 16px 0;
-    padding: 32px;
-    border-radius: 16px;
-    background: #ffffff;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+    max-width: 1160px;
+    height: min(84vh, 800px);
+    border-radius: 24px;
+    background: #161e33;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+    overflow: hidden;
+}
+
+/* ── Header ────────────────────────────────────────────────────────────── */
+
+.header {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 16px;
+    padding: 22px 28px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.searchWrap {
+    position: relative;
+    justify-self: start;
+    width: 100%;
+    max-width: 280px;
+}
+
+.searchIcon {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    transform: translateY(-50%);
+    font-size: 0.95rem;
+    opacity: 0.6;
+}
+
+.searchInput {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 14px 10px 38px;
+    font-size: 0.95rem;
+    color: #eef2fb;
+    background: #1c2440;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+.searchInput::placeholder {
+    color: #5f6c8c;
+}
+
+.searchInput:focus {
+    border-color: rgba(108, 123, 255, 0.6);
 }
 
 .title {
-    margin: 0 0 8px;
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #1a1aad;
-}
-
-.subtitle {
-    margin: 0 0 24px;
-    font-size: 0.95rem;
-    color: #575e75;
-}
-
-.newButton {
-    width: 100%;
-    padding: 16px;
-    margin-bottom: 24px;
-    font-size: 1.05rem;
+    margin: 0;
+    justify-self: center;
+    font-size: 1.35rem;
     font-weight: bold;
     color: #ffffff;
-    background: #00c97a;
-    border: none;
-    border-radius: 8px;
+    white-space: nowrap;
+}
+
+.closeButton {
+    justify-self: end;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
+    color: #9aa6c2;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
     cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.closeButton:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* ── Grid de proyectos ─────────────────────────────────────────────────── */
+
+.content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 24px 28px;
 }
 
 .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 18px;
 }
 
+/* min-width:0 es la fix estándar de CSS Grid — sin esto, un ítem `1fr` nunca se achica más allá
+   del ancho mínimo de su contenido (min-width:auto implícito), así que un nombre de proyecto
+   largo empuja esa columna, el grid entero se corre más ancho que .content y aparece scroll
+   horizontal. El truncado con ellipsis de .projectTitle ya depende de que esto esté seteado. */
 .projectCard {
     display: flex;
     flex-direction: column;
-    align-items: stretch;
-    padding: 0;
-    background: #f4f4fb;
+    min-width: 0;
+    aspect-ratio: 0.82;
+    background: #1c2440;
     border: 2px solid transparent;
-    border-radius: 12px;
-    overflow: hidden;
-    text-align: left;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, transform 0.15s ease;
 }
 
 .projectCard:hover {
-    border-color: #1a1aad;
+    border-color: rgba(108, 123, 255, 0.4);
 }
 
-.projectCardMain {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    padding: 0;
-    background: none;
-    border: none;
-    cursor: pointer;
-    text-align: left;
+.projectCardSelected {
+    border-color: #6c7bff;
+    box-shadow: 0 0 0 3px rgba(108, 123, 255, 0.25);
 }
 
-.projectActions {
-    display: flex;
-    border-top: 1px solid #d9d9e6;
-}
-
-.publishButton {
-    flex: 1;
-    padding: 8px 6px;
-    font-size: 0.72rem;
-    font-weight: bold;
-    color: #1a1aad;
-    background: #e8e8fb;
-    border: none;
-    cursor: pointer;
-}
-
-.publishButton:hover {
-    background: #d9d9f5;
-}
-
-.publishButton:disabled {
-    opacity: 0.5;
-    cursor: default;
-}
-
-.playLink {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px 10px;
-    font-size: 0.72rem;
-    font-weight: bold;
-    color: #ffffff;
-    background: #00c97a;
-    border: none;
-    border-left: 1px solid #d9d9e6;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-.playLink:hover {
-    background: #00b06a;
+/* El redondeado de las esquinas de arriba vive acá (no en .projectCard con overflow:hidden como
+   antes) — así el submenú "⋮" puede salirse del borde de la card en vez de quedar recortado
+   adentro. Las esquinas de abajo no necesitan clip propio: .meta no tiene fondo propio, se ve el
+   de .projectCard (ya redondeado) por transparencia. */
+.thumbWrap {
+    flex: 3;
+    min-height: 0;
+    overflow: hidden;
+    border-radius: 12px 12px 0 0;
+    background: #0f1629;
 }
 
 .thumb {
     width: 100%;
-    aspect-ratio: 4 / 3;
+    height: 100%;
     object-fit: cover;
-    background: #d9d9e6;
+    display: block;
 }
 
 .thumbPlaceholder {
     width: 100%;
-    aspect-ratio: 4 / 3;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
-    background: #d9d9e6;
+    font-size: 2.2rem;
+}
+
+.meta {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 8px 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.metaText {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
 }
 
 .projectTitle {
-    padding: 8px 10px 2px;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: bold;
-    color: #1a1aad;
+    color: #eef2fb;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
+.renameInput {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 1px 4px;
+    margin: -1px -4px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    font-family: inherit;
+    color: #eef2fb;
+    background: #0f1629;
+    border: 1px solid rgba(108, 123, 255, 0.6);
+    border-radius: 4px;
+    outline: none;
+}
+
 .projectDate {
-    padding: 0 10px 10px;
-    font-size: 0.75rem;
-    color: #9696b8;
+    margin-top: 2px;
+    font-size: 0.72rem;
+    color: #9aa6c2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Submenú "⋮" ───────────────────────────────────────────────────────── */
+
+.menuAnchor {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.menuButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    font-size: 1.1rem;
+    line-height: 1;
+    color: #9aa6c2;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.menuButton:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.projectMenu {
+    position: absolute;
+    z-index: 50;
+    bottom: calc(100% + 6px);
+    right: 0;
+    min-width: 148px;
+    padding: 4px;
+    background: #1c2440;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.5);
+    text-align: left;
+}
+
+.projectMenuItem {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 6px 8px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #eef2fb;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.projectMenuItem:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.projectMenuItem:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.projectMenuDivider {
+    margin: 4px 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.projectMenuItemDanger {
+    composes: projectMenuItem;
+    color: #fb7185;
+}
+
+.projectMenuItemDanger:hover {
+    background: rgba(251, 113, 133, 0.12);
 }
 
 .hint {
     margin-top: 8px;
-    font-size: 0.9rem;
-    color: #9696b8;
+    font-size: 0.95rem;
+    color: #9aa6c2;
     text-align: center;
 }
 
-.backLink {
-    display: block;
-    margin-top: 24px;
-    text-align: center;
-    background: none;
+/* ── Footer ────────────────────────────────────────────────────────────── */
+
+.footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 18px 28px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footerButtonPrimary,
+.footerButtonSecondary {
+    padding: 11px 20px;
+    font-size: 0.92rem;
+    font-weight: bold;
     border: none;
-    padding: 0;
-    color: #1a1aad;
-    font-size: 0.9rem;
+    border-radius: 10px;
     cursor: pointer;
-    text-decoration: underline;
+    transition: transform 0.15s ease, filter 0.15s ease, background 0.15s ease;
 }
 
-/* Fase 6 — modo oscuro (ver src/lib/dark-mode.js) */
-:global([data-theme="dark"]) .card {
+.footerButtonPrimary {
+    color: #3a2a06;
+    background: linear-gradient(180deg, #ffc65c, #ffb02e);
+    box-shadow: 0 10px 24px -10px rgba(255, 176, 46, 0.55);
+}
+
+.footerButtonPrimary:hover {
+    filter: brightness(1.05);
+}
+
+.footerButtonPrimary:active {
+    transform: scale(0.98);
+}
+
+.footerButtonSecondary {
+    color: #eef2fb;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.footerButtonSecondary:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.footerButtonSecondary:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+.footerButtonSecondary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* ── Modal de confirmación de borrado ──────────────────────────────────── */
+
+.confirmBackdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(5, 8, 18, 0.72);
+}
+
+.confirmCard {
+    width: 100%;
+    max-width: 420px;
+    padding: 28px;
     background: #161e33;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+    text-align: center;
 }
 
-:global([data-theme="dark"]) .title,
-:global([data-theme="dark"]) .backLink {
-    color: #8a95ff;
+.confirmTitle {
+    margin: 0 0 12px;
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #ffffff;
 }
 
-:global([data-theme="dark"]) .subtitle,
-:global([data-theme="dark"]) .hint,
-:global([data-theme="dark"]) .projectDate {
+.confirmText {
+    margin: 0 0 24px;
+    font-size: 0.98rem;
+    line-height: 1.5;
     color: #9aa6c2;
 }
 
-:global([data-theme="dark"]) .projectCard {
-    background: #1a2340;
+.confirmText strong {
+    color: #eef2fb;
 }
 
-:global([data-theme="dark"]) .projectActions {
-    border-top-color: rgba(255, 255, 255, 0.1);
+.confirmActions {
+    display: flex;
+    gap: 12px;
 }
 
-:global([data-theme="dark"]) .publishButton {
-    color: #8a95ff;
-    background: rgba(138, 149, 255, 0.12);
+.confirmCancelButton,
+.confirmDeleteButton {
+    flex: 1;
+    padding: 13px 16px;
+    font-size: 0.98rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
 }
 
-:global([data-theme="dark"]) .publishButton:hover {
-    background: rgba(138, 149, 255, 0.2);
+.confirmCancelButton {
+    color: #eef2fb;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.14);
 }
 
-:global([data-theme="dark"]) .playLink {
-    border-left-color: rgba(255, 255, 255, 0.1);
+.confirmCancelButton:hover {
+    background: rgba(255, 255, 255, 0.08);
 }
 
-:global([data-theme="dark"]) .thumb,
-:global([data-theme="dark"]) .thumbPlaceholder {
-    background: #0f1629;
+.confirmDeleteButton {
+    color: #ffffff;
+    background: #e04040;
 }
 
-:global([data-theme="dark"]) .projectTitle {
-    color: #e8edff;
+.confirmDeleteButton:hover:not(:disabled) {
+    background: #c43333;
+}
+
+.confirmDeleteButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
