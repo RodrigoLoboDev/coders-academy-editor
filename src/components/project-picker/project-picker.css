@@ -157,11 +157,30 @@
    adentro. Las esquinas de abajo no necesitan clip propio: .meta no tiene fondo propio, se ve el
    de .projectCard (ya redondeado) por transparencia. */
 .thumbWrap {
+    position: relative;
     flex: 3;
     min-height: 0;
     overflow: hidden;
     border-radius: 12px 12px 0 0;
     background: #0f1629;
+}
+
+/* Distingue a simple vista qué proyectos ya están publicados (visibles en /jugar/:id y en el
+   portal de familias) de los que siguen privados — antes esto solo se veía abriendo el submenú
+   "⋮" de cada card. Solo se marca el estado "publicado" (la excepción); un proyecto privado no
+   lleva badge, es el estado por default y no necesita señalizarse. */
+.publishedBadge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: #3ecfa0;
+    border-radius: 999px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
 }
 
 .thumb {

@@ -257,6 +257,22 @@ const ProjectPicker = ({studentId, onSelectProject, onCreateNew, onExit}) => {
                                         ) : (
                                             <div className={styles.thumbPlaceholder}>🐱</div>
                                         )}
+                                        {project.isPublishedToFamily && (
+                                            <span className={styles.publishedBadge}>
+                                                {/* SVG propio en vez del emoji 🌐 — un emoji es un glifo a todo
+                                                color, no se puede recolorear con `color`/`fill` de CSS. Necesitamos
+                                                que contraste oscuro sobre el verde-agua del badge. */}
+                                                <svg fill="none" height="20" viewBox="0 0 24 24" width="20">
+                                                    <circle cx="12" cy="12" r="9" stroke="#0a2e22" strokeWidth="2.5" />
+                                                    <path d="M3 12h18" stroke="#0a2e22" strokeWidth="2.5" />
+                                                    <path
+                                                        d="M12 3a14 14 0 0 1 3.6 9 14 14 0 0 1-3.6 9 14 14 0 0 1-3.6-9A14 14 0 0 1 12 3Z"
+                                                        stroke="#0a2e22"
+                                                        strokeWidth="2.5"
+                                                    />
+                                                </svg>
+                                            </span>
+                                        )}
                                     </div>
                                     <div className={styles.meta}>
                                         <div className={styles.metaText}>
