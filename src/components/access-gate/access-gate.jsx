@@ -19,6 +19,98 @@ const CODE_SESSION_KEY = 'ca_editor_access_code_ok';
 
 const normalizeCode = value => value.trim().toUpperCase();
 
+// Sesión 34 — mismo motivo visual que <FloatingBackground> en apps/web/apps/actividades: íconos
+// de marca flotando suavemente sobre el fondo, en emoji (no SVG con lucide-react) para no sumar
+// una dependencia nueva a este fork — el resto del editor ya es fuertemente emoji (🎒🍎🔒🌐), así
+// que encaja con el lenguaje visual existente en vez de desentonar.
+const FLOATING_ICONS = [
+    {emoji: '🚀', left: '8%', top: '18%', size: 36, delay: 0},
+    {emoji: '⭐', left: '88%', top: '22%', size: 31, delay: 0.6},
+    {emoji: '🎮', left: '10%', top: '76%', size: 36, delay: 1.8},
+    {emoji: '✨', left: '82%', top: '72%', size: 29, delay: 0.9},
+    {emoji: '🔷', left: '68%', top: '10%', size: 26, delay: 1.2}
+];
+
+const FloatingBackground = () => (
+    <React.Fragment>
+        {FLOATING_ICONS.map(({emoji, left, top, size, delay}, i) => (
+            <span
+                key={i}
+                className={styles.floatingIcon}
+                style={{
+                    left,
+                    top,
+                    fontSize: size,
+                    animationDuration: `${3 + delay}s`,
+                    animationDelay: `${delay}s`
+                }}
+            >
+                {emoji}
+            </span>
+        ))}
+    </React.Fragment>
+);
+
+// Mascota JEN, mismo diseño que <RobotSVG> (apps/web/apps/landing) — portado a mano porque este
+// fork corre en React 16 (sin `useId`, agregado recién en React 18): un id fijo alcanza porque
+// nunca hay más de una instancia montada a la vez en esta pantalla.
+const RobotMascot = ({armsUp}) => (
+    <svg className={styles.robot} height={112} viewBox="0 0 120 120" width={112}>
+        <defs>
+            <linearGradient id="caEditorRobotGrad" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0" stopColor="#8A95FF" />
+                <stop offset="1" stopColor="#6C7BFF" />
+            </linearGradient>
+        </defs>
+        <line stroke="#FFB02E" strokeLinecap="round" strokeWidth="3" x1="60" x2="60" y1="30" y2="16" />
+        <circle cx="60" cy="13" fill="#FFB02E" r="5" />
+        <rect
+            fill="#6C7BFF"
+            height="26"
+            rx="6"
+            transform={armsUp ? 'rotate(-28 20 57)' : undefined}
+            width="12"
+            x="14"
+            y={armsUp ? 44 : 60}
+        />
+        <rect
+            fill="#6C7BFF"
+            height="26"
+            rx="6"
+            transform={armsUp ? 'rotate(28 100 57)' : undefined}
+            width="12"
+            x="94"
+            y={armsUp ? 44 : 60}
+        />
+        <rect
+            fill="url(#caEditorRobotGrad)"
+            height="60"
+            rx="18"
+            stroke="rgba(255,255,255,0.3)"
+            strokeWidth="2"
+            width="68"
+            x="26"
+            y="30"
+        />
+        <rect fill="#10173A" height="34" rx="13" width="52" x="34" y="40" />
+        <circle cx="49" cy="56" fill="#5BE7F0" r="6" />
+        <circle cx="71" cy="56" fill="#5BE7F0" r="6" />
+        <circle cx="51" cy="54" fill="#fff" r="1.8" />
+        <circle cx="73" cy="54" fill="#fff" r="1.8" />
+        {armsUp ? (
+            <path d="M50 66q10 9 20 0" fill="none" stroke="#5BE7F0" strokeLinecap="round" strokeWidth="3" />
+        ) : (
+            <path d="M52 66q8 6 16 0" fill="none" stroke="#5BE7F0" strokeLinecap="round" strokeWidth="3" />
+        )}
+        <rect fill="#6C7BFF" height="10" rx="4" width="12" x="40" y="90" />
+        <rect fill="#6C7BFF" height="10" rx="4" width="12" x="68" y="90" />
+    </svg>
+);
+
+RobotMascot.propTypes = {
+    armsUp: PropTypes.bool
+};
+
 const AccessGate = ({onSelectStudent, onTeacherLogin}) => {
     const [step, setStep] = useState('role');
     const [code, setCode] = useState('');
@@ -97,18 +189,16 @@ const AccessGate = ({onSelectStudent, onTeacherLogin}) => {
     if (step === 'role') {
         return (
             <div className={styles.backdrop}>
+                <FloatingBackground />
                 <div className={styles.card}>
-                    <h1 className={styles.title}>👋 ¡Hola!</h1>
+                    <RobotMascot armsUp />
+                    <p className={styles.eyebrow}>Coders Academy</p>
+                    <h1 className={styles.title}>¡Hola! 👋</h1>
                     <p className={styles.subtitle}>¿Sos alumno o docente?</p>
                     <button className={styles.button} type="button" onClick={handleChooseStudent}>
                         🎒 Soy alumno
                     </button>
-                    <button
-                        className={styles.button}
-                        style={{marginTop: 10, background: '#575e75'}}
-                        type="button"
-                        onClick={() => setStep('teacherLogin')}
-                    >
+                    <button className={styles.buttonSecondary} type="button" onClick={() => setStep('teacherLogin')}>
                         🍎 Soy docente
                     </button>
                 </div>
@@ -119,8 +209,11 @@ const AccessGate = ({onSelectStudent, onTeacherLogin}) => {
     if (step === 'code') {
         return (
             <div className={styles.backdrop}>
+                <FloatingBackground />
                 <div className={styles.card}>
-                    <h1 className={styles.title}>👋 ¡Hola!</h1>
+                    <RobotMascot />
+                    <p className={styles.eyebrow}>Acceso alumno</p>
+                    <h1 className={styles.title}>¡Hola! 👋</h1>
                     <p className={styles.subtitle}>Ingresá el código que te dio tu profe.</p>
                     <form onSubmit={handleCodeSubmit}>
                         <input
@@ -147,7 +240,10 @@ const AccessGate = ({onSelectStudent, onTeacherLogin}) => {
     if (step === 'teacherLogin') {
         return (
             <div className={styles.backdrop}>
+                <FloatingBackground />
                 <div className={styles.card}>
+                    <RobotMascot />
+                    <p className={styles.eyebrow}>Portal docente</p>
                     <h1 className={styles.title}>🍎 Ingreso docente</h1>
                     <p className={styles.subtitle}>Usá tu mismo usuario del panel de Coders Academy.</p>
                     <form onSubmit={handleTeacherSubmit}>
@@ -186,7 +282,10 @@ const AccessGate = ({onSelectStudent, onTeacherLogin}) => {
 
     return (
         <div className={styles.backdrop}>
+            <FloatingBackground />
             <div className={styles.card}>
+                <RobotMascot />
+                <p className={styles.eyebrow}>Buscar alumno</p>
                 <h1 className={styles.title}>🔍 ¿Quién sos?</h1>
                 <p className={styles.subtitle}>Buscá tu nombre completo.</p>
                 <input
