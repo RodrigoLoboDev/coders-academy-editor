@@ -34,3 +34,26 @@
 [dir="rtl"] .detail-area {
     border-right: 1px solid $ui-black-transparent;
 }
+
+/* Sesión 34 — gap real: este panel (todo el editor de Disfraces y de Sonidos, a la derecha de la
+   lista de miniaturas — panel de scratch-paint y sound-editor respectivamente) seguía blanco puro
+   en modo oscuro, `background: white` hardcodeado, se había cubierto la lista de miniaturas
+   (selector.css) pero no este panel más grande. Mismo criterio y paleta que el resto de esta ronda
+   (panel base #1F1F1F, texto #E5E5E5, ver sprite-info.css para el mismo patrón). Alcance: fondo y
+   texto, no los botones/íconos del editor de disfraces ni el lienzo de dibujo en sí (misma
+   decisión de siempre: los bloques/botones/imágenes no cambian). */
+:global([data-theme="dark"]) .wrapper {
+    background-color: #1f1f1f;
+    color: #e5e5e5;
+}
+
+/* Selector de elemento nativo (`input`), no de clase — los campos de scratch-paint (ancho/alto,
+   centro de rotación) y del editor de sonido vienen de otro módulo CSS (scratch-paint,
+   node_modules), su nombre real en el DOM sale hasheado por css-loader y no se puede referenciar
+   como string literal acá. `input` como tag siempre matchea sin importar qué clase tenga — mismo
+   patrón ya usado en sprite-info.css. */
+:global([data-theme="dark"]) .wrapper input {
+    background-color: #363636;
+    color: #e5e5e5;
+    border-color: rgba(255, 255, 255, 0.15);
+}

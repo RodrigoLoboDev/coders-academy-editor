@@ -62,9 +62,10 @@
 
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-weight: 500;
-    /* Sesión 34 — mismo factor ×1.308 (+30.8%, 0.65rem→0.85rem de la letra de categorías) sobre
-       la letra/padding/ícono de las pestañas Código/Disfraces/Sonidos. Original 0.80rem. */
-    font-size: 1.05rem;
+    /* Sesión 34 — factor ×1.25 (+25%) sobre la letra/padding/ícono de las pestañas
+       Código/Disfraces/Sonidos. Bajado del ×1.308 (+30.8%) probado antes, quedaba grande para
+       esta sección. Original 0.80rem. */
+    font-size: 1.0rem;
 
     /* Overrides for react-tabs styling */
     margin: 0 !important;
@@ -79,9 +80,9 @@
     border-radius: 1rem 1rem 0 0;
     border: 1px solid $ui-black-transparent;
 
-    /* Sesión 34 — ×1.308, original 0.125rem 1.25rem 0 / font-size 0.75rem. */
-    padding: 0.16rem 1.64rem 0;
-    font-size: 0.98rem;
+    /* Sesión 34 — ×1.25, original 0.125rem 1.25rem 0 / font-size 0.75rem. */
+    padding: 0.16rem 1.56rem 0;
+    font-size: 0.94rem;
 
     background-color: $ui-tertiary;
     color: $text-primary-transparent;
@@ -133,8 +134,8 @@
 }
 
 .tab img {
-    /* Sesión 34 — ×1.308, original 1.375rem. */
-    width: 1.8rem;
+    /* Sesión 34 — ×1.25, original 1.375rem. */
+    width: 1.72rem;
     filter: grayscale(100%);
 }
 
@@ -353,19 +354,16 @@ $fade-out-distance: 15px;
     background-color: #1f1f1f;
 }
 
-/* El nombre de categoría que aparece arriba de los bloques al abrir el cajón (ej. "Movimiento") no
-   es un componente de React — lo dibuja scratch-blocks directamente como texto SVG, con su propio
-   CSS inyectado en tiempo de ejecución (node_modules/scratch-blocks/core/css.js,
-   .blocklyFlyoutLabelText, fill fijo #575E75). No se puede tocar como el resto de este archivo, vía
-   :global() apuntando directo a esa clase. */
-:global([data-theme="dark"] .blocklyFlyoutLabelText) {
-    fill: #ffffff;
-}
-
-/* Tamaño del label, independiente del color de arriba (ese sí depende del tema, esto no) — mismo
-   factor ×1.308 que el resto de esta ronda. Original 14pt. */
-:global(.blocklyFlyoutLabelText) {
-    font-size: 18pt;
+/* Sesión 34 — a pedido del usuario, se saca el nombre de categoría que aparecía arriba de los
+   bloques al abrir el cajón (ej. "Movimiento"): que quede solo los bloques. No es un componente de
+   React — lo dibuja scratch-blocks directamente como grupo SVG (fondo + texto), con su propio CSS
+   inyectado en tiempo de ejecución (node_modules/scratch-blocks/core/css.js, .blocklyFlyoutLabel
+   envuelve a .blocklyFlyoutLabelBackground + .blocklyFlyoutLabelText). Ocultando el grupo completo
+   en vez de solo el texto para que tampoco quede el rectángulo de fondo. No depende de data-theme,
+   aplica en los dos modos. Nota: el espacio vertical que scratch-blocks reserva para esta fila se
+   calcula en JS, no en CSS — puede quedar un pequeño hueco arriba del primer bloque; aceptado. */
+:global(.blocklyFlyoutLabel) {
+    display: none;
 }
 
 /* Sesión 34 — sidebar de categorías (Movimiento/Apariencia/Sonido/...). Mismo mecanismo que el
