@@ -62,7 +62,9 @@
 
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-weight: 500;
-    font-size: 0.80rem;
+    /* Sesión 34 — mismo factor ×1.308 (+30.8%, 0.65rem→0.85rem de la letra de categorías) sobre
+       la letra/padding/ícono de las pestañas Código/Disfraces/Sonidos. Original 0.80rem. */
+    font-size: 1.05rem;
 
     /* Overrides for react-tabs styling */
     margin: 0 !important;
@@ -77,8 +79,9 @@
     border-radius: 1rem 1rem 0 0;
     border: 1px solid $ui-black-transparent;
 
-    padding: 0.125rem 1.25rem 0;
-    font-size: 0.75rem;
+    /* Sesión 34 — ×1.308, original 0.125rem 1.25rem 0 / font-size 0.75rem. */
+    padding: 0.16rem 1.64rem 0;
+    font-size: 0.98rem;
 
     background-color: $ui-tertiary;
     color: $text-primary-transparent;
@@ -130,7 +133,8 @@
 }
 
 .tab img {
-    width: 1.375rem;
+    /* Sesión 34 — ×1.308, original 1.375rem. */
+    width: 1.8rem;
     filter: grayscale(100%);
 }
 
@@ -358,6 +362,12 @@ $fade-out-distance: 15px;
     fill: #ffffff;
 }
 
+/* Tamaño del label, independiente del color de arriba (ese sí depende del tema, esto no) — mismo
+   factor ×1.308 que el resto de esta ronda. Original 14pt. */
+:global(.blocklyFlyoutLabelText) {
+    font-size: 18pt;
+}
+
 /* Sesión 34 — sidebar de categorías (Movimiento/Apariencia/Sonido/...). Mismo mecanismo que el
    label de arriba: no es React, lo dibuja scratch-blocks con su propio CSS inyectado en runtime
    (node_modules/scratch-blocks/core/css.js,
@@ -372,6 +382,14 @@ $fade-out-distance: 15px;
    al mismo ancho. No depende de data-theme, aplica en los dos modos. */
 :global(.scratchCategoryMenu) {
     width: 80px;
+}
+
+/* Más separación vertical entre categorías (Movimiento, Apariencia, ..., Mis bloques, y
+   cualquier extensión que se agregue después — misma clase para todas, no hace falta nada
+   especial por extensión nueva). Mismo factor ×1.308 (+30.8%) que 0.65rem→0.85rem de la letra,
+   aplicado al padding vertical original: 0.375rem → 0.49rem. */
+:global(.scratchCategoryMenuItem) {
+    padding: 0.49rem 0px;
 }
 
 /* Cada nombre de categoría con el mismo color que su propio círculo — antes todos compartían un

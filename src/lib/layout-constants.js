@@ -38,7 +38,11 @@ const STAGE_DISPLAY_SIZES = keyMirror({
 });
 
 // zoom level to start with
-const BLOCKS_DEFAULT_SCALE = 0.675;
+// Sesión 34 — mismo factor ×1.308 (+30.8%) que el resto de esta ronda (0.65rem→0.85rem de la
+// letra de categorías), aplicado acá para que los bloques (en la paleta y en el workspace) crezcan
+// en la misma proporción que todo lo demás. Antes se había probado subir esto sin un criterio
+// concreto y se revirtió — esta vez sí hay una proporción documentada detrás.
+const BLOCKS_DEFAULT_SCALE = 0.88;
 
 const STAGE_DISPLAY_SCALES = {};
 STAGE_DISPLAY_SCALES[STAGE_DISPLAY_SIZES.large] = 1; // large mode, wide browser (standard)
