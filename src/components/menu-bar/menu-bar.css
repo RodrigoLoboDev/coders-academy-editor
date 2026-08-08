@@ -27,7 +27,15 @@
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: $menu-bar-standard-font-size;
     font-weight: bold;
-    background-color: $looks-secondary;
+    /* Sesión 34 — mismo navy que AccessGate/ProjectPicker (#161E33) en vez del violeta por
+       defecto de Scratch ($looks-secondary, #855CD6). No se usa la variable de color compartida
+       a propósito: $looks-secondary también define el color de la categoría "Apariencia" en la
+       paleta de bloques, tocarla ahí rompería un color que los chicos ya conocen de Scratch real.
+       Fija siempre (no varía con el toggle data-theme, mismo criterio que AccessGate) — el toggle
+       de modo oscuro (ver dark-mode-toggle.jsx) sigue controlando los colores de los bloques, algo
+       aparte de esta barra. */
+    background-color: #161e33;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     color: $ui-white;
 }
 
@@ -70,7 +78,10 @@
 
 .menu-bar-item.active,
 .menu-bar-item.hoverable:hover {
-    background-color: $ui-black-transparent;
+    /* $ui-black-transparent (negro 15%) era el hover pensado para la barra violeta clara de
+       Scratch — casi invisible sobre nuestro navy oscuro. Blanco transparente en su lugar, mismo
+       tratamiento de hover que el resto de la marca (AccessGate/ProjectPicker). */
+    background-color: rgba(255, 255, 255, 0.08);
 }
 
 .menu-bar-item.growable {
@@ -117,6 +128,11 @@
 .divider {
     margin: 0 .5rem;
     height: 34px;
+    /* El componente <Divider> (divider/divider.css) trae su propio border-right-color en negro
+       transparente, pensado para el filtro claro de la biblioteca de sprites (su único otro
+       consumidor) — acá necesitamos el opuesto. !important porque ambas clases (la de acá y la de
+       divider.css) tienen la misma especificidad y el orden de bundle no está garantizado. */
+    border-right-color: rgba(255, 255, 255, 0.15) !important;
 }
 
 .author-info {
@@ -243,8 +259,7 @@
     }
 }
 
-/* Fase 6 (docs/scratch-editor-integration.md, monorepo privado) — modo oscuro "híbrido", ver
-   src/lib/dark-mode.js y la nota de alcance en gui.css */
-:global([data-theme="dark"]) .menu-bar {
-    background-color: #1a1aad;
-}
+/* Sesión 34 — el override de modo oscuro que vivía acá (Fase 6, #1a1aad) se saca: la barra ya usa
+   el navy de marca siempre (ver comentario en .menu-bar arriba), no varía más con data-theme. El
+   toggle de modo oscuro (src/lib/dark-mode.js) sigue existiendo y sigue controlando los colores de
+   los bloques — eso no cambió, solo dejó de tener efecto sobre esta barra en particular. */

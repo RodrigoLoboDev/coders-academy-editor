@@ -1,17 +1,27 @@
 @import "../../css/colors.css";
 
+/*
+ * Sesión 34 — reskin de marca. Este componente <Menu> solo lo consumen piezas de la barra
+ * superior (menu-bar-menu, account-nav, login-dropdown, settings-menu — confirmado por grep antes
+ * de tocar nada), no el resto del editor (bloques, biblioteca de sprites), así que es seguro
+ * recolorearlo acá sin afectar nada fuera de la barra. $looks-secondary/$ui-black-transparent
+ * (violeta Scratch + negro transparente) reemplazados por el navy/blanco-transparente que ya usan
+ * AccessGate/ProjectPicker — no se toca la variable compartida $looks-secondary en sí, esa también
+ * define el color de la categoría "Apariencia" de los bloques.
+ */
+
 .menu {
     position: absolute;
-    border: 1px solid $ui-black-transparent;
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 0 0 8px 8px;
-    background-color: $looks-secondary;
+    background-color: #1c2440;
     padding: 0;
     margin: 0;
     min-width: 186px;
     max-width: 260px;
     overflow: visible;
     color: $ui-white;
-    box-shadow: 0 8px 8px 0 $ui-black-transparent;
+    box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.35);
 }
 
 .menu.left {
@@ -36,7 +46,7 @@
 .menu-item.active,
 .menu-item:hover,
 .menu-item.expanded {
-    background-color: $ui-black-transparent;
+    background-color: rgba(255, 255, 255, 0.08);
 }
 
 .menu-item.hoverable {
@@ -44,7 +54,7 @@
 }
 
 .menu-section {
-    border-top: 1px solid $ui-black-transparent;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .submenu {
@@ -70,7 +80,7 @@
     position: relative;
     overflow-y: auto;
     overflow-x: hidden;
-    scrollbar-color: $ui-black-transparent $looks-secondary;
+    scrollbar-color: rgba(255, 255, 255, 0.2) #1c2440;
     border-radius: 8px;
 }
 
@@ -89,11 +99,11 @@
 }
 
 .submenu > .menu::-webkit-scrollbar-track {
-    background: $looks-secondary;
+    background: #1c2440;
 }
 
 .submenu > .menu::-webkit-scrollbar-thumb {
-    background-color: $ui-black-transparent;
+    background-color: rgba(255, 255, 255, 0.2);
     border-radius: 12px;
-    border: 3px solid $looks-secondary;
+    border: 3px solid #1c2440;
 }

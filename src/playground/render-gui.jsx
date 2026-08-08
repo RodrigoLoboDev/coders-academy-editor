@@ -188,7 +188,6 @@ const StudentEditorRoute = ({WrappedGui}) => {
                 return (
                     <WrappedGui
                         canEditTitle
-                        backpackVisible
                         canSave
                         projectHost={apiScratchProjectsHost}
                         assetHost={apiScratchProjectsHost}
@@ -257,7 +256,6 @@ const TeacherEditorRoute = ({WrappedGui}) => {
                 return (
                     <WrappedGui
                         canEditTitle
-                        backpackVisible
                         canSave
                         projectHost={apiScratchTemplatesHost}
                         assetHost={apiScratchTemplatesHost}
