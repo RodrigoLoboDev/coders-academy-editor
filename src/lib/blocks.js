@@ -17,6 +17,23 @@ export default function (vm, useCatBlocks) {
     // (250 + ancho real de la barra en px).
     ScratchBlocks.Toolbox.prototype.width = 330;
 
+    // Sesión 34 — el nombre de categoría (ej. "Movimiento") que scratch-blocks dibuja arriba del
+    // cajón de bloques se ocultó por CSS (gui.css, .blocklyFlyoutLabel { display: none }) pero
+    // eso no le avisa nada al layout: scratch-blocks reserva su alto con una constante fija
+    // (FlyoutButton.prototype.height = 40, "Can't be computed like the width" según su propio
+    // comentario en node_modules/scratch-blocks/core/flyout_button.js) que no depende del DOM/CSS
+    // — por eso quedaba un hueco vacío arriba de los bloques aunque el texto ya no se viera.
+    // Parcheado en runtime (no en node_modules) para que, específicamente las labels (isLabel
+    // true), midan 0 en el layout — los botones reales del flyout (ej. "Hacer una variable") usan
+    // la misma clase base pero con isLabel false, así que no se tocan.
+    const originalFlyoutButtonInit = ScratchBlocks.FlyoutButton.prototype.init;
+    ScratchBlocks.FlyoutButton.prototype.init = function (workspace, targetWorkspace, xml, isLabel) {
+        originalFlyoutButtonInit.call(this, workspace, targetWorkspace, xml, isLabel);
+        if (isLabel) {
+            this.height = 0;
+        }
+    };
+
     const jsonForMenuBlock = function (name, menuOptionsFn, colors, start) {
         return {
             message0: '%1',

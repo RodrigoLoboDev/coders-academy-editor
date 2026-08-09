@@ -57,3 +57,44 @@
     color: #e5e5e5;
     border-color: rgba(255, 255, 255, 0.15);
 }
+
+/* Sesión 34 — violeta original de Scratch (#855CD6) que sigue viniendo directo de scratch-paint
+   (paquete externo en node_modules, con su propio CSS ya compilado — no comparte el
+   $looks-secondary de src/css/colors.css, que en este repo ya no es violeta desde otra sesión, ver
+   el comentario ahí mismo). Reemplazado acá por el ámbar de marca de Coders Academy (#FFB02E, el
+   mismo del botón de la pantalla de acceso, access-gate.css) en los lugares donde el violeta se
+   ve como color de UI real (no como ícono — los íconos SVG de scratch-paint traen el violeta
+   pintado adentro del archivo como data-uri, ej. la flechita de los dropdowns, eso no se puede
+   recolorear desde acá sin forkear el paquete, queda afuera de este alcance): herramienta
+   seleccionada (Seleccionar/Pincel/Relleno/...), swatch de color activo en el selector de color,
+   borde de foco de los campos numéricos, ítem de fuente resaltado al pasar el mouse en el
+   selector de fuente, y el botón "Convertir a mapa de bits/vector".
+   Mismo motivo que el resto de este archivo para no poder apuntar por el nombre de clase real: el
+   css-loader propio de scratch-paint hashea cada clase en su build (ej. `mod-tool-select_1RQKn`,
+   formato `[local]_[hash]`, fijo mientras no cambie la versión de scratch-paint — 3.0.339 en
+   package.json). Se apunta por el prefijo del nombre local vía selector de atributo `[class*=]`,
+   más resistente que copiar el hash exacto si el paquete se actualiza (el prefijo suele
+   sobrevivir un bump menor, el hash no). `!important` porque el CSS de scratch-paint se inyecta
+   en su propio momento de carga, sin garantía de que quede antes o después del nuestro en el
+   documento — sin esto, el orden real decide y a veces gana el violeta. No depende de
+   data-theme: mismo color en claro y oscuro, a pedido explícito. */
+.wrapper :global([class*="mod-tool-select_"][class*="is-selected_"]) {
+    background-color: #ffb02e !important;
+}
+
+.wrapper :global([class*="active-swatch_"]) {
+    border-color: #ffb02e !important;
+    box-shadow: 0px 0px 0px 3px rgba(255, 176, 46, 0.35) !important;
+}
+
+.wrapper input:global([class*="input-form_"]:focus) {
+    border-color: #ffb02e !important;
+}
+
+.wrapper :global([class*="mod-menu-item_"]:hover) {
+    background: #ffb02e !important;
+}
+
+.wrapper :global([class*="bitmap-button_"]) {
+    background-color: #ffb02e !important;
+}
