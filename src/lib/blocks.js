@@ -34,6 +34,84 @@ export default function (vm, useCatBlocks) {
         }
     };
 
+    // Sesión 34 — a pedido del usuario, clickear una categoría (Movimiento, Eventos, ...) muestra
+    // SOLO los bloques de esa categoría, en vez del comportamiento de fábrica de Scratch 3: mostrar
+    // TODOS los bloques de TODAS las categorías concatenados en un único flyout con scroll, donde
+    // clickear una categoría solo hace scroll hasta su posición
+    // (node_modules/scratch-blocks/core/toolbox.js, Toolbox.prototype.showAll_ arma la lista
+    // combinada, setSelectedItem/scrollToCategoryById solo mueven el scroll, nunca cambian qué hay
+    // en el flyout). Se parchean acá, en runtime, los tres puntos donde scratch-blocks decide qué
+    // mostrar en el flyout — no hay un flag/opción pública para este comportamiento, hay que
+    // reemplazar la lógica:
+    //   - populate_: arma el toolbox la primera vez (o cuando se recrea entero, ej. cambio de
+    //     idioma). Antes mostraba todo; ahora muestra solo una categoría — la que estaba
+    //     seleccionada antes de repoblar, si había alguna (ver más abajo, updateToolbox), o si no
+    //     la primera (arranque inicial).
+    //   - setSelectedItem: se dispara al clickear una categoría en la barra lateral. Antes hacía
+    //     scroll dentro del flyout combinado; ahora reemplaza el contenido del flyout por el de la
+    //     categoría clickeada.
+    //   - refreshSelection: lo llama scratch-blocks internamente cuando cambia algo de una
+    //     categoría dinámica mientras está abierta (ej. crear/renombrar una variable con la
+    //     categoría Variables abierta — workspace_svg.js). Antes volvía a armar el combinado; ahora
+    //     vuelve a pedir el contenido de la categoría actual (ya actualizado).
+    // showCategory_ es el reemplazo de showAll_ para una sola categoría — arma el mismo XML de
+    // label que showAll_ armaba por categoría (se sigue ocultando por CSS, gui.css
+    // .blocklyFlyoutLabel, pero mantiene el mismo formato por si alguna categoría dinámica lo
+    // necesita) y le pasa al flyout solo esa categoría en vez de la lista completa.
+    ScratchBlocks.Toolbox.prototype.showCategory_ = function (category) {
+        const labelString = `<xml><label text="${category.name_}" id="${category.id_}" ` +
+            `category-label="true" showStatusButton="${category.showStatusButton_}" ` +
+            `web-class="categoryLabel"></label></xml>`;
+        const labelXML = ScratchBlocks.Xml.textToDom(labelString);
+        this.flyout_.show([labelXML.firstChild].concat(category.getContents()));
+    };
+
+    ScratchBlocks.Toolbox.prototype.populate_ = function (newTree) {
+        const previouslySelectedId = this.selectedItem_ ? this.selectedItem_.id_ : null;
+        this.categoryMenu_.populate(newTree);
+        let categoryToSelect = this.categoryMenu_.categories_[0];
+        if (previouslySelectedId) {
+            for (let i = 0; i < this.categoryMenu_.categories_.length; i++) {
+                if (this.categoryMenu_.categories_[i].id_ === previouslySelectedId) {
+                    categoryToSelect = this.categoryMenu_.categories_[i];
+                    break;
+                }
+            }
+        }
+        this.setSelectedItem(categoryToSelect, false);
+    };
+
+    ScratchBlocks.Toolbox.prototype.setSelectedItem = function (item) {
+        if (this.selectedItem_) {
+            this.selectedItem_.setSelected(false);
+        }
+        this.selectedItem_ = item;
+        if (this.selectedItem_) {
+            this.selectedItem_.setSelected(true);
+            this.showCategory_(this.selectedItem_);
+        }
+    };
+
+    ScratchBlocks.Toolbox.prototype.refreshSelection = function () {
+        if (this.selectedItem_) {
+            this.showCategory_(this.selectedItem_);
+        }
+    };
+
+    // El click real en una categoría de la barra lateral no pasa por setSelectedItem de arriba —
+    // scratch-gui tiene su propio handler (src/containers/blocks.jsx, handleCategorySelected) que
+    // llama a este método de acá. De fábrica hacía lo mismo que setSelectedItem original: marcar
+    // seleccionada + scrollToCategoryById (posición dentro del combinado, que ya no existe).
+    // Reescrito para reusar el setSelectedItem ya parcheado arriba, misma lógica en un solo lugar.
+    ScratchBlocks.Toolbox.prototype.setSelectedCategoryById = function (id) {
+        for (let i = 0; i < this.categoryMenu_.categories_.length; i++) {
+            if (this.categoryMenu_.categories_[i].id_ === id) {
+                this.setSelectedItem(this.categoryMenu_.categories_[i]);
+                return;
+            }
+        }
+    };
+
     const jsonForMenuBlock = function (name, menuOptionsFn, colors, start) {
         return {
             message0: '%1',
