@@ -366,6 +366,17 @@ $fade-out-distance: 15px;
     display: none;
 }
 
+/* Sesión 34 — se saca la barra de scroll vertical del cajón de bloques (pedido del usuario). Es un
+   <svg> propio que dibuja scratch-blocks (node_modules/scratch-blocks/core/scrollbar.js,
+   Blockly.Scrollbar, clase `blocklyFlyoutScrollbar` — solo la del flyout, no toca la del workspace
+   principal, que no lleva esta clase) superpuesto al cajón, no el mecanismo de scroll en sí: el
+   scroll con la rueda del mouse queda enganchado aparte, directo al grupo SVG del flyout
+   (`this.svgGroup_`, flyout_base.js, evento 'wheel'), así que categorías con muchos bloques
+   (Movimiento) se siguen pudiendo scrollear igual, solo que sin la barra visible. */
+:global(.blocklyFlyoutScrollbar) {
+    display: none;
+}
+
 /* Sesión 34 — sidebar de categorías (Movimiento/Apariencia/Sonido/...). Mismo mecanismo que el
    label de arriba: no es React, lo dibuja scratch-blocks con su propio CSS inyectado en runtime
    (node_modules/scratch-blocks/core/css.js,

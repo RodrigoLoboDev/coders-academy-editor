@@ -112,6 +112,60 @@ export default function (vm, useCatBlocks) {
         }
     };
 
+    // Bug real encontrado por el usuario al probar lo de arriba: al hacer scroll dentro de una
+    // categoría con muchos bloques (ej. Movimiento) la barra lateral saltaba sola a otra categoría
+    // (siempre la primera) mientras el cajón seguía mostrando los bloques correctos — quedaban
+    // desincronizados. Causa: de fábrica, scratch-blocks tiene un "scroll spy" (pensado para el
+    // flyout combinado original, donde SÍ tenía sentido: bajás la rueda del mouse y la categoría
+    // seleccionada va cambiando para reflejar qué bloques estás viendo en ese momento) que
+    // reselecciona la categoría según la posición del scroll
+    // (node_modules/scratch-blocks/core/flyout_base.js, Flyout.prototype.setMetrics_ llama a
+    // selectCategoryByScrollPosition en cada scroll). Ese spy arma su propia lista de posiciones
+    // en recordCategoryScrollPositions_ recorriendo this.buttons_ (los labels dentro del flyout) y
+    // resolviendo el id real de cada uno con this.parentToolbox_.getCategoryByIndex(i) — usa el
+    // índice DENTRO DEL FLYOUT (i), no el id de la categoría. En el flyout combinado original eso
+    // coincidía (categoría #2 del flyout = categoría #2 de la barra), pero en modo "una categoría
+    // a la vez" el flyout siempre tiene un solo label en el índice 0, así que
+    // getCategoryByIndex(0) siempre devuelve la PRIMERA categoría de la barra (Movimiento) sin
+    // importar cuál se esté mostrando en realidad — de ahí que el salto fuera siempre a Movimiento.
+    // No tiene sentido este mecanismo con una categoría a la vez (nunca hay "otra categoría" a la
+    // que saltar dentro del mismo scroll), así que se anula directo en vez de tratar de arreglar el
+    // cálculo del índice.
+    ScratchBlocks.Flyout.prototype.selectCategoryByScrollPosition = function () {};
+
+    // Bug latente encontrado de paso (no reportado todavía, mismo origen que el de arriba: índice
+    // dentro del flyout combinado que ya no existe) — src/containers/blocks.jsx,
+    // BlocksComponent.updateToolbox() usa estos tres métodos para no perder la posición de scroll
+    // dentro de la categoría abierta cada vez que el toolbox se refresca (crear/renombrar una
+    // variable, cambiar de idioma, agregar un bloque personalizado, etc.):
+    //   1. lee getCategoryScrollOffset() (cuánto se había scrolleado dentro de la categoría actual)
+    //   2. repuebla el toolbox (toolbox_.populate_, ya parcheado arriba)
+    //   3. usa getCategoryPositionById/getCategoryLengthById (de la categoría que estaba abierta)
+    //      para volver a esa misma posición con setFlyoutScrollPos
+    // Los tres dependían de flyout_.categoryScrollPositions, la lista del flyout combinado — con
+    // una categoría a la vez, después de repoblar esa lista tiene una sola entrada con el
+    // categoryId equivocado (mismo bug que selectCategoryByScrollPosition), así que
+    // getCategoryPositionById(id) no encontraba nada, devolvía undefined, y terminaba pidiendo
+    // setFlyoutScrollPos(NaN) — no rompía nada visible todavía porque no se había disparado en la
+    // prueba, pero iba a pasar apenas alguien creara una variable con otra categoría (no
+    // Movimiento) abierta. Reescrito para la realidad de una categoría a la vez: como el flyout
+    // siempre arranca la categoría actual en la posición 0, "dónde estoy parado dentro de la
+    // categoría" es directamente la posición cruda de scroll del flyout — no hace falta buscar
+    // nada por id. getCategoryLengthById devuelve Infinity a propósito: la cuenta de
+    // updateToolbox() (`offset < currentCategoryLen`) es "¿el scroll guardado todavía entra en la
+    // categoría nueva?", que con una sola categoría siempre es sí.
+    ScratchBlocks.Toolbox.prototype.getCategoryScrollOffset = function () {
+        return this.flyout_.getScrollPos();
+    };
+
+    ScratchBlocks.Toolbox.prototype.getCategoryPositionById = function () {
+        return 0;
+    };
+
+    ScratchBlocks.Toolbox.prototype.getCategoryLengthById = function () {
+        return Infinity;
+    };
+
     const jsonForMenuBlock = function (name, menuOptionsFn, colors, start) {
         return {
             message0: '%1',
