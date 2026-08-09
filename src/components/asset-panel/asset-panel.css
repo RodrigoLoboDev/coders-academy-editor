@@ -62,10 +62,10 @@
    (paquete externo en node_modules, con su propio CSS ya compilado — no comparte el
    $looks-secondary de src/css/colors.css, que en este repo ya no es violeta desde otra sesión, ver
    el comentario ahí mismo). Reemplazado acá por el ámbar de marca de Coders Academy (#FFB02E, el
-   mismo del botón de la pantalla de acceso, access-gate.css) en los lugares donde el violeta se
-   ve como color de UI real (no como ícono — los íconos SVG de scratch-paint traen el violeta
-   pintado adentro del archivo como data-uri, ej. la flechita de los dropdowns, eso no se puede
-   recolorear desde acá sin forkear el paquete, queda afuera de este alcance): herramienta
+   mismo del botón de la pantalla de acceso, access-gate.css) en los lugares donde el violeta es
+   color de UI real (fondo/borde de una clase CSS, no el contenido de un ícono — los íconos SVG de
+   scratch-paint con el violeta pintado adentro del archivo, ej. Copiar/Pegar/Eliminar/Voltear, se
+   resuelven aparte en asset-panel.jsx por texto, no por CSS, ver el comentario ahí): herramienta
    seleccionada (Seleccionar/Pincel/Relleno/...), swatch de color activo en el selector de color,
    borde de foco de los campos numéricos, ítem de fuente resaltado al pasar el mouse en el
    selector de fuente, y el botón "Convertir a mapa de bits/vector".
