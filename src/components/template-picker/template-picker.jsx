@@ -50,6 +50,9 @@ const blankTemplateProjectJson = () => ({
     meta: {semver: '3.0.0', vm: '2.3.0', agent: ''}
 });
 
+// Sesión 34 — reskin: antes reemplazaba el card principal entero (early return); ahora es un panel
+// superpuesto sobre el grid, mismo patrón que AssignPanel más abajo — el grid de plantillas sigue
+// vivo detrás, se puede cancelar sin perder el scroll/búsqueda que tenía el docente.
 const NewTemplateForm = ({onCreate, onCancel, creating, error}) => {
     const [title, setTitle] = useState('');
     const [story, setStory] = useState('');
@@ -61,45 +64,55 @@ const NewTemplateForm = ({onCreate, onCancel, creating, error}) => {
     };
 
     return (
-        <form onSubmit={handleSubmit}>
-            <label className={styles.label} htmlFor="template-title">Título</label>
-            <input
-                autoFocus
-                className={styles.input}
-                id="template-title"
-                placeholder="Ej: El rescate del robot"
-                type="text"
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-            />
-            <label className={styles.label} htmlFor="template-story">Relato (el juego, la historia, el cuento)</label>
-            <textarea
-                className={styles.textarea}
-                id="template-story"
-                placeholder="Ej: Un robot quedó atrapado en una cueva y necesita tu ayuda para salir."
-                value={story}
-                onChange={e => setStory(e.target.value)}
-            />
-            <label className={styles.label} htmlFor="template-objective">Objetivo / misión</label>
-            <textarea
-                className={styles.textarea}
-                id="template-objective"
-                placeholder="Ej: Programá al robot para que llegue hasta la salida sin chocar con las paredes."
-                value={objective}
-                onChange={e => setObjective(e.target.value)}
-            />
-            <button
-                className={styles.newButton}
-                disabled={creating || !title.trim() || !story.trim() || !objective.trim()}
-                type="submit"
-            >
-                {creating ? 'Creando…' : '✅ Crear y empezar a armarla'}
-            </button>
-            {error && <p className={styles.error}>{error}</p>}
-            <button className={styles.backLink} type="button" onClick={onCancel}>
-                Cancelar
-            </button>
-        </form>
+        <div className={styles.panelBackdrop} onMouseDown={onCancel}>
+            <div className={styles.panelCard} onMouseDown={e => e.stopPropagation()}>
+                <h2 className={styles.panelTitle}>🍎 Nueva plantilla</h2>
+                <p className={styles.panelSubtitle}>
+                    Completá el título, el relato y la misión — después armás el proyecto en el editor.
+                </p>
+                <form onSubmit={handleSubmit}>
+                    <label className={styles.label} htmlFor="template-title">Título</label>
+                    <input
+                        autoFocus
+                        className={styles.input}
+                        id="template-title"
+                        placeholder="Ej: El rescate del robot"
+                        type="text"
+                        value={title}
+                        onChange={e => setTitle(e.target.value)}
+                    />
+                    <label className={styles.label} htmlFor="template-story">
+                        Relato (el juego, la historia, el cuento)
+                    </label>
+                    <textarea
+                        className={styles.textarea}
+                        id="template-story"
+                        placeholder="Ej: Un robot quedó atrapado en una cueva y necesita tu ayuda para salir."
+                        value={story}
+                        onChange={e => setStory(e.target.value)}
+                    />
+                    <label className={styles.label} htmlFor="template-objective">Objetivo / misión</label>
+                    <textarea
+                        className={styles.textarea}
+                        id="template-objective"
+                        placeholder="Ej: Programá al robot para que llegue hasta la salida sin chocar con las paredes."
+                        value={objective}
+                        onChange={e => setObjective(e.target.value)}
+                    />
+                    <button
+                        className={styles.newButton}
+                        disabled={creating || !title.trim() || !story.trim() || !objective.trim()}
+                        type="submit"
+                    >
+                        {creating ? 'Creando…' : '✅ Crear y empezar a armarla'}
+                    </button>
+                    {error && <p className={styles.error}>{error}</p>}
+                    <button className={styles.backLink} type="button" onClick={onCancel}>
+                        Cancelar
+                    </button>
+                </form>
+            </div>
+        </div>
     );
 };
 
@@ -218,17 +231,17 @@ const AssignPanel = ({token, templateId, templateTitle, onClose}) => {
     };
 
     return (
-        <div className={styles.backdrop} onClick={onClose}>
-            <div className={styles.card} onClick={e => e.stopPropagation()}>
-                <h1 className={styles.title}>👥 Asignar</h1>
-                <p className={styles.subtitle}>{templateTitle}</p>
+        <div className={styles.panelBackdrop} onMouseDown={onClose}>
+            <div className={styles.panelCard} onMouseDown={e => e.stopPropagation()}>
+                <h2 className={styles.panelTitle}>👥 Asignar</h2>
+                <p className={styles.panelSubtitle}>{templateTitle}</p>
 
                 <label className={styles.label} htmlFor="assign-commission">Por comisión</label>
                 {commissionsError && <p className={styles.error}>{commissionsError}</p>}
                 {commissions && (
                     <>
                         <select
-                            className={styles.input}
+                            className={styles.select}
                             id="assign-commission"
                             value={selectedCommissionId}
                             onChange={e => setSelectedCommissionId(e.target.value)}
@@ -241,7 +254,7 @@ const AssignPanel = ({token, templateId, templateTitle, onClose}) => {
                         <button
                             className={styles.newButton}
                             disabled={assigning || !selectedCommissionId}
-                            style={{marginBottom: 20}}
+                            style={{marginBottom: 4}}
                             type="button"
                             onClick={handleAssignCommission}
                         >
@@ -279,7 +292,7 @@ const AssignPanel = ({token, templateId, templateTitle, onClose}) => {
                 {assignError && <p className={styles.error}>{assignError}</p>}
                 {assignSuccess && <p className={styles.success}>{assignSuccess}</p>}
 
-                <p className={styles.label} style={{marginTop: 20}}>Ya asignada a</p>
+                <p className={styles.label}>Ya asignada a</p>
                 {assignmentsError && <p className={styles.error}>{assignmentsError}</p>}
                 {assignments === null && !assignmentsError && <p className={styles.hint}>Cargando…</p>}
                 {assignments && assignments.length === 0 && (
@@ -321,12 +334,16 @@ AssignPanel.propTypes = {
 };
 
 /*
- * Selector de plantillas para el docente — análogo a ProjectPicker, pero contra
- * /admin/scratch-templates (requiere token de docente/admin) en vez de /scratch-projects/:studentId.
+ * Selector de plantillas para el docente — mismo tratamiento visual que ProjectPicker (sesión 34):
+ * header fijo (buscador + título + cerrar), grid de 6 columnas con scroll propio, selección de
+ * card + botón "Editar plantilla" separado del click (en vez de abrir directo al primer click),
+ * "Nueva plantilla" y "Asignar" como paneles superpuestos en vez de reemplazar la pantalla entera.
  */
 const TemplatePicker = ({token, onSelectTemplate, onLogout}) => {
     const [templates, setTemplates] = useState(null);
     const [error, setError] = useState(null);
+    const [query, setQuery] = useState('');
+    const [selectedId, setSelectedId] = useState(null);
     const [creatingNew, setCreatingNew] = useState(false);
     const [createError, setCreateError] = useState(null);
     const [submitting, setSubmitting] = useState(false);
@@ -364,69 +381,114 @@ const TemplatePicker = ({token, onSelectTemplate, onLogout}) => {
             .finally(() => setSubmitting(false));
     };
 
-    if (creatingNew) {
-        return (
-            <div className={styles.backdrop}>
-                <div className={styles.card}>
-                    <h1 className={styles.title}>🍎 Nueva plantilla</h1>
-                    <p className={styles.subtitle}>Completá el título, el relato y la misión — después armás el proyecto en el editor.</p>
-                    <NewTemplateForm
-                        creating={submitting}
-                        error={createError}
-                        onCancel={() => setCreatingNew(false)}
-                        onCreate={handleCreate}
-                    />
-                </div>
-            </div>
-        );
-    }
+    const filteredTemplates = templates
+        ? templates.filter(t => t.title.toLowerCase().includes(query.trim().toLowerCase()))
+        : null;
 
     return (
         <div className={styles.backdrop}>
             <div className={styles.card}>
-                <h1 className={styles.title}>🍎 Tus plantillas</h1>
-                <p className={styles.subtitle}>Elegí una para seguir armándola, o creá una nueva.</p>
-                <button className={styles.newButton} type="button" onClick={() => setCreatingNew(true)}>
-                    ➕ Crear plantilla nueva
-                </button>
-                {error && <p className={styles.error}>{error}</p>}
-                {templates === null && !error && <p className={styles.hint}>Cargando…</p>}
-                {templates && templates.length === 0 && (
-                    <p className={styles.hint}>Todavía no hay plantillas.</p>
-                )}
-                {templates && templates.length > 0 && (
-                    <div className={styles.grid}>
-                        {templates.map(template => (
-                            <div key={template.id} className={styles.templateCard}>
-                                <button
-                                    className={styles.templateCardMain}
-                                    type="button"
-                                    onClick={() => onSelectTemplate(template.id)}
-                                >
-                                    {template.thumbnailUrl ? (
-                                        <img alt="" className={styles.thumb} src={template.thumbnailUrl} />
-                                    ) : (
-                                        <div className={styles.thumbPlaceholder}>🍎</div>
-                                    )}
-                                    <span className={styles.templateTitle}>{template.title}</span>
-                                    <span className={styles.templateStory}>{template.story}</span>
-                                    <span className={styles.templateStory}>{formatDate(template.updatedAt)}</span>
-                                </button>
-                                <button
-                                    className={styles.assignButton}
-                                    type="button"
-                                    onClick={() => setAssigningTemplate(template)}
-                                >
-                                    👥 Asignar
-                                </button>
-                            </div>
-                        ))}
+                <div className={styles.header}>
+                    <div className={styles.searchWrap}>
+                        <span className={styles.searchIcon}>🔍</span>
+                        <input
+                            className={styles.searchInput}
+                            placeholder="Buscar plantilla…"
+                            type="text"
+                            value={query}
+                            onChange={e => setQuery(e.target.value)}
+                        />
                     </div>
-                )}
-                <button className={styles.backLink} type="button" onClick={onLogout}>
-                    Cerrar sesión
-                </button>
+                    <h1 className={styles.title}>Mis plantillas</h1>
+                    <button className={styles.closeButton} type="button" onClick={onLogout}>
+                        ✕
+                    </button>
+                </div>
+
+                <div className={styles.content}>
+                    {error && <p className={styles.hint}>{error}</p>}
+                    {templates === null && !error && <p className={styles.hint}>Cargando…</p>}
+                    {templates && templates.length === 0 && (
+                        <p className={styles.hint}>Todavía no hay plantillas.</p>
+                    )}
+                    {filteredTemplates && filteredTemplates.length === 0 && templates.length > 0 && (
+                        <p className={styles.hint}>No encontramos ninguna plantilla con ese nombre.</p>
+                    )}
+                    {filteredTemplates && filteredTemplates.length > 0 && (
+                        <div className={styles.grid}>
+                            {filteredTemplates.map(template => (
+                                <div
+                                    key={template.id}
+                                    className={
+                                        template.id === selectedId
+                                            ? `${styles.templateCard} ${styles.templateCardSelected}`
+                                            : styles.templateCard
+                                    }
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={() => setSelectedId(template.id)}
+                                    onDoubleClick={() => onSelectTemplate(template.id)}
+                                >
+                                    <div className={styles.thumbWrap}>
+                                        {template.thumbnailUrl ? (
+                                            <img alt="" className={styles.thumb} src={template.thumbnailUrl} />
+                                        ) : (
+                                            <div className={styles.thumbPlaceholder}>🍎</div>
+                                        )}
+                                    </div>
+                                    <div className={styles.meta}>
+                                        <div className={styles.metaText}>
+                                            <span className={styles.templateTitle}>{template.title}</span>
+                                            <span className={styles.templateStory}>
+                                                {formatDate(template.updatedAt)}
+                                            </span>
+                                        </div>
+                                        <button
+                                            className={styles.assignButton}
+                                            title="Asignar"
+                                            type="button"
+                                            onClick={e => {
+                                                e.stopPropagation();
+                                                setAssigningTemplate(template);
+                                            }}
+                                        >
+                                            👥
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                <div className={styles.footer}>
+                    <button
+                        className={styles.footerButtonPrimary}
+                        type="button"
+                        onClick={() => setCreatingNew(true)}
+                    >
+                        ➕ Crear plantilla nueva
+                    </button>
+                    <button
+                        className={styles.footerButtonSecondary}
+                        disabled={!selectedId}
+                        type="button"
+                        onClick={() => onSelectTemplate(selectedId)}
+                    >
+                        ✏️ Editar plantilla
+                    </button>
+                </div>
             </div>
+
+            {creatingNew && (
+                <NewTemplateForm
+                    creating={submitting}
+                    error={createError}
+                    onCancel={() => setCreatingNew(false)}
+                    onCreate={handleCreate}
+                />
+            )}
+
             {assigningTemplate && (
                 <AssignPanel
                     templateId={assigningTemplate.id}
