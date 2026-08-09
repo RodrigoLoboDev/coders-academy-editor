@@ -105,6 +105,23 @@
     padding: 0 0.75rem;
 }
 
+/* Sesión 34 — quedaba mucho espacio entre el logo ("Coders Academy | Editor") y el globo de
+   idioma (SettingsMenu, siguiente ítem del mismo .file-group): los dos lados se suman (margin +
+   padding derecho del logo, más margin + padding izquierdo del selector de idioma) ≈ 2rem de
+   hueco. Se achica solo el lado derecho del logo — el selector de idioma no se toca, sigue
+   aportando su propio margin+padding del otro lado. */
+.file-group .menu-bar-item.logo-menu-item {
+    padding-right: 0;
+    margin-right: 0;
+}
+
+[dir="rtl"] .file-group .menu-bar-item.logo-menu-item {
+    padding-right: 0.75rem;
+    margin-right: 0.25rem;
+    padding-left: 0;
+    margin-left: 0;
+}
+
 .file-group .no-offset {
     margin: 0 .25rem;
     padding: 0 0.25rem;

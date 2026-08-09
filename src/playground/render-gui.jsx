@@ -95,14 +95,6 @@ const sessionButtonStyle = {
     padding: 0
 };
 
-// Sesión 34 — botón "Mis Proyectos" con el mismo look que Tutoriales (menu-bar.jsx): ícono +
-// label, sin el subrayado/estilo de link que usan los demás botones de sesión (Mis plantillas,
-// Cerrar sesión) — separado del nombre por el mismo separador punteado de la barra
-// (menuBarStyles.divider), no por el margin-left de sessionButtonStyle (quedaría doble espacio).
-const myProjectsButtonStyle = {
-    marginLeft: 0
-};
-
 // Sesión 33 — routing real con react-router (docs/scratch-editor-integration.md, monorepo
 // privado). Antes todo el flujo (AccessGate → picker → editor) era una state machine adentro de
 // un solo componente, sin tocar nunca la URL — el navegador siempre mostraba
@@ -201,18 +193,16 @@ const StudentEditorRoute = ({WrappedGui}) => {
                     <div style={sessionInfoStyle}>
                         <span style={sessionNameStyle}>{student.firstName}</span>
                         <Divider className={menuBarStyles.divider} />
-                        <button
+                        <div
                             className={classNames(menuBarStyles.menuBarItem, menuBarStyles.hoverable)}
-                            style={myProjectsButtonStyle}
-                            type="button"
                             onClick={() => navigate(PATHS.projects)}
                         >
                             <img
                                 className={menuBarStyles.helpIcon}
                                 src={myProjectsIcon}
                             />
-                            <span>Mis Proyectos</span>
-                        </button>
+                            <span className={menuBarStyles.tutorialsLabel}>Mis Proyectos</span>
+                        </div>
                     </div>
                 );
 
