@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {BrowserRouter, Routes, Route, Navigate, useNavigate, useParams} from 'react-router-dom';
@@ -11,6 +12,14 @@ import AccessGate from '../components/access-gate/access-gate.jsx';
 import ProjectPicker from '../components/project-picker/project-picker.jsx';
 import TemplatePicker from '../components/template-picker/template-picker.jsx';
 import PublicPlayer from '../components/public-player/public-player.jsx';
+import Divider from '../components/divider/divider.jsx';
+
+// Sesión 34 — reusa las clases ya definidas en menu-bar.css (mismo look que el botón Tutoriales:
+// menuBarItem/hoverable/helpIcon, y el separador punteado blanco entre el título de proyecto y
+// Tutoriales) en vez de duplicar esos estilos acá — el nombre físico de la clase es el mismo sin
+// importar desde qué archivo se importe el módulo CSS.
+import menuBarStyles from '../components/menu-bar/menu-bar.css';
+import myProjectsIcon from '../components/menu-bar/icon--my-projects.svg';
 
 // Sobrevive un refresh accidental de la página sin perder al alumno ya identificado (el código de
 // acceso ya se guarda aparte, ver access-gate.jsx) — se borra solo al cerrar la pestaña/navegador,
@@ -67,6 +76,14 @@ const sessionInfoStyle = {
     whiteSpace: 'nowrap'
 };
 
+// Sesión 34 — nombre del alumno/docente/admin al mismo tamaño y grosor que el wordmark "Coders
+// Academy | Editor" del logo (menu-bar/scratch-logo.svg: font-size 17, font-weight 700 — 17px con
+// raíz de 16px por default, sin ningún override en este repo, ≈ 1.0625rem).
+const sessionNameStyle = {
+    fontSize: '1.0625rem',
+    fontWeight: 700
+};
+
 const sessionButtonStyle = {
     marginLeft: 10,
     background: 'none',
@@ -76,6 +93,14 @@ const sessionButtonStyle = {
     cursor: 'pointer',
     fontSize: '0.8rem',
     padding: 0
+};
+
+// Sesión 34 — botón "Mis Proyectos" con el mismo look que Tutoriales (menu-bar.jsx): ícono +
+// label, sin el subrayado/estilo de link que usan los demás botones de sesión (Mis plantillas,
+// Cerrar sesión) — separado del nombre por el mismo separador punteado de la barra
+// (menuBarStyles.divider), no por el margin-left de sessionButtonStyle (quedaría doble espacio).
+const myProjectsButtonStyle = {
+    marginLeft: 0
 };
 
 // Sesión 33 — routing real con react-router (docs/scratch-editor-integration.md, monorepo
@@ -174,13 +199,19 @@ const StudentEditorRoute = ({WrappedGui}) => {
 
                 const studentRightContent = (
                     <div style={sessionInfoStyle}>
-                        {student.firstName}
+                        <span style={sessionNameStyle}>{student.firstName}</span>
+                        <Divider className={menuBarStyles.divider} />
                         <button
-                            style={sessionButtonStyle}
+                            className={classNames(menuBarStyles.menuBarItem, menuBarStyles.hoverable)}
+                            style={myProjectsButtonStyle}
                             type="button"
                             onClick={() => navigate(PATHS.projects)}
                         >
-                            Volver a mis proyectos
+                            <img
+                                className={menuBarStyles.helpIcon}
+                                src={myProjectsIcon}
+                            />
+                            <span>Mis Proyectos</span>
                         </button>
                     </div>
                 );
@@ -231,9 +262,10 @@ const TeacherEditorRoute = ({WrappedGui}) => {
                 const apiScratchTemplatesHost = `${process.env.API_URL}/admin/scratch-templates`;
                 const teacherRightContent = (
                     <div style={sessionInfoStyle}>
-                        {teacher.name}
+                        <span style={sessionNameStyle}>{teacher.name}</span>
+                        <Divider className={menuBarStyles.divider} />
                         <button
-                            style={sessionButtonStyle}
+                            style={{...sessionButtonStyle, marginLeft: 0}}
                             type="button"
                             onClick={() => navigate(PATHS.templates)}
                         >
