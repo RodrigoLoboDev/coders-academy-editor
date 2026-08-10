@@ -124,11 +124,10 @@ NewTemplateForm.propTypes = {
 };
 
 // Fase 4 del plan (docs/plan-fases-scratch-plataforma.md, monorepo privado) — submenú "⋮" con
-// renombrar/eliminar, mismo patrón que ProjectMenu de project-picker.css/jsx (docente pidió
-// explícitamente el mismo tratamiento que ya tienen los proyectos de los alumnos, antes de probar
-// en producción). "Asignar" queda aparte como acción rápida (👥, siempre visible) — solo estas dos
-// entran al menú, porque son las dos que necesitan una confirmación/estado propio.
-const TemplateMenu = ({onClose, onRename, onDelete}) => {
+// asignar/renombrar/eliminar, mismo patrón que ProjectMenu de project-picker.css/jsx. "Asignar"
+// vivía como botón (👥) suelto al lado de este menú — el usuario pidió que entre acá adentro
+// junto con las otras dos acciones, en vez de quedar como acción rápida separada.
+const TemplateMenu = ({onClose, onAssign, onRename, onDelete}) => {
     const menuRef = useRef(null);
 
     useEffect(() => {
@@ -141,6 +140,9 @@ const TemplateMenu = ({onClose, onRename, onDelete}) => {
 
     return (
         <div ref={menuRef} className={styles.templateMenu} onMouseDown={e => e.stopPropagation()}>
+            <button className={styles.templateMenuItem} type="button" onClick={onAssign}>
+                👥 Asignar
+            </button>
             <button className={styles.templateMenuItem} type="button" onClick={onRename}>
                 ✏️ Renombrar
             </button>
@@ -152,6 +154,7 @@ const TemplateMenu = ({onClose, onRename, onDelete}) => {
 };
 
 TemplateMenu.propTypes = {
+    onAssign: PropTypes.func.isRequired,
     onClose: PropTypes.func.isRequired,
     onDelete: PropTypes.func.isRequired,
     onRename: PropTypes.func.isRequired
@@ -669,40 +672,31 @@ const TemplatePicker = ({token, onSelectTemplate, onLogout}) => {
                                                 {formatDate(template.updatedAt)}
                                             </span>
                                         </div>
-                                        <div className={styles.actions}>
+                                        <div className={styles.menuAnchor}>
                                             <button
-                                                className={styles.assignButton}
-                                                title="Asignar"
+                                                className={styles.menuButton}
                                                 type="button"
                                                 onClick={e => {
                                                     e.stopPropagation();
-                                                    setAssigningTemplate(template);
+                                                    setOpenMenuId(openMenuId === template.id ? null : template.id);
                                                 }}
                                             >
-                                                👥
+                                                ⋮
                                             </button>
-                                            <div className={styles.menuAnchor}>
-                                                <button
-                                                    className={styles.menuButton}
-                                                    type="button"
-                                                    onClick={e => {
-                                                        e.stopPropagation();
-                                                        setOpenMenuId(openMenuId === template.id ? null : template.id);
+                                            {openMenuId === template.id && (
+                                                <TemplateMenu
+                                                    onAssign={() => {
+                                                        setOpenMenuId(null);
+                                                        setAssigningTemplate(template);
                                                     }}
-                                                >
-                                                    ⋮
-                                                </button>
-                                                {openMenuId === template.id && (
-                                                    <TemplateMenu
-                                                        onClose={() => setOpenMenuId(null)}
-                                                        onDelete={() => {
-                                                            setOpenMenuId(null);
-                                                            setDeleteTarget(template);
-                                                        }}
-                                                        onRename={() => startRename(template)}
-                                                    />
-                                                )}
-                                            </div>
+                                                    onClose={() => setOpenMenuId(null)}
+                                                    onDelete={() => {
+                                                        setOpenMenuId(null);
+                                                        setDeleteTarget(template);
+                                                    }}
+                                                    onRename={() => startRename(template)}
+                                                />
+                                            )}
                                         </div>
                                     </div>
                                 </div>

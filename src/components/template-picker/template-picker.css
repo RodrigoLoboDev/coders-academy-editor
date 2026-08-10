@@ -220,41 +220,10 @@
     text-overflow: ellipsis;
 }
 
-/* Fase 4 del plan (docs/plan-fases-scratch-plataforma.md) — antes .assignButton era el único hijo
-   suelto de .meta junto a .metaText; ahora va adentro de .actions junto con el nuevo menú "⋮"
-   (renombrar/eliminar), mismo hijo único a efectos de .meta { justify-content: space-between }. */
-.actions {
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-    gap: 2px;
-}
-
-/* Botón "Asignar" por card — mismo tratamiento visual que .menuButton (⋮) de acá abajo, pero es
-   una acción única (no un submenú), así que dispara directo el panel de asignación en vez de
-   desplegar una lista. */
-.assignButton {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    width: 26px;
-    height: 26px;
-    font-size: 0.95rem;
-    line-height: 1;
-    color: #9aa6c2;
-    background: none;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-.assignButton:hover {
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.08);
-}
-
-/* ── Submenú "⋮" (renombrar / eliminar) — mismo patrón que project-picker.css ─────────────── */
+/* ── Submenú "⋮" (asignar / renombrar / eliminar) — mismo patrón que project-picker.css ─────
+   Fase 4 del plan (docs/plan-fases-scratch-plataforma.md) — "Asignar" vivía como botón (👥)
+   suelto al lado de este menú; el usuario pidió que entre acá adentro junto con las otras dos
+   acciones, en vez de quedar como acción rápida separada. */
 
 .menuAnchor {
     position: relative;
