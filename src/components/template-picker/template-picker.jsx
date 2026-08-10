@@ -133,6 +133,19 @@ const AssignPanel = ({token, templateId, templateTitle, onClose}) => {
     const [commissionsError, setCommissionsError] = useState(null);
     const [selectedCommissionId, setSelectedCommissionId] = useState('');
 
+    // Fase 3 del plan (docs/plan-fases-scratch-plataforma.md, monorepo) — asignar a un curso
+    // entero es un vínculo vivo: cualquier comisión de ese curso (actual o futura) y por lo tanto
+    // cualquier alumno de esas comisiones ya queda con acceso, sin volver a tocar nada acá.
+    const [courses, setCourses] = useState(null);
+    const [coursesError, setCoursesError] = useState(null);
+    const [selectedCourseId, setSelectedCourseId] = useState('');
+    // Un curso puede tener comisiones de más de un rango de edad (ej. 6-10 y 11-15 del mismo
+    // curso) — filtro opcional para que "todo el curso" no sea demasiado amplio en una plantilla
+    // pensada para una sola franja etaria. Las opciones salen de las comisiones reales de ese
+    // curso (mismo string que Commission.ageGroup), no de una lista fija — evita typos que
+    // rompan el match por igualdad exacta del lado del backend.
+    const [selectedAgeGroup, setSelectedAgeGroup] = useState('');
+
     const [assignments, setAssignments] = useState(null);
     const [assignmentsError, setAssignmentsError] = useState(null);
 
@@ -166,6 +179,16 @@ const AssignPanel = ({token, templateId, templateTitle, onClose}) => {
             })
             .then(setCommissions)
             .catch(() => setCommissionsError('No se pudieron cargar las comisiones.'));
+        // GET /courses es público (lo consume apps/landing sin login) — mismo criterio que ya
+        // usa el selector de curso del form de comisiones en apps/web, se reusa acá en vez de
+        // duplicar un endpoint nuevo.
+        fetch(`${process.env.API_URL}/courses`)
+            .then(response => {
+                if (!response.ok) throw new Error(response.status);
+                return response.json();
+            })
+            .then(setCourses)
+            .catch(() => setCoursesError('No se pudieron cargar los cursos.'));
         loadAssignments();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [templateId]);
@@ -203,12 +226,36 @@ const AssignPanel = ({token, templateId, templateTitle, onClose}) => {
                 return response.json();
             })
             .then(result => {
-                setAssignSuccess(`Asignado a ${result.count} alumno${result.count === 1 ? '' : 's'}.`);
+                // Fase 3 — el backend ya no expande comisión/curso a alumnos individuales (vínculo
+                // vivo), así que "count" dejó de tener sentido para esos dos casos: la respuesta
+                // ahora es {studentCount, commissionAssigned, courseAssigned}.
+                if (result.courseAssigned) {
+                    setAssignSuccess('Asignado a todo el curso — alumnos actuales y futuros.');
+                } else if (result.commissionAssigned) {
+                    setAssignSuccess('Asignado a toda la comisión — alumnos actuales y futuros.');
+                } else {
+                    setAssignSuccess(`Asignado a ${result.studentCount} alumno${result.studentCount === 1 ? '' : 's'}.`);
+                }
                 loadAssignments();
             })
             .catch(() => setAssignError('No se pudo asignar.'))
             .finally(() => setAssigning(false));
     };
+
+    const handleAssignCourse = () => {
+        if (!selectedCourseId) return;
+        doAssign({courseId: selectedCourseId, ageGroup: selectedAgeGroup || undefined});
+    };
+
+    // Rangos de edad reales entre las comisiones del curso elegido — no una lista fija, para que
+    // el valor matchee exacto contra Commission.ageGroup del lado del backend.
+    const ageGroupOptions = selectedCourseId && commissions
+        ? [...new Set(
+            commissions
+                .filter(commission => commission.courseId === selectedCourseId)
+                .map(commission => commission.ageGroup)
+        )]
+        : [];
 
     const handleAssignCommission = () => {
         if (!selectedCommissionId) return;
@@ -236,7 +283,50 @@ const AssignPanel = ({token, templateId, templateTitle, onClose}) => {
                 <h2 className={styles.panelTitle}>👥 Asignar</h2>
                 <p className={styles.panelSubtitle}>{templateTitle}</p>
 
-                <label className={styles.label} htmlFor="assign-commission">Por comisión</label>
+                <label className={styles.label} htmlFor="assign-course">Por curso (recomendado)</label>
+                {coursesError && <p className={styles.error}>{coursesError}</p>}
+                {courses && (
+                    <>
+                        <select
+                            className={styles.select}
+                            id="assign-course"
+                            value={selectedCourseId}
+                            onChange={e => {
+                                setSelectedCourseId(e.target.value);
+                                setSelectedAgeGroup('');
+                            }}
+                        >
+                            <option value="">Elegí un curso…</option>
+                            {courses.map(course => (
+                                <option key={course.id} value={course.id}>{course.title}</option>
+                            ))}
+                        </select>
+                        {selectedCourseId && ageGroupOptions.length > 0 && (
+                            <select
+                                className={styles.select}
+                                id="assign-course-age-group"
+                                value={selectedAgeGroup}
+                                onChange={e => setSelectedAgeGroup(e.target.value)}
+                            >
+                                <option value="">Todas las edades del curso</option>
+                                {ageGroupOptions.map(ageGroup => (
+                                    <option key={ageGroup} value={ageGroup}>Solo {ageGroup} años</option>
+                                ))}
+                            </select>
+                        )}
+                        <button
+                            className={styles.newButton}
+                            disabled={assigning || !selectedCourseId}
+                            style={{marginBottom: 4}}
+                            type="button"
+                            onClick={handleAssignCourse}
+                        >
+                            {selectedAgeGroup ? `Asignar a ${selectedAgeGroup} años del curso` : 'Asignar a todo el curso'}
+                        </button>
+                    </>
+                )}
+
+                <label className={styles.label} htmlFor="assign-commission">Por comisión puntual</label>
                 {commissionsError && <p className={styles.error}>{commissionsError}</p>}
                 {commissions && (
                     <>
@@ -302,9 +392,20 @@ const AssignPanel = ({token, templateId, templateTitle, onClose}) => {
                     <div className={styles.assignmentsList}>
                         {assignments.map(assignment => (
                             <div key={assignment.id} className={styles.assignmentRow}>
+                                {/* Fase 3 — assignment.scope distingue las tres formas de
+                                asignación: STUDENT (fila individual, como siempre),
+                                COMMISSION/COURSE (vínculo vivo, ScratchTemplateGroupAssignment —
+                                no tienen .student, es a nivel comisión/curso entero). */}
                                 <span>
-                                    {assignment.student.firstName} {assignment.student.lastName}
-                                    {assignment.commission && ` · ${assignment.commission.name}`}
+                                    {assignment.scope === 'COURSE' && (
+                                        `🎓 ${assignment.ageGroup ? `${assignment.ageGroup} años de` : 'Todo el'} curso: ${assignment.course.title}`
+                                    )}
+                                    {assignment.scope === 'COMMISSION' && `👥 Toda la comisión: ${assignment.commission.name}`}
+                                    {assignment.scope === 'STUDENT' && (
+                                        <>
+                                            {assignment.student.firstName} {assignment.student.lastName}
+                                        </>
+                                    )}
                                 </span>
                                 <button
                                     className={styles.removeButton}
