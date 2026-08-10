@@ -18,7 +18,11 @@
     border-bottom: 2px solid #ffb02e;
     color: #ffffff;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    overflow: hidden;
+    /* Bug real encontrado probando en producción: "Ver más" no hacía nada visible — el popover SÍ
+       se abría (el estado cambiaba bien), pero quedaba recortado por completo acá, porque un
+       overflow:hidden en un ancestro corta cualquier descendiente posicionado en absolute que se
+       salga de su caja, sin importar el z-index. El truncado con ellipsis de .title/.story-preview
+       ya tiene su propio overflow:hidden en cada uno — no hacía falta repetirlo acá arriba. */
 }
 
 .badge {
