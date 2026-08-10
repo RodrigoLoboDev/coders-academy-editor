@@ -124,6 +124,7 @@ const GUIComponent = props => {
         soundsTabVisible,
         stageSizeMode,
         targetIsStage,
+        taskBanner,
         telemetryModalVisible,
         theme,
         tipsLibraryVisible,
@@ -253,7 +254,12 @@ const GUIComponent = props => {
                     onToggleLoginOpen={onToggleLoginOpen}
                     rightContent={rightContent}
                 />
-                <Box className={styles.bodyWrapper}>
+                {/* Fase 4 del plan (docs/plan-fases-scratch-plataforma.md, monorepo privado) —
+                franja de tarea asignada, solo cuando el proyecto abierto viene de una plantilla
+                (StudentEditorRoute en render-gui.jsx la arma y la pasa acá). Va debajo del
+                MenuBar y arriba del área de trabajo, nunca tapa nada de scratch-blocks/stage. */}
+                {taskBanner}
+                <Box className={classNames(styles.bodyWrapper, {[styles.withTaskBanner]: Boolean(taskBanner)})}>
                     <Box className={styles.flexWrapper}>
                         <Box className={styles.editorWrapper}>
                             <Tabs
@@ -448,6 +454,8 @@ GUIComponent.propTypes = {
     soundsTabVisible: PropTypes.bool,
     stageSizeMode: PropTypes.oneOf(Object.keys(STAGE_SIZE_MODES)),
     targetIsStage: PropTypes.bool,
+    // Fase 4 — franja de tarea asignada (ver comentario donde se renderiza, más arriba).
+    taskBanner: PropTypes.node,
     telemetryModalVisible: PropTypes.bool,
     theme: PropTypes.string,
     tipsLibraryVisible: PropTypes.bool,

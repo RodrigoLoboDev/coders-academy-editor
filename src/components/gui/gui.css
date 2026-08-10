@@ -11,6 +11,12 @@
     background-color: $ui-primary;
 }
 
+/* Fase 4 — cuando hay franja de tarea (taskBanner en gui.jsx) se resta también su altura fija,
+   si no el body-wrapper se pasa del alto disponible y corta el borde inferior del stage. */
+.body-wrapper.with-task-banner {
+    height: calc(100% - $menu-bar-height - $task-banner-height);
+}
+
 .body-wrapper * {
     box-sizing: border-box;
 }

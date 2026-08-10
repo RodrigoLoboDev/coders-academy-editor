@@ -8,6 +8,10 @@ $sprites-per-row: 5;
 $menu-bar-height: 3rem;
 $sprite-info-height: 6rem;
 $stage-menu-height: 2.75rem;
+/* Fase 4 del plan (docs/plan-fases-scratch-plataforma.md) — franja de tarea asignada, altura fija
+   a propósito (sin "ver más" que empuje el layout) para que el cálculo de .body-wrapper de más
+   abajo sea siempre exacto. */
+$task-banner-height: 2.75rem;
 
 $library-header-height: 3.125rem;
 $library-filter-bar-height: 2.5rem;

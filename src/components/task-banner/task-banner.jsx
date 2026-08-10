@@ -1,0 +1,77 @@
+import React, {useEffect, useRef, useState} from 'react';
+import PropTypes from 'prop-types';
+
+import styles from './task-banner.css';
+
+/*
+ * Fase 4 del plan (docs/plan-fases-scratch-plataforma.md, monorepo privado) — franja fija arriba
+ * del editor con el título/relato/objetivo de la tarea asignada que el alumno tiene abierta.
+ * Solo se muestra cuando el proyecto abierto viene de una plantilla (sourceTemplateId), ver
+ * StudentEditorRoute en render-gui.jsx — un proyecto libre no la muestra.
+ *
+ * Altura fija a propósito (ver $task-banner-height en units.css, que gui.css resta del alto
+ * disponible): "ver más" abre un popover superpuesto en vez de empujar el layout del editor hacia
+ * abajo, así el cálculo de altura del stage/bloques no depende de cuánto texto tenga la tarea.
+ */
+const TaskBanner = ({title, story, objective}) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const popoverRef = useRef(null);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleOutsideClick = e => {
+            if (popoverRef.current && !popoverRef.current.contains(e.target)) setIsOpen(false);
+        };
+        const handleEscape = e => {
+            if (e.key === 'Escape') setIsOpen(false);
+        };
+        document.addEventListener('mousedown', handleOutsideClick);
+        document.addEventListener('keydown', handleEscape);
+        return () => {
+            document.removeEventListener('mousedown', handleOutsideClick);
+            document.removeEventListener('keydown', handleEscape);
+        };
+    }, [isOpen]);
+
+    return (
+        <div className={styles.banner}>
+            <span className={styles.badge}>🎯 Tarea</span>
+            <span className={styles.title}>{title}</span>
+            {story && <span className={styles.storyPreview}>— {story}</span>}
+            <div className={styles.popoverAnchor} ref={popoverRef}>
+                <button
+                    className={styles.toggleButton}
+                    type="button"
+                    onClick={() => setIsOpen(prev => !prev)}
+                >
+                    {isOpen ? 'Ocultar ▲' : 'Ver más ▾'}
+                </button>
+                {isOpen && (
+                    <div className={styles.popover}>
+                        <h2 className={styles.popoverTitle}>{title}</h2>
+                        {story && (
+                            <div className={styles.popoverSection}>
+                                <h3 className={styles.popoverLabel}>📖 La historia</h3>
+                                <p className={styles.popoverText}>{story}</p>
+                            </div>
+                        )}
+                        {objective && (
+                            <div className={styles.popoverSection}>
+                                <h3 className={styles.popoverLabel}>🎯 Tu misión</h3>
+                                <p className={styles.popoverText}>{objective}</p>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+TaskBanner.propTypes = {
+    objective: PropTypes.string,
+    story: PropTypes.string,
+    title: PropTypes.string.isRequired
+};
+
+export default TaskBanner;

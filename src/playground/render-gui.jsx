@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import ReactDOM from 'react-dom';
 import {BrowserRouter, Routes, Route, Navigate, useNavigate, useParams} from 'react-router-dom';
 
@@ -13,6 +13,7 @@ import ProjectPicker from '../components/project-picker/project-picker.jsx';
 import TemplatePicker from '../components/template-picker/template-picker.jsx';
 import PublicPlayer from '../components/public-player/public-player.jsx';
 import Divider from '../components/divider/divider.jsx';
+import TaskBanner from '../components/task-banner/task-banner.jsx';
 
 // Sesión 34 — reusa las clases ya definidas en menu-bar.css (mismo look que el botón Tutoriales:
 // menuBarItem/hoverable/helpIcon, y el separador punteado blanco entre el título de proyecto y
@@ -176,19 +177,53 @@ const ProjectsRoute = () => {
 const StudentEditorRoute = ({WrappedGui}) => {
     const navigate = useNavigate();
     const {projectId} = useParams();
+    // Leído directo acá (no del render-prop de RequireStudent más abajo) a propósito: los Hooks de
+    // React no pueden vivir adentro de esa callback (RequireStudent hace un return temprano sin
+    // alumno, así que los hooks de acá quedarían llamados condicionalmente — "rendered fewer hooks
+    // than expected" en cuanto cambiara esa condición). Mismo dato, misma fuente
+    // (sessionStorage), solo que leído en el nivel del componente en vez de adentro del guard.
+    const student = readStoredStudent();
+    // ProjectFetcherHOC (containers/project-fetcher-hoc.jsx) solo despacha setProjectId en su
+    // constructor si projectId no es null/undefined/'' — 'nuevo' (nuestro slug de URL para "crear
+    // proyecto en blanco") se traduce acá a '0' (defaultProjectId, sentinela hardcodeado en
+    // reducers/project-state.js) para que sí dispare esa carga. Mismo id que usaba el viejo
+    // HashParserHOC, ver más abajo por qué no se usa ese HOC.
+    const effectiveProjectId = projectId === 'nuevo' ? '0' : projectId;
+    const apiScratchProjectsHost = student ? `${process.env.API_URL}/scratch-projects/${student.id}` : null;
+
+    // Fase 4 del plan (docs/plan-fases-scratch-plataforma.md, monorepo privado) — fetch propio y
+    // liviano (solo metadata, no el projectJson pesado que ya trae fetch-project-from-server.js
+    // por su cuenta) para saber si el proyecto abierto viene de una plantilla y armar la franja de
+    // tarea. Un proyecto libre (sin sourceTemplateId) o el sentinela '0' de "nuevo en blanco" no
+    // muestran franja.
+    const [taskInfo, setTaskInfo] = useState(null);
+    useEffect(() => {
+        if (!apiScratchProjectsHost || effectiveProjectId === '0') {
+            setTaskInfo(null);
+            return;
+        }
+        let cancelled = false;
+        fetch(`${apiScratchProjectsHost}/${effectiveProjectId}`)
+            .then(response => (response.ok ? response.json() : null))
+            .then(project => {
+                if (cancelled) return;
+                setTaskInfo(
+                    project && project.sourceTemplateId
+                        ? {title: project.title, story: project.taskStory, objective: project.taskObjective}
+                        : null
+                );
+            })
+            .catch(() => {
+                if (!cancelled) setTaskInfo(null);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [apiScratchProjectsHost, effectiveProjectId]);
 
     return (
         <RequireStudent>
-            {student => {
-                const apiScratchProjectsHost = `${process.env.API_URL}/scratch-projects/${student.id}`;
-                // ProjectFetcherHOC (containers/project-fetcher-hoc.jsx) solo despacha
-                // setProjectId en su constructor si projectId no es null/undefined/'' — 'nuevo'
-                // (nuestro slug de URL para "crear proyecto en blanco") se traduce acá a '0'
-                // (defaultProjectId, sentinela hardcodeado en reducers/project-state.js) para que
-                // sí dispare esa carga. Mismo id que usaba el viejo HashParserHOC, ver más abajo
-                // por qué no se usa ese HOC.
-                const effectiveProjectId = projectId === 'nuevo' ? '0' : projectId;
-
+            {() => {
                 const studentRightContent = (
                     <div style={sessionInfoStyle}>
                         <span style={sessionNameStyle}>{student.firstName}</span>
@@ -214,6 +249,15 @@ const StudentEditorRoute = ({WrappedGui}) => {
                         assetHost={apiScratchProjectsHost}
                         projectId={effectiveProjectId}
                         rightContent={studentRightContent}
+                        taskBanner={
+                            taskInfo && (
+                                <TaskBanner
+                                    objective={taskInfo.objective}
+                                    story={taskInfo.story}
+                                    title={taskInfo.title}
+                                />
+                            )
+                        }
                         onClickLogo={onClickLogo}
                         onUpdateProjectThumbnail={saveThumbnailToServer}
                     />

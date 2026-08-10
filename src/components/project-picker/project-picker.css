@@ -91,6 +91,63 @@
     white-space: nowrap;
 }
 
+/* Fase 4 del plan (docs/plan-fases-scratch-plataforma.md) — reemplaza al <h1> estático de arriba
+   cuando hay más de una pestaña (Mis Proyectos / Tareas asignadas). Mismo lugar en el grid del
+   header (columna central), mismo criterio visual que el resto del picker. */
+.tabBar {
+    display: flex;
+    justify-self: center;
+    gap: 6px;
+    padding: 4px;
+    background: #1c2440;
+    border-radius: 12px;
+}
+
+.tabButton {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    font-size: 0.92rem;
+    font-weight: bold;
+    color: #9aa6c2;
+    background: none;
+    border: none;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.tabButton:hover {
+    color: #eef2fb;
+}
+
+.tabButtonActive {
+    color: #3a2a06;
+    background: linear-gradient(180deg, #ffc65c, #ffb02e);
+}
+
+.tabButtonActive:hover {
+    color: #3a2a06;
+}
+
+.tabBadge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    font-size: 0.68rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.15);
+    color: inherit;
+}
+
+.tabButtonActive .tabBadge {
+    background: rgba(58, 42, 6, 0.18);
+}
+
 .closeButton {
     justify-self: end;
     display: flex;
@@ -334,6 +391,106 @@
     font-size: 0.95rem;
     color: #9aa6c2;
     text-align: center;
+}
+
+/* ── Tareas asignadas ──────────────────────────────────────────────────── */
+
+.taskCard {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    aspect-ratio: 0.82;
+    background: #1c2440;
+    border: 2px solid transparent;
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.taskThumbWrap {
+    position: relative;
+    flex: 3;
+    min-height: 0;
+    background: #0f1629;
+}
+
+.taskThumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.taskThumbPlaceholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+}
+
+.taskProgressBadge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    padding: 3px 9px;
+    font-size: 0.68rem;
+    font-weight: bold;
+    color: #3a2a06;
+    background: #ffb02e;
+    border-radius: 999px;
+}
+
+.taskMeta {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.taskTitle {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #eef2fb;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.taskStory {
+    flex: 1;
+    margin: 0;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: #9aa6c2;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.taskAction {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #3a2a06;
+    background: linear-gradient(180deg, #ffc65c, #ffb02e);
+    border: none;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: filter 0.15s ease;
+}
+
+.taskAction:hover:not(:disabled) {
+    filter: brightness(1.05);
+}
+
+.taskAction:disabled {
+    opacity: 0.6;
+    cursor: default;
 }
 
 /* ── Footer ────────────────────────────────────────────────────────────── */

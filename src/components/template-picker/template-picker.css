@@ -220,9 +220,19 @@
     text-overflow: ellipsis;
 }
 
-/* Botón "Asignar" por card — mismo tratamiento visual que .menuButton (⋮) de project-picker.css,
-   pero es una acción única (no un submenú), así que dispara directo el panel de asignación en vez
-   de desplegar una lista. */
+/* Fase 4 del plan (docs/plan-fases-scratch-plataforma.md) — antes .assignButton era el único hijo
+   suelto de .meta junto a .metaText; ahora va adentro de .actions junto con el nuevo menú "⋮"
+   (renombrar/eliminar), mismo hijo único a efectos de .meta { justify-content: space-between }. */
+.actions {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 2px;
+}
+
+/* Botón "Asignar" por card — mismo tratamiento visual que .menuButton (⋮) de acá abajo, pero es
+   una acción única (no un submenú), así que dispara directo el panel de asignación en vez de
+   desplegar una lista. */
 .assignButton {
     display: flex;
     align-items: center;
@@ -242,6 +252,135 @@
 .assignButton:hover {
     color: #ffffff;
     background: rgba(255, 255, 255, 0.08);
+}
+
+/* ── Submenú "⋮" (renombrar / eliminar) — mismo patrón que project-picker.css ─────────────── */
+
+.menuAnchor {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.menuButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    font-size: 1.1rem;
+    line-height: 1;
+    color: #9aa6c2;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.menuButton:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.templateMenu {
+    position: absolute;
+    z-index: 50;
+    bottom: calc(100% + 6px);
+    right: 0;
+    min-width: 148px;
+    padding: 4px;
+    background: #1c2440;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.5);
+    text-align: left;
+}
+
+.templateMenuItem {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 6px 8px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #eef2fb;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.templateMenuItem:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.templateMenuItemDanger {
+    composes: templateMenuItem;
+    color: #fb7185;
+}
+
+.templateMenuItemDanger:hover {
+    background: rgba(251, 113, 133, 0.12);
+}
+
+.renameInput {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 1px 4px;
+    margin: -1px -4px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    font-family: inherit;
+    color: #eef2fb;
+    background: #0f1629;
+    border: 1px solid rgba(108, 123, 255, 0.6);
+    border-radius: 4px;
+    outline: none;
+}
+
+/* ── Modal de confirmación de borrado — reusa .panelBackdrop/.panelCard/.panelTitle de más abajo,
+   solo suma los botones de acción (cancelar/borrar), mismo patrón que
+   .confirmActions/.confirmCancelButton/.confirmDeleteButton de project-picker.css. ──────────── */
+
+.confirmActions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.confirmCancelButton,
+.confirmDeleteButton {
+    flex: 1;
+    padding: 13px 16px;
+    font-size: 0.98rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.confirmCancelButton {
+    color: #eef2fb;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.confirmCancelButton:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.confirmDeleteButton {
+    color: #ffffff;
+    background: #e04040;
+}
+
+.confirmDeleteButton:hover:not(:disabled) {
+    background: #c43333;
+}
+
+.confirmDeleteButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 .hint {

@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import React, {useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
 
@@ -130,7 +131,12 @@ ConfirmDeleteModal.propTypes = {
  * publicar, borrar) movidas a un submenú "⋮" por card.
  */
 const ProjectPicker = ({studentId, onSelectProject, onCreateNew, onExit}) => {
+    // Fase 4 del plan (docs/plan-fases-scratch-plataforma.md, monorepo privado) — pestaña nueva
+    // "Tareas asignadas" al lado de "Mis Proyectos", mismo picker (header/footer/grid) en vez de
+    // un componente aparte, para no duplicar el chrome del modal.
+    const [activeTab, setActiveTab] = useState('projects');
     const [projects, setProjects] = useState(null);
+    const [tasks, setTasks] = useState(null);
     const [error, setError] = useState(null);
     const [query, setQuery] = useState('');
     const [selectedId, setSelectedId] = useState(null);
@@ -140,6 +146,7 @@ const ProjectPicker = ({studentId, onSelectProject, onCreateNew, onExit}) => {
     const [renameValue, setRenameValue] = useState('');
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [startingTaskId, setStartingTaskId] = useState(null);
 
     useEffect(() => {
         fetch(`${process.env.API_URL}/scratch-projects/${studentId}`)
@@ -150,6 +157,39 @@ const ProjectPicker = ({studentId, onSelectProject, onCreateNew, onExit}) => {
             .then(setProjects)
             .catch(() => setError('No se pudieron cargar tus proyectos.'));
     }, [studentId]);
+
+    // Se trae siempre (no solo al entrar a la pestaña) — así el badge con la cantidad ya está
+    // listo desde el principio y projects ya tiene los datos para saber, por sourceTemplateId, qué
+    // tareas ya tienen progreso propio (ver hasProgress más abajo).
+    useEffect(() => {
+        fetch(`${process.env.API_URL}/scratch-templates/assigned/${studentId}`)
+            .then(response => {
+                if (!response.ok) throw new Error(response.status);
+                return response.json();
+            })
+            .then(setTasks)
+            .catch(() => setError('No se pudieron cargar tus tareas asignadas.'));
+    }, [studentId]);
+
+    // Idempotente del lado del backend (ScratchTemplatesService.cloneToStudentProject) — si el
+    // alumno ya tiene un proyecto de esta plantilla, esto devuelve ESE proyecto en vez de crear
+    // uno nuevo. Por eso acá no hace falta distinguir "empezar" de "continuar": siempre se llama
+    // igual, y directo se navega al proyecto que devuelva.
+    const handleStartTask = templateId => {
+        setStartingTaskId(templateId);
+        fetch(`${process.env.API_URL}/scratch-templates/${templateId}/clone/${studentId}`, {method: 'POST'})
+            .then(response => {
+                if (!response.ok) throw new Error(response.status);
+                return response.json();
+            })
+            .then(project => onSelectProject(project.id))
+            .catch(() => {
+                setError('No se pudo abrir la tarea. Probá de nuevo.');
+                setStartingTaskId(null);
+            });
+    };
+
+    const hasProgress = templateId => Boolean(projects && projects.some(p => p.sourceTemplateId === templateId));
 
     const handleTogglePublish = project => {
         setOpenMenuId(null);
@@ -206,6 +246,9 @@ const ProjectPicker = ({studentId, onSelectProject, onCreateNew, onExit}) => {
     const filteredProjects = projects
         ? projects.filter(p => p.title.toLowerCase().includes(query.trim().toLowerCase()))
         : null;
+    const filteredTasks = tasks
+        ? tasks.filter(t => t.template.title.toLowerCase().includes(query.trim().toLowerCase()))
+        : null;
 
     return (
         <div className={styles.backdrop}>
@@ -221,7 +264,25 @@ const ProjectPicker = ({studentId, onSelectProject, onCreateNew, onExit}) => {
                             onChange={e => setQuery(e.target.value)}
                         />
                     </div>
-                    <h1 className={styles.title}>Mis proyectos</h1>
+                    <div className={styles.tabBar}>
+                        <button
+                            className={classNames(
+                                styles.tabButton, {[styles.tabButtonActive]: activeTab === 'projects'}
+                            )}
+                            type="button"
+                            onClick={() => setActiveTab('projects')}
+                        >
+                            📂 Mis Proyectos
+                        </button>
+                        <button
+                            className={classNames(styles.tabButton, {[styles.tabButtonActive]: activeTab === 'tasks'})}
+                            type="button"
+                            onClick={() => setActiveTab('tasks')}
+                        >
+                            🎯 Tareas asignadas
+                            {tasks && tasks.length > 0 && <span className={styles.tabBadge}>{tasks.length}</span>}
+                        </button>
+                    </div>
                     <button className={styles.closeButton} type="button" onClick={onExit}>
                         ✕
                     </button>
@@ -229,14 +290,17 @@ const ProjectPicker = ({studentId, onSelectProject, onCreateNew, onExit}) => {
 
                 <div className={styles.content}>
                     {error && <p className={styles.hint}>{error}</p>}
-                    {projects === null && !error && <p className={styles.hint}>Cargando…</p>}
-                    {projects && projects.length === 0 && (
+                    {activeTab === 'projects' && projects === null && !error && (
+                        <p className={styles.hint}>Cargando…</p>
+                    )}
+                    {activeTab === 'projects' && projects && projects.length === 0 && (
                         <p className={styles.hint}>Todavía no tenés proyectos guardados.</p>
                     )}
-                    {filteredProjects && filteredProjects.length === 0 && projects.length > 0 && (
+                    {activeTab === 'projects' && filteredProjects && projects.length > 0 &&
+                        filteredProjects.length === 0 && (
                         <p className={styles.hint}>No encontramos ningún proyecto con ese nombre.</p>
                     )}
-                    {filteredProjects && filteredProjects.length > 0 && (
+                    {activeTab === 'projects' && filteredProjects && filteredProjects.length > 0 && (
                         <div className={styles.grid}>
                             {filteredProjects.map(project => (
                                 <div
@@ -325,21 +389,67 @@ const ProjectPicker = ({studentId, onSelectProject, onCreateNew, onExit}) => {
                             ))}
                         </div>
                     )}
+
+                    {activeTab === 'tasks' && tasks === null && !error && (
+                        <p className={styles.hint}>Cargando…</p>
+                    )}
+                    {activeTab === 'tasks' && tasks && tasks.length === 0 && (
+                        <p className={styles.hint}>Todavía no tenés tareas asignadas por tu docente.</p>
+                    )}
+                    {activeTab === 'tasks' && filteredTasks && filteredTasks.length === 0 && tasks.length > 0 && (
+                        <p className={styles.hint}>No encontramos ninguna tarea con ese nombre.</p>
+                    )}
+                    {activeTab === 'tasks' && filteredTasks && filteredTasks.length > 0 && (
+                        <div className={styles.grid}>
+                            {filteredTasks.map(({template}) => (
+                                <div key={template.id} className={styles.taskCard}>
+                                    <div className={styles.taskThumbWrap}>
+                                        {template.thumbnailUrl ? (
+                                            <img alt="" className={styles.taskThumb} src={template.thumbnailUrl} />
+                                        ) : (
+                                            <div className={styles.taskThumbPlaceholder}>🎯</div>
+                                        )}
+                                        {hasProgress(template.id) && (
+                                            <span className={styles.taskProgressBadge}>En progreso</span>
+                                        )}
+                                    </div>
+                                    <div className={styles.taskMeta}>
+                                        <span className={styles.taskTitle}>{template.title}</span>
+                                        <p className={styles.taskStory}>{template.story}</p>
+                                        <button
+                                            className={styles.taskAction}
+                                            disabled={startingTaskId === template.id}
+                                            type="button"
+                                            onClick={() => handleStartTask(template.id)}
+                                        >
+                                            {startingTaskId === template.id
+                                                ? 'Abriendo…'
+                                                : hasProgress(template.id)
+                                                    ? '↻ Continuar'
+                                                    : '▶ Empezar'}
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
-                <div className={styles.footer}>
-                    <button className={styles.footerButtonPrimary} type="button" onClick={onCreateNew}>
-                        ➕ Nuevo proyecto
-                    </button>
-                    <button
-                        className={styles.footerButtonSecondary}
-                        disabled={!selectedId}
-                        type="button"
-                        onClick={() => onSelectProject(selectedId)}
-                    >
-                        📂 Cargar proyecto
-                    </button>
-                </div>
+                {activeTab === 'projects' && (
+                    <div className={styles.footer}>
+                        <button className={styles.footerButtonPrimary} type="button" onClick={onCreateNew}>
+                            ➕ Nuevo proyecto
+                        </button>
+                        <button
+                            className={styles.footerButtonSecondary}
+                            disabled={!selectedId}
+                            type="button"
+                            onClick={() => onSelectProject(selectedId)}
+                        >
+                            📂 Cargar proyecto
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Sesión 32 — antes "No soy yo, cambiar de alumno" (buscaba otro alumno sin salir de

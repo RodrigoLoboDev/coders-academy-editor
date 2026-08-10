@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
 
 import styles from './template-picker.css';
@@ -121,6 +121,73 @@ NewTemplateForm.propTypes = {
     error: PropTypes.string,
     onCancel: PropTypes.func.isRequired,
     onCreate: PropTypes.func.isRequired
+};
+
+// Fase 4 del plan (docs/plan-fases-scratch-plataforma.md, monorepo privado) — submenú "⋮" con
+// renombrar/eliminar, mismo patrón que ProjectMenu de project-picker.css/jsx (docente pidió
+// explícitamente el mismo tratamiento que ya tienen los proyectos de los alumnos, antes de probar
+// en producción). "Asignar" queda aparte como acción rápida (👥, siempre visible) — solo estas dos
+// entran al menú, porque son las dos que necesitan una confirmación/estado propio.
+const TemplateMenu = ({onClose, onRename, onDelete}) => {
+    const menuRef = useRef(null);
+
+    useEffect(() => {
+        const handleOutsideClick = e => {
+            if (menuRef.current && !menuRef.current.contains(e.target)) onClose();
+        };
+        document.addEventListener('mousedown', handleOutsideClick);
+        return () => document.removeEventListener('mousedown', handleOutsideClick);
+    }, [onClose]);
+
+    return (
+        <div ref={menuRef} className={styles.templateMenu} onMouseDown={e => e.stopPropagation()}>
+            <button className={styles.templateMenuItem} type="button" onClick={onRename}>
+                ✏️ Renombrar
+            </button>
+            <button className={styles.templateMenuItemDanger} type="button" onClick={onDelete}>
+                🗑️ Eliminar
+            </button>
+        </div>
+    );
+};
+
+TemplateMenu.propTypes = {
+    onClose: PropTypes.func.isRequired,
+    onDelete: PropTypes.func.isRequired,
+    onRename: PropTypes.func.isRequired
+};
+
+const ConfirmDeleteModal = ({title, isDeleting, onCancel, onConfirm}) => (
+    <div className={styles.panelBackdrop} onMouseDown={onCancel}>
+        <div className={styles.panelCard} onMouseDown={e => e.stopPropagation()}>
+            <h2 className={styles.panelTitle}>🗑️ ¿Eliminar esta plantilla?</h2>
+            <p className={styles.panelSubtitle}>
+                <strong>{title}</strong> se va a borrar para siempre, junto con sus asignaciones. Los proyectos
+                de alumnos ya clonados de esta plantilla NO se borran — quedan como están. Esta acción no se
+                puede deshacer.
+            </p>
+            <div className={styles.confirmActions}>
+                <button className={styles.confirmCancelButton} type="button" onClick={onCancel}>
+                    Cancelar
+                </button>
+                <button
+                    className={styles.confirmDeleteButton}
+                    disabled={isDeleting}
+                    type="button"
+                    onClick={onConfirm}
+                >
+                    {isDeleting ? 'Borrando…' : 'Sí, eliminar'}
+                </button>
+            </div>
+        </div>
+    </div>
+);
+
+ConfirmDeleteModal.propTypes = {
+    isDeleting: PropTypes.bool,
+    onCancel: PropTypes.func.isRequired,
+    onConfirm: PropTypes.func.isRequired,
+    title: PropTypes.string.isRequired
 };
 
 // Paso 4.5 — panel de asignación por plantilla: comisión completa (alumnos activos de esa
@@ -449,6 +516,11 @@ const TemplatePicker = ({token, onSelectTemplate, onLogout}) => {
     const [createError, setCreateError] = useState(null);
     const [submitting, setSubmitting] = useState(false);
     const [assigningTemplate, setAssigningTemplate] = useState(null);
+    const [openMenuId, setOpenMenuId] = useState(null);
+    const [renamingId, setRenamingId] = useState(null);
+    const [renameValue, setRenameValue] = useState('');
+    const [deleteTarget, setDeleteTarget] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         fetch(`${process.env.API_URL}/admin/scratch-templates`, {
@@ -480,6 +552,43 @@ const TemplatePicker = ({token, onSelectTemplate, onLogout}) => {
             .then(template => onSelectTemplate(template.id))
             .catch(() => setCreateError('No se pudo crear la plantilla.'))
             .finally(() => setSubmitting(false));
+    };
+
+    const startRename = template => {
+        setOpenMenuId(null);
+        setRenamingId(template.id);
+        setRenameValue(template.title);
+    };
+
+    const submitRename = template => {
+        const nextTitle = renameValue.trim();
+        setRenamingId(null);
+        if (!nextTitle || nextTitle === template.title) return;
+        // Optimista, mismo criterio que project-picker.jsx: se ve el nombre nuevo de inmediato,
+        // sin esperar la respuesta del PATCH.
+        setTemplates(prev => prev.map(t => (t.id === template.id ? {...t, title: nextTitle} : t)));
+        fetch(`${process.env.API_URL}/admin/scratch-templates/${template.id}`, {
+            method: 'PATCH',
+            headers: {'Content-Type': 'application/json', Authorization: `Bearer ${token}`},
+            body: JSON.stringify({title: nextTitle})
+        }).catch(() => setError('No se pudo renombrar la plantilla. Probá de nuevo.'));
+    };
+
+    const confirmDelete = () => {
+        if (!deleteTarget) return;
+        setIsDeleting(true);
+        fetch(`${process.env.API_URL}/admin/scratch-templates/${deleteTarget.id}`, {
+            method: 'DELETE',
+            headers: {Authorization: `Bearer ${token}`}
+        })
+            .then(response => {
+                if (!response.ok) throw new Error(response.status);
+                setTemplates(prev => prev.filter(t => t.id !== deleteTarget.id));
+                setSelectedId(prev => (prev === deleteTarget.id ? null : prev));
+                setDeleteTarget(null);
+            })
+            .catch(() => setError('No se pudo eliminar la plantilla. Probá de nuevo.'))
+            .finally(() => setIsDeleting(false));
     };
 
     const filteredTemplates = templates
@@ -539,22 +648,62 @@ const TemplatePicker = ({token, onSelectTemplate, onLogout}) => {
                                     </div>
                                     <div className={styles.meta}>
                                         <div className={styles.metaText}>
-                                            <span className={styles.templateTitle}>{template.title}</span>
+                                            {renamingId === template.id ? (
+                                                <input
+                                                    autoFocus
+                                                    className={styles.renameInput}
+                                                    type="text"
+                                                    value={renameValue}
+                                                    onBlur={() => submitRename(template)}
+                                                    onChange={e => setRenameValue(e.target.value)}
+                                                    onClick={e => e.stopPropagation()}
+                                                    onKeyDown={e => {
+                                                        if (e.key === 'Enter') submitRename(template);
+                                                        if (e.key === 'Escape') setRenamingId(null);
+                                                    }}
+                                                />
+                                            ) : (
+                                                <span className={styles.templateTitle}>{template.title}</span>
+                                            )}
                                             <span className={styles.templateStory}>
                                                 {formatDate(template.updatedAt)}
                                             </span>
                                         </div>
-                                        <button
-                                            className={styles.assignButton}
-                                            title="Asignar"
-                                            type="button"
-                                            onClick={e => {
-                                                e.stopPropagation();
-                                                setAssigningTemplate(template);
-                                            }}
-                                        >
-                                            👥
-                                        </button>
+                                        <div className={styles.actions}>
+                                            <button
+                                                className={styles.assignButton}
+                                                title="Asignar"
+                                                type="button"
+                                                onClick={e => {
+                                                    e.stopPropagation();
+                                                    setAssigningTemplate(template);
+                                                }}
+                                            >
+                                                👥
+                                            </button>
+                                            <div className={styles.menuAnchor}>
+                                                <button
+                                                    className={styles.menuButton}
+                                                    type="button"
+                                                    onClick={e => {
+                                                        e.stopPropagation();
+                                                        setOpenMenuId(openMenuId === template.id ? null : template.id);
+                                                    }}
+                                                >
+                                                    ⋮
+                                                </button>
+                                                {openMenuId === template.id && (
+                                                    <TemplateMenu
+                                                        onClose={() => setOpenMenuId(null)}
+                                                        onDelete={() => {
+                                                            setOpenMenuId(null);
+                                                            setDeleteTarget(template);
+                                                        }}
+                                                        onRename={() => startRename(template)}
+                                                    />
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -596,6 +745,15 @@ const TemplatePicker = ({token, onSelectTemplate, onLogout}) => {
                     templateTitle={assigningTemplate.title}
                     token={token}
                     onClose={() => setAssigningTemplate(null)}
+                />
+            )}
+
+            {deleteTarget && (
+                <ConfirmDeleteModal
+                    isDeleting={isDeleting}
+                    title={deleteTarget.title}
+                    onCancel={() => setDeleteTarget(null)}
+                    onConfirm={confirmDelete}
                 />
             )}
         </div>
