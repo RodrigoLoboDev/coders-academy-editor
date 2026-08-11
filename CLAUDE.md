@@ -48,10 +48,14 @@ código fuente completo de la versión modificada — **este repo es esa publica
 No es "se abre la app y aparece directo la UI de Scratch". El flujo real:
 
 1. **Pantalla de código de acceso** — el alumno ingresa un código que le da el docente en clase.
-   Implementado (`src/components/access-gate/access-gate.jsx`): código fijo único (`ACCESS_CODE`,
-   env var compilada al bundle en build time), sin DB ni admin UI — decisión explícita de primer
-   paso simple, ver `docs/scratch-editor-integration.md` (privado) sección "Fase 2" para las
-   mejoras futuras evaluadas (código editable desde admin, códigos rotativos por vencimiento).
+   Implementado (`src/components/access-gate/access-gate.jsx`): código **rotativo**, generado por
+   el docente desde el propio editor ("🔑 Código de la clase" en `TemplatePicker`), con vencimiento
+   editable (default 3 horas) — `EditorAccessCode` del lado de la API, verificado server-side
+   (`POST /editor-access-code/verify`), no un valor fijo compilado al bundle. Un alumno con sesión
+   abierta cuando el código vence se desloguea solo (`AccessCodeWatcher` en `render-gui.jsx`). Fase
+   6 del plan (docs privado), reemplazó el `ACCESS_CODE` fijo original (hallazgo de la auditoría de
+   seguridad: al ser este repo público, ese valor con su fallback hardcodeado quedaba visible en
+   GitHub).
 2. **Buscador de alumno** — busca por **nombre completo** contra la API privada
    (`GET /students/search`, público, sin auth) — puede haber más de un alumno con el mismo nombre
    de pila. Implementado, mismo componente que el paso 1.
@@ -83,12 +87,13 @@ existen. Lo que sí es estable, y hay que respetar siempre:
   facturación — esta app no tiene ninguna razón para tocar esos datos.
 - Guardado de proyectos: JSON del proyecto desglosado (no el `.sb3` binario), assets subidos por
   separado — permite generar biblioteca de assets compartida y no re-parsear un binario.
-- Auth: sin login de familia/docente en esta app — el "código de acceso" es el único mecanismo, y
-  hoy se valida **client-side** contra `process.env.ACCESS_CODE` (compilado al bundle), no contra
-  la API — es una barrera de producto ("uso exclusivo en la academia"), no una medida de seguridad
-  real: el valor viaja igual al navegador sea cual sea el mecanismo, y el buscador de alumnos ya es
-  público sin auth de por sí. Ver `docs/scratch-editor-integration.md` (privado, sección "Fase 2")
-  si en algún momento se decide moverlo a un mecanismo validado server-side.
+- Auth: sin login de familia/docente en esta app — el "código de acceso" es el único mecanismo del
+  lado del alumno. Desde la Fase 6 se valida **server-side** (`POST /editor-access-code/verify`,
+  código rotativo con vencimiento, ver arriba) — sigue siendo una barrera de producto ("uso
+  exclusivo en la academia"), no reemplaza la falta de auth real del buscador de alumnos
+  (`GET /students/search`, público sin auth) ni de `/scratch-projects/:studentId/...` (accesible
+  por cualquiera que tenga ese `studentId` — trade-off aceptado, ver hallazgos de la auditoría de
+  seguridad en `docs/plan-fases-scratch-plataforma.md` del monorepo privado, Fase 6).
 - CORS: la API privada tiene que tener el origin de esta app en su whitelist (env var del lado de
   la API, ver el doc privado si hace falta el nombre exacto).
 

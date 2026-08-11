@@ -48,11 +48,37 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* Fase 6 del plan (docs/plan-fases-scratch-plataforma.md) — agrupa el buscador + el botón nuevo
+   de "Código de la clase" en la misma celda del grid (columna 1, 1fr), sin tocar el layout de 3
+   columnas que ya tenía el header. */
+.headerLeft {
+    display: flex;
+    align-items: center;
+    justify-self: start;
+    gap: 12px;
+}
+
 .searchWrap {
     position: relative;
-    justify-self: start;
     width: 100%;
-    max-width: 280px;
+    max-width: 240px;
+}
+
+.accessCodeButton {
+    flex-shrink: 0;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #ffb02e;
+    white-space: nowrap;
+    background: rgba(255, 176, 46, 0.12);
+    border: 1px solid rgba(255, 176, 46, 0.3);
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.accessCodeButton:hover {
+    background: rgba(255, 176, 46, 0.2);
 }
 
 .searchIcon {

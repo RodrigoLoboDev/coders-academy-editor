@@ -15,6 +15,7 @@ import PublicPlayer from '../components/public-player/public-player.jsx';
 import Divider from '../components/divider/divider.jsx';
 import TaskBanner from '../components/task-banner/task-banner.jsx';
 import fetchSharedScratchAssets from '../lib/fetch-shared-scratch-assets';
+import {clearCodeSession, codeSessionMsRemaining} from '../lib/editor-access-code-session';
 
 // Sesión 34 — reusa las clases ya definidas en menu-bar.css (mismo look que el botón Tutoriales:
 // menuBarItem/hoverable/helpIcon, y el separador punteado blanco entre el título de proyecto y
@@ -342,8 +343,39 @@ const PublicPlayerRoute = ({WrappedGui}) => {
     return <PublicPlayer WrappedGui={WrappedGui} projectId={projectId} onClickLogo={onClickLogo} />;
 };
 
+// Fase 6 del plan (docs/plan-fases-scratch-plataforma.md, monorepo privado) — el código de acceso
+// ahora vence de verdad (ver access-gate.jsx). Este componente vive DENTRO del <BrowserRouter>
+// (necesita useNavigate) pero fuera de <Routes> — se monta una sola vez, sobrevive a los cambios
+// de ruta, y cada `ACCESS_CODE_CHECK_INTERVAL_MS` fija de nuevo cuánto falta. Poll en vez de un
+// único setTimeout calculado al montar: así también cubre al alumno que entra DESPUÉS de que este
+// componente ya montó (un setTimeout fijo calculado una sola vez, con sessionStorage todavía
+// vacío, nunca se reprogramaría solo).
+const ACCESS_CODE_CHECK_INTERVAL_MS = 30000;
+
+const AccessCodeWatcher = () => {
+    const navigate = useNavigate();
+    useEffect(() => {
+        const check = () => {
+            // El código solo aplica al flujo de alumno — un docente logueado no tiene por qué
+            // desconectarse porque en algún momento anterior de esta pestaña haya vencido un
+            // código de alumno.
+            if (!readStoredStudent()) return;
+            const msRemaining = codeSessionMsRemaining();
+            if (msRemaining === null || msRemaining > 0) return;
+            clearCodeSession();
+            sessionStorage.removeItem(STUDENT_SESSION_KEY);
+            navigate(PATHS.role, {replace: true});
+        };
+        check();
+        const intervalId = setInterval(check, ACCESS_CODE_CHECK_INTERVAL_MS);
+        return () => clearInterval(intervalId);
+    }, [navigate]);
+    return null;
+};
+
 const PlaygroundRouter = ({WrappedGui}) => (
     <BrowserRouter>
+        <AccessCodeWatcher />
         <Routes>
             <Route element={<RoleRoute />} path={PATHS.role} />
             <Route element={<ProjectsRoute />} path={PATHS.projects} />

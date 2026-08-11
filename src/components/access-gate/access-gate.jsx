@@ -2,20 +2,25 @@ import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 
 import styles from './access-gate.css';
+import {isCodeSessionValid, saveCodeSession} from '../../lib/editor-access-code-session';
 
-// Sesión de código de acceso: se guarda en sessionStorage (no localStorage) para que sobreviva un
-// refresh accidental de la página pero se pida de nuevo si se cierra la pestaña/navegador — el
-// código en sí solo es una barrera de producto (uso exclusivo en la academia), no una medida de
-// seguridad real: este repo es público (AGPL) y el valor viaja igual en el bundle compilado, y el
-// buscador de alumnos (GET /students/search) ya es un endpoint público sin auth. Ver
-// docs/scratch-editor-integration.md (monorepo privado) para el porqué completo.
+// Fase 6 del plan (docs/plan-fases-scratch-plataforma.md, monorepo privado) — código de acceso
+// ROTATIVO, verificado contra la API (POST /editor-access-code/verify), reemplaza el ACCESS_CODE
+// fijo compilado en el bundle. Hallazgo de la auditoría de seguridad que motivó el cambio: al ser
+// este repo público (AGPL), el valor fijo (con su fallback hardcodeado en webpack.config.js)
+// quedaba visible en el código fuente para cualquiera. Ahora el docente genera un código nuevo
+// desde el editor (TemplatePicker → "🔑 Código de la clase"), con vencimiento editable — sigue
+// siendo una barrera de producto, no reemplaza el buscador de alumnos público sin auth, pero ya no
+// es "de conocimiento público en GitHub" ni fijo para siempre.
+//
+// Se sigue guardando la sesión en sessionStorage (no localStorage) para que sobreviva un refresh
+// accidental de la página pero se pida de nuevo si se cierra la pestaña/navegador — más el
+// vencimiento propio del código, que fuerza a pedirlo de nuevo aunque la pestaña siga abierta (ver
+// AccessCodeWatcher en render-gui.jsx).
 //
 // El docente NO pasa por este código — ver handleChooseTeacher más abajo. Decisión tomada con el
-// usuario (06/08/2026): pensando en una mejora futura del código de alumno (rotativo, con
-// vencimiento por clase, creado desde /admin), atar al docente a "el código de hoy" no tendría
-// sentido — un docente arma/edita plantillas en cualquier momento, no solo durante una clase en
-// curso, y ya tiene una barrera real (login) que un código compartido no mejora en nada.
-const CODE_SESSION_KEY = 'ca_editor_access_code_ok';
+// usuario (06/08/2026): un docente arma/edita plantillas en cualquier momento, no solo durante una
+// clase en curso, y ya tiene una barrera real (login) que un código compartido no mejora en nada.
 
 const normalizeCode = value => value.trim().toUpperCase();
 
@@ -115,6 +120,7 @@ const AccessGate = ({onSelectStudent, onTeacherLogin}) => {
     const [step, setStep] = useState('role');
     const [code, setCode] = useState('');
     const [codeError, setCodeError] = useState(null);
+    const [codeSubmitting, setCodeSubmitting] = useState(false);
 
     const [query, setQuery] = useState('');
     const [results, setResults] = useState([]);
@@ -127,19 +133,34 @@ const AccessGate = ({onSelectStudent, onTeacherLogin}) => {
     const [teacherLoading, setTeacherLoading] = useState(false);
 
     const handleChooseStudent = () => {
-        // Si ya pasó el código en esta misma pestaña/sesión, no se lo vuelve a pedir.
-        setStep(sessionStorage.getItem(CODE_SESSION_KEY) === '1' ? 'search' : 'code');
+        // Si ya pasó el código en esta misma pestaña/sesión y todavía no venció, no se lo vuelve a
+        // pedir — mismo criterio de antes, ahora con vencimiento real de por medio.
+        setStep(isCodeSessionValid() ? 'search' : 'code');
     };
 
     const handleCodeSubmit = e => {
         e.preventDefault();
-        if (normalizeCode(code) === normalizeCode(process.env.ACCESS_CODE || '')) {
-            sessionStorage.setItem(CODE_SESSION_KEY, '1');
-            setCodeError(null);
-            setStep('search');
-        } else {
-            setCodeError('Código incorrecto. Pedile el código a tu profe.');
-        }
+        setCodeSubmitting(true);
+        setCodeError(null);
+        fetch(`${process.env.API_URL}/editor-access-code/verify`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({code: normalizeCode(code)})
+        })
+            .then(response => {
+                if (!response.ok) throw new Error(response.status);
+                return response.json();
+            })
+            .then(({valid, expiresAt}) => {
+                if (!valid) {
+                    setCodeError('Código incorrecto o vencido. Pedile el código a tu profe.');
+                    return;
+                }
+                saveCodeSession(expiresAt);
+                setStep('search');
+            })
+            .catch(() => setCodeError('No se pudo verificar el código. Probá de nuevo.'))
+            .finally(() => setCodeSubmitting(false));
     };
 
     const handleTeacherSubmit = e => {
@@ -224,8 +245,12 @@ const AccessGate = ({onSelectStudent, onTeacherLogin}) => {
                             value={code}
                             onChange={e => setCode(e.target.value)}
                         />
-                        <button className={styles.button} disabled={code.trim().length === 0} type="submit">
-                            Entrar
+                        <button
+                            className={styles.button}
+                            disabled={codeSubmitting || code.trim().length === 0}
+                            type="submit"
+                        >
+                            {codeSubmitting ? 'Verificando…' : 'Entrar'}
                         </button>
                     </form>
                     {codeError && <p className={styles.error}>{codeError}</p>}

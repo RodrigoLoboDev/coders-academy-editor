@@ -2,6 +2,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
 
 import styles from './template-picker.css';
+import AccessCodePanel from '../access-code-panel/access-code-panel.jsx';
 
 const formatDate = isoString => new Date(isoString).toLocaleDateString('es-AR', {
     day: 'numeric',
@@ -638,6 +639,7 @@ const TemplatePicker = ({token, onSelectTemplate, onLogout}) => {
     const [renameValue, setRenameValue] = useState('');
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [showAccessCode, setShowAccessCode] = useState(false);
 
     useEffect(() => {
         fetch(`${process.env.API_URL}/admin/scratch-templates`, {
@@ -716,15 +718,23 @@ const TemplatePicker = ({token, onSelectTemplate, onLogout}) => {
         <div className={styles.backdrop}>
             <div className={styles.card}>
                 <div className={styles.header}>
-                    <div className={styles.searchWrap}>
-                        <span className={styles.searchIcon}>🔍</span>
-                        <input
-                            className={styles.searchInput}
-                            placeholder="Buscar plantilla…"
-                            type="text"
-                            value={query}
-                            onChange={e => setQuery(e.target.value)}
-                        />
+                    <div className={styles.headerLeft}>
+                        <div className={styles.searchWrap}>
+                            <span className={styles.searchIcon}>🔍</span>
+                            <input
+                                className={styles.searchInput}
+                                placeholder="Buscar plantilla…"
+                                type="text"
+                                value={query}
+                                onChange={e => setQuery(e.target.value)}
+                            />
+                        </div>
+                        {/* Fase 6 del plan (docs/plan-fases-scratch-plataforma.md) — reemplaza el
+                        ACCESS_CODE fijo compilado en el bundle público por un código rotativo que
+                        el docente genera acá mismo. Ver AccessCodePanel. */}
+                        <button className={styles.accessCodeButton} type="button" onClick={() => setShowAccessCode(true)}>
+                            🔑 Código de la clase
+                        </button>
                     </div>
                     <h1 className={styles.title}>Mis plantillas</h1>
                     <button className={styles.closeButton} type="button" onClick={onLogout}>
@@ -877,6 +887,8 @@ const TemplatePicker = ({token, onSelectTemplate, onLogout}) => {
                     onSaved={updated => setTemplates(prev => prev.map(t => (t.id === updated.id ? updated : t)))}
                 />
             )}
+
+            {showAccessCode && <AccessCodePanel token={token} onClose={() => setShowAccessCode(false)} />}
         </div>
     );
 };
