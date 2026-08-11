@@ -127,7 +127,10 @@ NewTemplateForm.propTypes = {
 // asignar/renombrar/eliminar, mismo patrón que ProjectMenu de project-picker.css/jsx. "Asignar"
 // vivía como botón (👥) suelto al lado de este menú — el usuario pidió que entre acá adentro
 // junto con las otras dos acciones, en vez de quedar como acción rápida separada.
-const TemplateMenu = ({onClose, onAssign, onRename, onDelete}) => {
+// Fase 5 — "📝 Editar info" suma acá (título/relato/objetivo + vista previa, ver EditInfoPanel más
+// abajo) — nombre distinto a propósito del botón "✏️ Editar plantilla" del footer (ese abre el
+// editor de bloques/disfraces de la plantilla en sí, esto edita solo el texto que lee el alumno).
+const TemplateMenu = ({onClose, onAssign, onEditInfo, onRename, onDelete}) => {
     const menuRef = useRef(null);
 
     useEffect(() => {
@@ -143,6 +146,9 @@ const TemplateMenu = ({onClose, onAssign, onRename, onDelete}) => {
             <button className={styles.templateMenuItem} type="button" onClick={onAssign}>
                 👥 Asignar
             </button>
+            <button className={styles.templateMenuItem} type="button" onClick={onEditInfo}>
+                📝 Editar info
+            </button>
             <button className={styles.templateMenuItem} type="button" onClick={onRename}>
                 ✏️ Renombrar
             </button>
@@ -157,6 +163,7 @@ TemplateMenu.propTypes = {
     onAssign: PropTypes.func.isRequired,
     onClose: PropTypes.func.isRequired,
     onDelete: PropTypes.func.isRequired,
+    onEditInfo: PropTypes.func.isRequired,
     onRename: PropTypes.func.isRequired
 };
 
@@ -191,6 +198,112 @@ ConfirmDeleteModal.propTypes = {
     onCancel: PropTypes.func.isRequired,
     onConfirm: PropTypes.func.isRequired,
     title: PropTypes.string.isRequired
+};
+
+// Fase 5 del plan (docs/plan-fases-scratch-plataforma.md, monorepo privado) — panel de edición de
+// título/relato/objetivo. Tenía una vista previa en vivo acá abajo (reusando TaskBanner, la misma
+// franja que ve el alumno en la Fase 4) — se sacó a pedido del usuario: el formulario de arriba ya
+// muestra el texto completo sin truncar, la franja achicada no aportaba nada que no se viera ya.
+const EditInfoPanel = ({token, template, onClose, onSaved}) => {
+    const [title, setTitle] = useState(template.title);
+    const [story, setStory] = useState(template.story);
+    const [objective, setObjective] = useState(template.objective);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState(null);
+
+    const hasChanges = title.trim() !== template.title ||
+        story.trim() !== template.story ||
+        objective.trim() !== template.objective;
+
+    const handleSave = () => {
+        const nextTitle = title.trim();
+        const nextStory = story.trim();
+        const nextObjective = objective.trim();
+        if (!nextTitle || !nextStory || !nextObjective) {
+            setError('Los tres campos son obligatorios.');
+            return;
+        }
+        setSaving(true);
+        setError(null);
+        fetch(`${process.env.API_URL}/admin/scratch-templates/${template.id}`, {
+            method: 'PATCH',
+            headers: {'Content-Type': 'application/json', Authorization: `Bearer ${token}`},
+            body: JSON.stringify({title: nextTitle, story: nextStory, objective: nextObjective})
+        })
+            .then(response => {
+                if (!response.ok) throw new Error(response.status);
+                return response.json();
+            })
+            .then(updated => {
+                onSaved(updated);
+                onClose();
+            })
+            .catch(() => {
+                setError('No se pudo guardar. Probá de nuevo.');
+                setSaving(false);
+            });
+    };
+
+    return (
+        <div className={styles.panelBackdrop} onMouseDown={onClose}>
+            <div className={styles.panelCard} onMouseDown={e => e.stopPropagation()}>
+                <h2 className={styles.panelTitle}>📝 Editar info</h2>
+                <p className={styles.panelSubtitle}>
+                    Título, relato y objetivo — lo que el alumno va a leer en la franja de la tarea.
+                </p>
+
+                <label className={styles.label} htmlFor="edit-title">Título</label>
+                <input
+                    className={styles.input}
+                    id="edit-title"
+                    type="text"
+                    value={title}
+                    onChange={e => setTitle(e.target.value)}
+                />
+                <label className={styles.label} htmlFor="edit-story">
+                    Relato (el juego, la historia, el cuento)
+                </label>
+                <textarea
+                    className={styles.textarea}
+                    id="edit-story"
+                    value={story}
+                    onChange={e => setStory(e.target.value)}
+                />
+                <label className={styles.label} htmlFor="edit-objective">Objetivo / misión</label>
+                <textarea
+                    className={styles.textarea}
+                    id="edit-objective"
+                    value={objective}
+                    onChange={e => setObjective(e.target.value)}
+                />
+
+                {error && <p className={styles.error}>{error}</p>}
+                <button
+                    className={styles.newButton}
+                    disabled={saving || !hasChanges}
+                    type="button"
+                    onClick={handleSave}
+                >
+                    {saving ? 'Guardando…' : '💾 Guardar cambios'}
+                </button>
+                <button className={styles.backLink} type="button" onClick={onClose}>
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    );
+};
+
+EditInfoPanel.propTypes = {
+    onClose: PropTypes.func.isRequired,
+    onSaved: PropTypes.func.isRequired,
+    template: PropTypes.shape({
+        id: PropTypes.string.isRequired,
+        objective: PropTypes.string.isRequired,
+        story: PropTypes.string.isRequired,
+        title: PropTypes.string.isRequired
+    }).isRequired,
+    token: PropTypes.string.isRequired
 };
 
 // Paso 4.5 — panel de asignación por plantilla: comisión completa (alumnos activos de esa
@@ -519,6 +632,7 @@ const TemplatePicker = ({token, onSelectTemplate, onLogout}) => {
     const [createError, setCreateError] = useState(null);
     const [submitting, setSubmitting] = useState(false);
     const [assigningTemplate, setAssigningTemplate] = useState(null);
+    const [editingTemplate, setEditingTemplate] = useState(null);
     const [openMenuId, setOpenMenuId] = useState(null);
     const [renamingId, setRenamingId] = useState(null);
     const [renameValue, setRenameValue] = useState('');
@@ -694,6 +808,10 @@ const TemplatePicker = ({token, onSelectTemplate, onLogout}) => {
                                                         setOpenMenuId(null);
                                                         setDeleteTarget(template);
                                                     }}
+                                                    onEditInfo={() => {
+                                                        setOpenMenuId(null);
+                                                        setEditingTemplate(template);
+                                                    }}
                                                     onRename={() => startRename(template)}
                                                 />
                                             )}
@@ -748,6 +866,15 @@ const TemplatePicker = ({token, onSelectTemplate, onLogout}) => {
                     title={deleteTarget.title}
                     onCancel={() => setDeleteTarget(null)}
                     onConfirm={confirmDelete}
+                />
+            )}
+
+            {editingTemplate && (
+                <EditInfoPanel
+                    template={editingTemplate}
+                    token={token}
+                    onClose={() => setEditingTemplate(null)}
+                    onSaved={updated => setTemplates(prev => prev.map(t => (t.id === updated.id ? updated : t)))}
                 />
             )}
         </div>
