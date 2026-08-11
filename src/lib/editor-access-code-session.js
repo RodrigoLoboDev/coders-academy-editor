@@ -7,8 +7,13 @@
  */
 const CODE_SESSION_KEY = 'ca_editor_access_code_ok';
 
-export const saveCodeSession = expiresAt => {
-    sessionStorage.setItem(CODE_SESSION_KEY, JSON.stringify({expiresAt}));
+// Fase 6 (punto 2, sesión real por alumno) — se guarda también el código en sí, no solo cuándo
+// vence: hace falta para pedir el token de sesión del alumno al elegirlo en el buscador
+// (POST /editor-student-auth/:studentId, exige el código de acceso vigente), y ese paso puede
+// pasar mucho después de haber tipeado el código (si `isCodeSessionValid` ya lo venía dando por
+// bueno de una entrada anterior en la misma pestaña).
+export const saveCodeSession = (code, expiresAt) => {
+    sessionStorage.setItem(CODE_SESSION_KEY, JSON.stringify({code, expiresAt}));
 };
 
 export const clearCodeSession = () => {
@@ -28,6 +33,11 @@ export const isCodeSessionValid = () => {
     const session = readCodeSession();
     if (!session || !session.expiresAt) return false;
     return new Date(session.expiresAt).getTime() > Date.now();
+};
+
+export const getCodeSessionCode = () => {
+    const session = readCodeSession();
+    return session ? session.code : null;
 };
 
 /**

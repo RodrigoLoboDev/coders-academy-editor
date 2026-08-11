@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 
 import styles from './access-gate.css';
-import {isCodeSessionValid, saveCodeSession} from '../../lib/editor-access-code-session';
+import {getCodeSessionCode, isCodeSessionValid, saveCodeSession} from '../../lib/editor-access-code-session';
 
 // Fase 6 del plan (docs/plan-fases-scratch-plataforma.md, monorepo privado) — código de acceso
 // ROTATIVO, verificado contra la API (POST /editor-access-code/verify), reemplaza el ACCESS_CODE
@@ -126,6 +126,12 @@ const AccessGate = ({onSelectStudent, onTeacherLogin}) => {
     const [results, setResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
     const [searchError, setSearchError] = useState(null);
+    // Fase 6 (punto 2, sesión real por alumno) — elegir un resultado ya no navega directo: primero
+    // hay que pedir el token de sesión del alumno (POST /editor-student-auth/:id), que exige el
+    // código de acceso vigente de la clase. selectingStudentId marca CUÁL card está en ese fetch
+    // (para deshabilitar solo esa, no toda la lista).
+    const [selectingStudentId, setSelectingStudentId] = useState(null);
+    const [selectError, setSelectError] = useState(null);
 
     const [teacherEmail, setTeacherEmail] = useState('');
     const [teacherPassword, setTeacherPassword] = useState('');
@@ -156,11 +162,32 @@ const AccessGate = ({onSelectStudent, onTeacherLogin}) => {
                     setCodeError('Código incorrecto o vencido. Pedile el código a tu profe.');
                     return;
                 }
-                saveCodeSession(expiresAt);
+                saveCodeSession(normalizeCode(code), expiresAt);
                 setStep('search');
             })
             .catch(() => setCodeError('No se pudo verificar el código. Probá de nuevo.'))
             .finally(() => setCodeSubmitting(false));
+    };
+
+    // Fase 6 (punto 2) — antes esto era sincrónico (onSelectStudent(id, firstName) directo). Ahora
+    // pide primero un token de sesión propio de este alumno — sin eso, StudentOwnershipGuard del
+    // lado de la API rechaza cualquier pedido a /scratch-projects/:studentId/... aunque el id sea
+    // correcto.
+    const handleSelectStudent = student => {
+        setSelectError(null);
+        setSelectingStudentId(student.id);
+        fetch(`${process.env.API_URL}/editor-student-auth/${student.id}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({accessCode: getCodeSessionCode()})
+        })
+            .then(response => {
+                if (!response.ok) throw new Error(response.status);
+                return response.json();
+            })
+            .then(({token}) => onSelectStudent(student.id, student.firstName, token))
+            .catch(() => setSelectError('No se pudo iniciar la sesión. Probá de nuevo.'))
+            .finally(() => setSelectingStudentId(null));
     };
 
     const handleTeacherSubmit = e => {
@@ -323,16 +350,20 @@ const AccessGate = ({onSelectStudent, onTeacherLogin}) => {
                 />
                 {isSearching && <p className={styles.hint}>Buscando…</p>}
                 {searchError && <p className={styles.error}>{searchError}</p>}
+                {selectError && <p className={styles.error}>{selectError}</p>}
                 {results.length > 0 && (
                     <div className={styles.resultsList}>
                         {results.map(student => (
                             <button
                                 key={student.id}
                                 className={styles.resultItem}
+                                disabled={selectingStudentId === student.id}
                                 type="button"
-                                onClick={() => onSelectStudent(student.id, student.firstName)}
+                                onClick={() => handleSelectStudent(student)}
                             >
-                                {student.firstName} {student.lastName}
+                                {selectingStudentId === student.id
+                                    ? 'Entrando…'
+                                    : `${student.firstName} ${student.lastName}`}
                             </button>
                         ))}
                     </div>

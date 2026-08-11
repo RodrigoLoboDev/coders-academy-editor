@@ -126,8 +126,12 @@ const RoleRoute = () => {
     if (student) return <Navigate replace to={PATHS.projects} />;
     if (teacher) return <Navigate replace to={PATHS.templates} />;
 
-    const handleSelectStudent = (id, firstName) => {
-        sessionStorage.setItem(STUDENT_SESSION_KEY, JSON.stringify({id, firstName}));
+    // Fase 6 (punto 2, sesión real por alumno) — `token` ahora es parte de la sesión guardada:
+    // AccessGate ya lo pidió (POST /editor-student-auth/:id) antes de llamar acá. Sin este token,
+    // StudentOwnershipGuard del lado de la API rechaza todo lo que pegue contra
+    // /scratch-projects/:studentId/... aunque el id sea el correcto.
+    const handleSelectStudent = (id, firstName, token) => {
+        sessionStorage.setItem(STUDENT_SESSION_KEY, JSON.stringify({id, firstName, token}));
         navigate(PATHS.projects);
     };
 
@@ -147,6 +151,7 @@ const RoleRoute = () => {
 const RequireStudent = ({children}) => {
     const student = readStoredStudent();
     if (!student) return <Navigate replace to={PATHS.role} />;
+    storage.setAuthToken(student.token);
     return children(student);
 };
 
@@ -164,6 +169,7 @@ const ProjectsRoute = () => {
             {student => (
                 <ProjectPicker
                     studentId={student.id}
+                    token={student.token}
                     onCreateNew={() => navigate(PATHS.editor('nuevo'))}
                     onExit={() => {
                         sessionStorage.removeItem(STUDENT_SESSION_KEY);
@@ -205,7 +211,9 @@ const StudentEditorRoute = ({WrappedGui}) => {
             return;
         }
         let cancelled = false;
-        fetch(`${apiScratchProjectsHost}/${effectiveProjectId}`)
+        fetch(`${apiScratchProjectsHost}/${effectiveProjectId}`, {
+            headers: student ? {Authorization: `Bearer ${student.token}`} : {}
+        })
             .then(response => (response.ok ? response.json() : null))
             .then(project => {
                 if (cancelled) return;

@@ -130,7 +130,7 @@ ConfirmDeleteModal.propTypes = {
  * click (mismo patrón que un selector de archivos nativo), y acciones secundarias (renombrar,
  * publicar, borrar) movidas a un submenú "⋮" por card.
  */
-const ProjectPicker = ({studentId, onSelectProject, onCreateNew, onExit}) => {
+const ProjectPicker = ({studentId, token, onSelectProject, onCreateNew, onExit}) => {
     // Fase 4 del plan (docs/plan-fases-scratch-plataforma.md, monorepo privado) — pestaña nueva
     // "Tareas asignadas" al lado de "Mis Proyectos", mismo picker (header/footer/grid) en vez de
     // un componente aparte, para no duplicar el chrome del modal.
@@ -148,27 +148,33 @@ const ProjectPicker = ({studentId, onSelectProject, onCreateNew, onExit}) => {
     const [isDeleting, setIsDeleting] = useState(false);
     const [startingTaskId, setStartingTaskId] = useState(null);
 
+    // Fase 6 (punto 2, sesión real por alumno) — todo lo de acá abajo vive detrás de
+    // StudentOwnershipGuard del lado de la API: sin este header, cualquiera de estos fetch da 401.
+    const authHeaders = {Authorization: `Bearer ${token}`};
+
     useEffect(() => {
-        fetch(`${process.env.API_URL}/scratch-projects/${studentId}`)
+        fetch(`${process.env.API_URL}/scratch-projects/${studentId}`, {headers: authHeaders})
             .then(response => {
                 if (!response.ok) throw new Error(response.status);
                 return response.json();
             })
             .then(setProjects)
             .catch(() => setError('No se pudieron cargar tus proyectos.'));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [studentId]);
 
     // Se trae siempre (no solo al entrar a la pestaña) — así el badge con la cantidad ya está
     // listo desde el principio y projects ya tiene los datos para saber, por sourceTemplateId, qué
     // tareas ya tienen progreso propio (ver hasProgress más abajo).
     useEffect(() => {
-        fetch(`${process.env.API_URL}/scratch-templates/assigned/${studentId}`)
+        fetch(`${process.env.API_URL}/scratch-templates/assigned/${studentId}`, {headers: authHeaders})
             .then(response => {
                 if (!response.ok) throw new Error(response.status);
                 return response.json();
             })
             .then(setTasks)
             .catch(() => setError('No se pudieron cargar tus tareas asignadas.'));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [studentId]);
 
     // Idempotente del lado del backend (ScratchTemplatesService.cloneToStudentProject) — si el
@@ -177,7 +183,10 @@ const ProjectPicker = ({studentId, onSelectProject, onCreateNew, onExit}) => {
     // igual, y directo se navega al proyecto que devuelva.
     const handleStartTask = templateId => {
         setStartingTaskId(templateId);
-        fetch(`${process.env.API_URL}/scratch-templates/${templateId}/clone/${studentId}`, {method: 'POST'})
+        fetch(`${process.env.API_URL}/scratch-templates/${templateId}/clone/${studentId}`, {
+            method: 'POST',
+            headers: authHeaders
+        })
             .then(response => {
                 if (!response.ok) throw new Error(response.status);
                 return response.json();
@@ -196,7 +205,7 @@ const ProjectPicker = ({studentId, onSelectProject, onCreateNew, onExit}) => {
         setTogglingId(project.id);
         fetch(`${process.env.API_URL}/scratch-projects/${studentId}/${project.id}`, {
             method: 'PATCH',
-            headers: {'Content-Type': 'application/json'},
+            headers: {'Content-Type': 'application/json', ...authHeaders},
             body: JSON.stringify({isPublishedToFamily: !project.isPublishedToFamily})
         })
             .then(response => {
@@ -224,7 +233,7 @@ const ProjectPicker = ({studentId, onSelectProject, onCreateNew, onExit}) => {
         setProjects(prev => prev.map(p => (p.id === project.id ? {...p, title: nextTitle} : p)));
         fetch(`${process.env.API_URL}/scratch-projects/${studentId}/${project.id}`, {
             method: 'PATCH',
-            headers: {'Content-Type': 'application/json'},
+            headers: {'Content-Type': 'application/json', ...authHeaders},
             body: JSON.stringify({title: nextTitle})
         }).catch(() => setError('No se pudo renombrar el proyecto. Probá de nuevo.'));
     };
@@ -232,7 +241,10 @@ const ProjectPicker = ({studentId, onSelectProject, onCreateNew, onExit}) => {
     const confirmDelete = () => {
         if (!deleteTarget) return;
         setIsDeleting(true);
-        fetch(`${process.env.API_URL}/scratch-projects/${studentId}/${deleteTarget.id}`, {method: 'DELETE'})
+        fetch(`${process.env.API_URL}/scratch-projects/${studentId}/${deleteTarget.id}`, {
+            method: 'DELETE',
+            headers: authHeaders
+        })
             .then(response => {
                 if (!response.ok) throw new Error(response.status);
                 setProjects(prev => prev.filter(p => p.id !== deleteTarget.id));
@@ -472,7 +484,8 @@ ProjectPicker.propTypes = {
     onCreateNew: PropTypes.func.isRequired,
     onExit: PropTypes.func.isRequired,
     onSelectProject: PropTypes.func.isRequired,
-    studentId: PropTypes.string.isRequired
+    studentId: PropTypes.string.isRequired,
+    token: PropTypes.string.isRequired
 };
 
 export default ProjectPicker;
