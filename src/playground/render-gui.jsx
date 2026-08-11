@@ -14,6 +14,7 @@ import TemplatePicker from '../components/template-picker/template-picker.jsx';
 import PublicPlayer from '../components/public-player/public-player.jsx';
 import Divider from '../components/divider/divider.jsx';
 import TaskBanner from '../components/task-banner/task-banner.jsx';
+import fetchSharedScratchAssets from '../lib/fetch-shared-scratch-assets';
 
 // Sesión 34 — reusa las clases ya definidas en menu-bar.css (mismo look que el botón Tutoriales:
 // menuBarItem/hoverable/helpIcon, y el separador punteado blanco entre el título de proyecto y
@@ -362,6 +363,19 @@ const PlaygroundRouter = ({WrappedGui}) => (
  */
 export default appTarget => {
     GUI.setAppElement(appTarget);
+
+    // Bug real encontrado probando en producción (Fase 4) — un sprite de la biblioteca
+    // institucional (SharedScratchAsset, /admin/scratch-assets) que YA viene adentro de una
+    // plantilla/proyecto al cargar aparecía como "?" (404 contra assets.scratch.mit.edu). Causa:
+    // storage.sharedAssetMap solo se poblaba cuando el alumno/docente ABRÍA el selector de
+    // sprites/fondos (sprite-library.jsx/backdrop-library.jsx) — si el proyecto ya trae ese
+    // sprite desde el clonado (nunca se abrió el selector en esta sesión), scratch-vm intenta
+    // resolverlo y no lo encuentra ni en el mapa propio del proyecto ni en el institucional,
+    // cae al CDN real de Scratch (que nunca tuvo este md5) y 404. Se dispara acá, al boot de la
+    // app entera (fetchSharedScratchAssets ya se cachea en memoria, así que las llamadas
+    // posteriores de esos dos selectores son gratis) — para cuando el proyecto termine de
+    // cargar, el mapa institucional ya está listo.
+    fetchSharedScratchAssets();
 
     // Sin HashParserHOC a propósito: ese HOC del fork original lee el id de proyecto del #hash de
     // la URL (mecanismo legacy del playground de scratch-www) y en su componentDidMount despacha
