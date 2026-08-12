@@ -238,17 +238,30 @@ const AccessGate = ({onSelectStudent, onTeacherLogin}) => {
         return (
             <div className={styles.backdrop}>
                 <FloatingBackground />
-                <div className={styles.card}>
+                <div className={styles.hero}>
                     <RobotMascot armsUp />
                     <p className={styles.eyebrow}>Coders Academy</p>
                     <h1 className={styles.title}>¡Hola! 👋</h1>
                     <p className={styles.subtitle}>¿Sos alumno o docente?</p>
-                    <button className={styles.button} type="button" onClick={handleChooseStudent}>
-                        🎒 Soy alumno
-                    </button>
-                    <button className={styles.buttonSecondary} type="button" onClick={() => setStep('teacherLogin')}>
-                        🍎 Soy docente
-                    </button>
+                    <p className={styles.tagline}>Programá tus propios juegos y animaciones ✨</p>
+                    <div className={styles.roleTiles}>
+                        <button
+                            className={`${styles.roleTile} ${styles.roleTileStudent}`}
+                            type="button"
+                            onClick={handleChooseStudent}
+                        >
+                            <span className={styles.roleTileIcon}>🎒</span>
+                            <span className={styles.roleTileLabel}>Soy alumno</span>
+                        </button>
+                        <button
+                            className={`${styles.roleTile} ${styles.roleTileTeacher}`}
+                            type="button"
+                            onClick={() => setStep('teacherLogin')}
+                        >
+                            <span className={styles.roleTileIcon}>🍎</span>
+                            <span className={styles.roleTileLabel}>Soy docente</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         );
@@ -258,29 +271,31 @@ const AccessGate = ({onSelectStudent, onTeacherLogin}) => {
         return (
             <div className={styles.backdrop}>
                 <FloatingBackground />
-                <div className={styles.card}>
+                <div className={styles.hero}>
                     <RobotMascot />
                     <p className={styles.eyebrow}>Acceso alumno</p>
                     <h1 className={styles.title}>¡Hola! 👋</h1>
                     <p className={styles.subtitle}>Ingresá el código que te dio tu profe.</p>
-                    <form onSubmit={handleCodeSubmit}>
-                        <input
-                            autoFocus
-                            className={styles.input}
-                            placeholder="Código de acceso"
-                            type="text"
-                            value={code}
-                            onChange={e => setCode(e.target.value)}
-                        />
-                        <button
-                            className={styles.button}
-                            disabled={codeSubmitting || code.trim().length === 0}
-                            type="submit"
-                        >
-                            {codeSubmitting ? 'Verificando…' : 'Entrar'}
-                        </button>
-                    </form>
-                    {codeError && <p className={styles.error}>{codeError}</p>}
+                    <div className={`${styles.authSurface} ${styles.authSurfaceStudent}`}>
+                        <form onSubmit={handleCodeSubmit}>
+                            <input
+                                autoFocus
+                                className={styles.input}
+                                placeholder="Código de acceso"
+                                type="text"
+                                value={code}
+                                onChange={e => setCode(e.target.value)}
+                            />
+                            <button
+                                className={styles.button}
+                                disabled={codeSubmitting || code.trim().length === 0}
+                                type="submit"
+                            >
+                                {codeSubmitting ? 'Verificando…' : 'Entrar'}
+                            </button>
+                        </form>
+                        {codeError && <p className={styles.error}>{codeError}</p>}
+                    </div>
                     <button className={styles.backLink} type="button" onClick={() => setStep('role')}>
                         Volver
                     </button>
@@ -293,37 +308,39 @@ const AccessGate = ({onSelectStudent, onTeacherLogin}) => {
         return (
             <div className={styles.backdrop}>
                 <FloatingBackground />
-                <div className={styles.card}>
+                <div className={styles.hero}>
                     <RobotMascot />
                     <p className={styles.eyebrow}>Portal docente</p>
                     <h1 className={styles.title}>🍎 Ingreso docente</h1>
                     <p className={styles.subtitle}>Usá tu mismo usuario del panel de Coders Academy.</p>
-                    <form onSubmit={handleTeacherSubmit}>
-                        <input
-                            autoFocus
-                            className={styles.input}
-                            placeholder="Email"
-                            type="email"
-                            value={teacherEmail}
-                            onChange={e => setTeacherEmail(e.target.value)}
-                        />
-                        <input
-                            className={styles.input}
-                            placeholder="Contraseña"
-                            style={{marginTop: 10}}
-                            type="password"
-                            value={teacherPassword}
-                            onChange={e => setTeacherPassword(e.target.value)}
-                        />
-                        <button
-                            className={styles.button}
-                            disabled={teacherLoading || !teacherEmail.trim() || !teacherPassword}
-                            type="submit"
-                        >
-                            {teacherLoading ? 'Ingresando…' : 'Ingresar'}
-                        </button>
-                    </form>
-                    {teacherError && <p className={styles.error}>{teacherError}</p>}
+                    <div className={`${styles.authSurface} ${styles.authSurfaceTeacher}`}>
+                        <form onSubmit={handleTeacherSubmit}>
+                            <input
+                                autoFocus
+                                className={styles.input}
+                                placeholder="Email"
+                                type="email"
+                                value={teacherEmail}
+                                onChange={e => setTeacherEmail(e.target.value)}
+                            />
+                            <input
+                                className={styles.input}
+                                placeholder="Contraseña"
+                                style={{marginTop: 10}}
+                                type="password"
+                                value={teacherPassword}
+                                onChange={e => setTeacherPassword(e.target.value)}
+                            />
+                            <button
+                                className={styles.button}
+                                disabled={teacherLoading || !teacherEmail.trim() || !teacherPassword}
+                                type="submit"
+                            >
+                                {teacherLoading ? 'Ingresando…' : 'Ingresar'}
+                            </button>
+                        </form>
+                        {teacherError && <p className={styles.error}>{teacherError}</p>}
+                    </div>
                     <button className={styles.backLink} type="button" onClick={() => setStep('role')}>
                         Volver
                     </button>
@@ -335,42 +352,44 @@ const AccessGate = ({onSelectStudent, onTeacherLogin}) => {
     return (
         <div className={styles.backdrop}>
             <FloatingBackground />
-            <div className={styles.card}>
+            <div className={styles.hero}>
                 <RobotMascot />
                 <p className={styles.eyebrow}>Buscar alumno</p>
                 <h1 className={styles.title}>🔍 ¿Quién sos?</h1>
                 <p className={styles.subtitle}>Buscá tu nombre completo.</p>
-                <input
-                    autoFocus
-                    className={styles.input}
-                    placeholder="Nombre y apellido"
-                    type="text"
-                    value={query}
-                    onChange={e => setQuery(e.target.value)}
-                />
-                {isSearching && <p className={styles.hint}>Buscando…</p>}
-                {searchError && <p className={styles.error}>{searchError}</p>}
-                {selectError && <p className={styles.error}>{selectError}</p>}
-                {results.length > 0 && (
-                    <div className={styles.resultsList}>
-                        {results.map(student => (
-                            <button
-                                key={student.id}
-                                className={styles.resultItem}
-                                disabled={selectingStudentId === student.id}
-                                type="button"
-                                onClick={() => handleSelectStudent(student)}
-                            >
-                                {selectingStudentId === student.id
-                                    ? 'Entrando…'
-                                    : `${student.firstName} ${student.lastName}`}
-                            </button>
-                        ))}
-                    </div>
-                )}
-                {!isSearching && query.trim().length >= 2 && results.length === 0 && !searchError && (
-                    <p className={styles.hint}>No encontramos a nadie con ese nombre.</p>
-                )}
+                <div className={`${styles.authSurface} ${styles.authSurfaceStudent}`}>
+                    <input
+                        autoFocus
+                        className={styles.input}
+                        placeholder="Nombre y apellido"
+                        type="text"
+                        value={query}
+                        onChange={e => setQuery(e.target.value)}
+                    />
+                    {isSearching && <p className={styles.hint}>Buscando…</p>}
+                    {searchError && <p className={styles.error}>{searchError}</p>}
+                    {selectError && <p className={styles.error}>{selectError}</p>}
+                    {results.length > 0 && (
+                        <div className={styles.resultsList}>
+                            {results.map(student => (
+                                <button
+                                    key={student.id}
+                                    className={styles.resultItem}
+                                    disabled={selectingStudentId === student.id}
+                                    type="button"
+                                    onClick={() => handleSelectStudent(student)}
+                                >
+                                    {selectingStudentId === student.id
+                                        ? 'Entrando…'
+                                        : `${student.firstName} ${student.lastName}`}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                    {!isSearching && query.trim().length >= 2 && results.length === 0 && !searchError && (
+                        <p className={styles.hint}>No encontramos a nadie con ese nombre.</p>
+                    )}
+                </div>
                 <button className={styles.backLink} type="button" onClick={() => setStep('role')}>
                     Volver
                 </button>
