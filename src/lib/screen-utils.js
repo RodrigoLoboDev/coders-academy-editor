@@ -22,11 +22,22 @@ const STAGE_DIMENSION_DEFAULTS = {
 /**
  * Resolve the current GUI and browser state to an actual stage size enum value.
  * @param {STAGE_SIZE_MODES} stageSizeMode - the state of the stage size toggle button.
- * @param {boolean} isFullSize - true if the window is large enough for the large stage at its full size.
+ * @param {boolean} isFullSize - true if the window is large enough (width AND height) for the
+ *   large stage at its full size.
+ * @param {boolean} hasEnoughHeight - true if the window is tall enough for even the constrained
+ *   stage to leave room for the sprite pane below it. Defaults to true so existing call sites
+ *   that don't pass it (e.g. tests) keep the old width-only behavior.
  * @return {STAGE_DISPLAY_SIZES} - the stage size enum value we should use in this situation.
  */
-const resolveStageSize = (stageSizeMode, isFullSize) => {
+const resolveStageSize = (stageSizeMode, isFullSize, hasEnoughHeight = true) => {
     if (stageSizeMode === STAGE_SIZE_MODES.small) {
+        return STAGE_DISPLAY_SIZES.small;
+    }
+    // 12/08/2026 — pantalla muy baja (ej. netbooks de 11" del aula): ni el stage "constrained"
+    // deja lugar razonable para la lista de sprites debajo. Se achica solo, sin que haga falta
+    // tocar el toggle manual de tamaño de stage (ese sigue funcionando igual, ver el check de
+    // stageSizeMode arriba).
+    if (!hasEnoughHeight) {
         return STAGE_DISPLAY_SIZES.small;
     }
     if (isFullSize) {

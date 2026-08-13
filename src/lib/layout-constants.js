@@ -53,7 +53,21 @@ export default {
     standardStageWidth: 480,
     standardStageHeight: 360,
     fullSizeMinWidth: 1096,
-    fullSizePaintMinWidth: 1250
+    fullSizePaintMinWidth: 1250,
+
+    // 12/08/2026 — scratch-gui original solo decide el tamaño del stage mirando el ANCHO de
+    // ventana (fullSizeMinWidth de arriba). En una netbook de pantalla chica (11", ej. las del
+    // aula) el ancho puede sobrar pero el ALTO no: el stage se queda fijo en 360px (o 306px en
+    // modo "constrained") y como la lista de sprites vive debajo en la misma columna flex, le
+    // queda casi sin alto — apenas se le ven las cabezas. Estos dos umbrales agregan el alto a
+    // la cuenta (ver resolveStageSize en screen-utils.js y su uso en gui.jsx):
+    //   - por debajo de fullSizeMinHeight: nunca usar el stage "large" (360px), cae a
+    //     "largeConstrained" (306px) aunque el ancho alcance.
+    //   - por debajo de constrainedMinHeight: ni siquiera "largeConstrained" deja lugar
+    //     razonable para la lista de sprites — se achica automáticamente a "small" (180px),
+    //     sin que el docente/alumno tenga que tocar el botón manual de tamaño de stage.
+    fullSizeMinHeight: 720,
+    constrainedMinHeight: 560
 };
 
 export {

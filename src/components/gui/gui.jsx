@@ -148,10 +148,16 @@ const GUIComponent = props => {
         isRendererSupported = Renderer.isSupported();
     }
 
-    return (<MediaQuery minWidth={layout.fullSizeMinWidth}>{isFullSize => {
-        const stageSize = resolveStageSize(stageSizeMode, isFullSize);
+    // 12/08/2026 — el MediaQuery original solo miraba el ANCHO (fullSizeMinWidth) para decidir
+    // el tamaño del stage. Se agrega un segundo MediaQuery por ALTO, anidado, para que pantallas
+    // angostas de alto pero anchas (netbooks de 11" del aula) también achiquen el stage — ver el
+    // comentario de fullSizeMinHeight/constrainedMinHeight en layout-constants.js y el de
+    // resolveStageSize en screen-utils.js para el detalle de los 2 umbrales.
+    return (<MediaQuery minHeight={layout.constrainedMinHeight}>{hasEnoughHeight => (
+        <MediaQuery minHeight={layout.fullSizeMinHeight} minWidth={layout.fullSizeMinWidth}>{isFullSize => {
+            const stageSize = resolveStageSize(stageSizeMode, isFullSize, hasEnoughHeight);
 
-        return isPlayerOnly ? (
+            return isPlayerOnly ? (
             <StageWrapper
                 isFullScreen={isFullScreen}
                 isRendererSupported={isRendererSupported}
@@ -382,8 +388,9 @@ const GUIComponent = props => {
                 </Box>
                 <DragLayer />
             </Box>
-        );
-    }}</MediaQuery>);
+            );
+        }}</MediaQuery>
+    )}</MediaQuery>);
 };
 
 GUIComponent.propTypes = {

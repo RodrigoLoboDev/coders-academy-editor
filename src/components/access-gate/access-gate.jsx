@@ -282,9 +282,10 @@ const AccessGate = ({onSelectStudent, onTeacherLogin}) => {
                                 autoFocus
                                 className={styles.input}
                                 placeholder="Código de acceso"
+                                style={{textTransform: 'uppercase'}}
                                 type="text"
                                 value={code}
-                                onChange={e => setCode(e.target.value)}
+                                onChange={e => setCode(e.target.value.toUpperCase())}
                             />
                             <button
                                 className={styles.button}
