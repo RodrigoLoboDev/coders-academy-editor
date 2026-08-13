@@ -29,10 +29,28 @@ import myProjectsIcon from '../components/menu-bar/icon--my-projects.svg';
 // acceso ya se guarda aparte, ver access-gate.jsx) — se borra solo al cerrar la pestaña/navegador,
 // mismo criterio de "barrera de sesión, no de seguridad" que el resto del flujo de acceso.
 const STUDENT_SESSION_KEY = 'ca_editor_student';
-// Mismo criterio para el docente (Fase 4) — acá sí importa la seguridad real (es un token JWT
-// válido de /admin), pero el criterio de "se borra al cerrar la pestaña" sigue siendo el correcto:
-// es una compu compartida del aula, no el dispositivo personal del docente.
+// 13/08/2026 — cambia de sessionStorage a localStorage a pedido del usuario: el docente quiere
+// apagar la netbook, prenderla al otro día y seguir en sus plantillas sin loguearse de nuevo. El
+// JWT (apps/api, JwtModule.register signOptions.expiresIn: '7d') ya da margen de sobra para eso.
+// Trade-off real, aceptado a propósito: en una compu compartida del aula, cualquiera que abra
+// crear.codersacademy.com.ar en esa misma netbook dentro de esos 7 días entra directo a "Mis
+// plantillas" del docente, hasta que alguien cierre sesión a mano ("Cerrar sesión" o la "✕" de
+// TemplatePicker, los dos siguen limpiando la sesión igual que antes). Antes (Fase 4) era
+// sessionStorage justamente para evitar esto — se revierte esa decisión con este cambio.
 const TEACHER_SESSION_KEY = 'ca_editor_teacher';
+
+// JWT sin verificar firma (no hace falta — solo se usa para decidir localmente si conviene
+// mostrarle al docente el picker directo o mandarlo a loguearse de nuevo; cualquier request real a
+// la API igual pasa por el JwtStrategy del backend, que si acepta el token es porque es válido de
+// verdad). Si el token viene raro/corrupto, se lo trata como vencido en vez de romper.
+const decodeJwtExpiryMs = token => {
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+        return typeof payload.exp === 'number' ? payload.exp * 1000 : null;
+    } catch {
+        return null;
+    }
+};
 
 const readStoredStudent = () => {
     try {
@@ -45,8 +63,15 @@ const readStoredStudent = () => {
 
 const readStoredTeacher = () => {
     try {
-        const raw = sessionStorage.getItem(TEACHER_SESSION_KEY);
-        return raw ? JSON.parse(raw) : null;
+        const raw = localStorage.getItem(TEACHER_SESSION_KEY);
+        if (!raw) return null;
+        const teacher = JSON.parse(raw);
+        const expiresAt = decodeJwtExpiryMs(teacher.token);
+        if (expiresAt !== null && expiresAt <= Date.now()) {
+            localStorage.removeItem(TEACHER_SESSION_KEY);
+            return null;
+        }
+        return teacher;
     } catch {
         return null;
     }
@@ -103,8 +128,9 @@ const sessionButtonStyle = {
 // privado). Antes todo el flujo (AccessGate → picker → editor) era una state machine adentro de
 // un solo componente, sin tocar nunca la URL — el navegador siempre mostraba
 // crear.codersacademy.com.ar sin importar la pantalla. Ahora cada pantalla tiene su propia ruta:
-// no cambia la lógica de sesión (sigue en sessionStorage, sobrevive un refresh), solo se le suma
-// una URL real por encima — permite compartir/recargar en la pantalla en la que estás y usar
+// no cambia la lógica de sesión (alumno en sessionStorage, docente en localStorage desde
+// 13/08/2026 — ver TEACHER_SESSION_KEY), solo se le suma una URL real por encima — permite
+// compartir/recargar en la pantalla en la que estás y usar
 // atrás/adelante del navegador. El catch-all de Vercel (vercel.json) y `historyApiFallback` del
 // dev server (webpack.config.js) ya cubrían esto de antes, no hizo falta tocar infra.
 const PATHS = {
@@ -137,7 +163,7 @@ const RoleRoute = () => {
     };
 
     const handleTeacherLogin = (token, user) => {
-        sessionStorage.setItem(TEACHER_SESSION_KEY, JSON.stringify({token, name: user.name}));
+        localStorage.setItem(TEACHER_SESSION_KEY, JSON.stringify({token, name: user.name}));
         storage.setAuthToken(token);
         navigate(PATHS.templates);
     };
@@ -285,7 +311,7 @@ const TemplatesRoute = () => {
                 <TemplatePicker
                     token={teacher.token}
                     onLogout={() => {
-                        sessionStorage.removeItem(TEACHER_SESSION_KEY);
+                        localStorage.removeItem(TEACHER_SESSION_KEY);
                         storage.setAuthToken(null);
                         navigate(PATHS.role);
                     }}
@@ -315,7 +341,7 @@ const TeacherEditorRoute = ({WrappedGui}) => {
                         </ExitEditorGuard>
                         <ExitEditorGuard
                             onExit={() => {
-                                sessionStorage.removeItem(TEACHER_SESSION_KEY);
+                                localStorage.removeItem(TEACHER_SESSION_KEY);
                                 storage.setAuthToken(null);
                                 navigate(PATHS.role);
                             }}
