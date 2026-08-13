@@ -117,3 +117,33 @@
     color: rgba(255, 255, 255, 0.9);
     white-space: pre-wrap;
 }
+
+/* 13/08/2026 — la misión ahora se ve como instrucciones paso a paso (<ol>/<li>), no como un
+   párrafo suelto. Número propio (marker ámbar, igual criterio de color que .badge/.popover-label)
+   en vez del bullet/número por defecto del navegador, que quedaba apagado sobre este fondo oscuro. */
+.popover-objective-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: objective-step;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.popover-objective-list li {
+    position: relative;
+    padding-left: 26px;
+    font-size: 0.85rem;
+    line-height: 1.45;
+    color: rgba(255, 255, 255, 0.9);
+    counter-increment: objective-step;
+}
+
+.popover-objective-list li::before {
+    content: counter(objective-step) ".";
+    position: absolute;
+    left: 0;
+    font-weight: 700;
+    color: #ffb02e;
+}

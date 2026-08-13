@@ -17,6 +17,15 @@ const TaskBanner = ({title, story, objective}) => {
     const [isOpen, setIsOpen] = useState(false);
     const popoverRef = useRef(null);
 
+    // 13/08/2026 — la "misión" del docente pasó de un textarea libre a una lista de pasos (ver
+    // ObjectiveListEditor en template-picker.jsx). El dato sigue viajando como un string plano
+    // (sin tocar el backend): cada paso separado por "\n", unido ahí al guardar. Acá se vuelve a
+    // separar para mostrarlo como <ol>/<li> real. Compatible con plantillas viejas guardadas antes
+    // de este cambio (un solo párrafo sin "\n") — se ven como una lista de un solo paso.
+    const objectiveSteps = objective
+        ? objective.split('\n').map(step => step.trim()).filter(Boolean)
+        : [];
+
     useEffect(() => {
         if (!isOpen) return;
         const handleOutsideClick = e => {
@@ -55,10 +64,15 @@ const TaskBanner = ({title, story, objective}) => {
                                 <p className={styles.popoverText}>{story}</p>
                             </div>
                         )}
-                        {objective && (
+                        {objectiveSteps.length > 0 && (
                             <div className={styles.popoverSection}>
                                 <h3 className={styles.popoverLabel}>🎯 Tu misión</h3>
-                                <p className={styles.popoverText}>{objective}</p>
+                                <ol className={styles.popoverObjectiveList}>
+                                    {objectiveSteps.map((step, index) => (
+                                        // eslint-disable-next-line react/no-array-index-key
+                                        <li key={index}>{step}</li>
+                                    ))}
+                                </ol>
                             </div>
                         )}
                     </div>

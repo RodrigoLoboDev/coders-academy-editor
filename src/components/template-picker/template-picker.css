@@ -542,7 +542,83 @@
 
 .textarea {
     resize: vertical;
-    min-height: 70px;
+    min-height: 120px;
+}
+
+/* 13/08/2026 — editor de pasos de la misión (ObjectiveListEditor), reemplaza al textarea libre.
+   Mismo color de superficie que .input (#1c2440) por fila, número en un círculo ámbar (mismo tono
+   que el resto de los acentos de marca del editor) en vez de depender del list-style nativo. */
+.objectiveList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.objectiveItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.objectiveItemNumber {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: rgba(255, 176, 46, 0.16);
+    color: #ffb02e;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.objectiveItemInput {
+    composes: input;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.objectiveItemRemove {
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #9aa6c2;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.objectiveItemRemove:hover:not(:disabled) {
+    background: rgba(251, 113, 133, 0.14);
+    color: #fb7185;
+}
+
+.objectiveItemRemove:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.addStepButton {
+    align-self: flex-start;
+    margin-top: 2px;
+    padding: 8px 14px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #9aa6c2;
+    background: none;
+    border: 1px dashed rgba(255, 255, 255, 0.18);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.addStepButton:hover {
+    border-color: rgba(255, 176, 46, 0.5);
+    color: #ffb02e;
 }
 
 .select option {

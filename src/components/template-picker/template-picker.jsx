@@ -51,17 +51,89 @@ const blankTemplateProjectJson = () => ({
     meta: {semver: '3.0.0', vm: '2.3.0', agent: ''}
 });
 
+// 13/08/2026 — la "misión" del docente pasó de un textarea libre a una lista de pasos
+// (1., 2., 3.…) que el docente arma agregando/quitando ítems — pensado para instrucciones paso a
+// paso ("programá al robot para que gire", "después que avance", ...), que antes quedaban todas
+// amontonadas en un solo párrafo. Reusado por NewTemplateForm y EditInfoPanel.
+//
+// El dato sigue viajando como un string plano al backend, sin tocar el schema: cada paso se une
+// con "\n" al guardar (buildObjectiveText más abajo) y se vuelve a separar al leer (acá y en
+// TaskBanner, que es donde lo lee el alumno) — evita una migración de columna por un cambio que es
+// puramente de UI/UX.
+const buildObjectiveText = items => items.map(step => step.trim()).filter(Boolean).join('\n');
+
+const parseObjectiveText = text => {
+    const steps = text ? text.split('\n').map(step => step.trim()).filter(Boolean) : [];
+    return steps.length > 0 ? steps : [''];
+};
+
+const ObjectiveListEditor = ({items, onChange}) => {
+    const updateStep = (index, value) => {
+        const next = [...items];
+        next[index] = value;
+        onChange(next);
+    };
+
+    const removeStep = index => {
+        if (items.length === 1) {
+            onChange(['']);
+            return;
+        }
+        onChange(items.filter((_, i) => i !== index));
+    };
+
+    return (
+        <div className={styles.objectiveList}>
+            {items.map((step, index) => (
+                // eslint-disable-next-line react/no-array-index-key
+                <div key={index} className={styles.objectiveItem}>
+                    <span className={styles.objectiveItemNumber}>{index + 1}</span>
+                    <input
+                        className={styles.objectiveItemInput}
+                        placeholder={`Paso ${index + 1}`}
+                        type="text"
+                        value={step}
+                        onChange={e => updateStep(index, e.target.value)}
+                    />
+                    <button
+                        className={styles.objectiveItemRemove}
+                        disabled={items.length === 1 && !step}
+                        title="Quitar paso"
+                        type="button"
+                        onClick={() => removeStep(index)}
+                    >
+                        ✕
+                    </button>
+                </div>
+            ))}
+            <button
+                className={styles.addStepButton}
+                type="button"
+                onClick={() => onChange([...items, ''])}
+            >
+                ➕ Agregar paso
+            </button>
+        </div>
+    );
+};
+
+ObjectiveListEditor.propTypes = {
+    items: PropTypes.arrayOf(PropTypes.string).isRequired,
+    onChange: PropTypes.func.isRequired
+};
+
 // Sesión 34 — reskin: antes reemplazaba el card principal entero (early return); ahora es un panel
 // superpuesto sobre el grid, mismo patrón que AssignPanel más abajo — el grid de plantillas sigue
 // vivo detrás, se puede cancelar sin perder el scroll/búsqueda que tenía el docente.
 const NewTemplateForm = ({onCreate, onCancel, creating, error}) => {
     const [title, setTitle] = useState('');
     const [story, setStory] = useState('');
-    const [objective, setObjective] = useState('');
+    const [objectiveItems, setObjectiveItems] = useState(['']);
+    const objectiveText = buildObjectiveText(objectiveItems);
 
     const handleSubmit = e => {
         e.preventDefault();
-        onCreate({title: title.trim(), story: story.trim(), objective: objective.trim()});
+        onCreate({title: title.trim(), story: story.trim(), objective: objectiveText});
     };
 
     return (
@@ -92,17 +164,11 @@ const NewTemplateForm = ({onCreate, onCancel, creating, error}) => {
                         value={story}
                         onChange={e => setStory(e.target.value)}
                     />
-                    <label className={styles.label} htmlFor="template-objective">Objetivo / misión</label>
-                    <textarea
-                        className={styles.textarea}
-                        id="template-objective"
-                        placeholder="Ej: Programá al robot para que llegue hasta la salida sin chocar con las paredes."
-                        value={objective}
-                        onChange={e => setObjective(e.target.value)}
-                    />
+                    <label className={styles.label}>Objetivo / misión (paso a paso)</label>
+                    <ObjectiveListEditor items={objectiveItems} onChange={setObjectiveItems} />
                     <button
                         className={styles.newButton}
-                        disabled={creating || !title.trim() || !story.trim() || !objective.trim()}
+                        disabled={creating || !title.trim() || !story.trim() || !objectiveText}
                         type="submit"
                     >
                         {creating ? 'Creando…' : '✅ Crear y empezar a armarla'}
@@ -208,20 +274,20 @@ ConfirmDeleteModal.propTypes = {
 const EditInfoPanel = ({token, template, onClose, onSaved}) => {
     const [title, setTitle] = useState(template.title);
     const [story, setStory] = useState(template.story);
-    const [objective, setObjective] = useState(template.objective);
+    const [objectiveItems, setObjectiveItems] = useState(parseObjectiveText(template.objective));
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState(null);
 
+    const objectiveText = buildObjectiveText(objectiveItems);
     const hasChanges = title.trim() !== template.title ||
         story.trim() !== template.story ||
-        objective.trim() !== template.objective;
+        objectiveText !== template.objective;
 
     const handleSave = () => {
         const nextTitle = title.trim();
         const nextStory = story.trim();
-        const nextObjective = objective.trim();
-        if (!nextTitle || !nextStory || !nextObjective) {
-            setError('Los tres campos son obligatorios.');
+        if (!nextTitle || !nextStory || !objectiveText) {
+            setError('Título, relato y al menos un paso de la misión son obligatorios.');
             return;
         }
         setSaving(true);
@@ -229,7 +295,7 @@ const EditInfoPanel = ({token, template, onClose, onSaved}) => {
         fetch(`${process.env.API_URL}/admin/scratch-templates/${template.id}`, {
             method: 'PATCH',
             headers: {'Content-Type': 'application/json', Authorization: `Bearer ${token}`},
-            body: JSON.stringify({title: nextTitle, story: nextStory, objective: nextObjective})
+            body: JSON.stringify({title: nextTitle, story: nextStory, objective: objectiveText})
         })
             .then(response => {
                 if (!response.ok) throw new Error(response.status);
@@ -270,13 +336,8 @@ const EditInfoPanel = ({token, template, onClose, onSaved}) => {
                     value={story}
                     onChange={e => setStory(e.target.value)}
                 />
-                <label className={styles.label} htmlFor="edit-objective">Objetivo / misión</label>
-                <textarea
-                    className={styles.textarea}
-                    id="edit-objective"
-                    value={objective}
-                    onChange={e => setObjective(e.target.value)}
-                />
+                <label className={styles.label}>Objetivo / misión (paso a paso)</label>
+                <ObjectiveListEditor items={objectiveItems} onChange={setObjectiveItems} />
 
                 {error && <p className={styles.error}>{error}</p>}
                 <button
