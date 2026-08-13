@@ -1,0 +1,93 @@
+/*
+ * 13/08/2026 — mismo lenguaje visual que template-picker.css/project-picker.css (navy + ámbar +
+ * indigo), independiente a propósito: este modal puede aparecer tanto en el flujo de alumno como
+ * en el de docente, ninguno de esos dos módulos es dueño natural de este componente.
+ */
+
+.backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(5, 8, 18, 0.72);
+}
+
+.card {
+    width: 100%;
+    max-width: 380px;
+    padding: 28px;
+    background: #161e33;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+    text-align: center;
+}
+
+.title {
+    margin: 0 0 8px;
+    font-size: 1.15rem;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.subtitle {
+    margin: 0 0 22px;
+    font-size: 0.9rem;
+    color: #9aa6c2;
+}
+
+.saveButton {
+    width: 100%;
+    padding: 13px;
+    font-size: 0.95rem;
+    font-weight: bold;
+    color: #3a2a06;
+    background: linear-gradient(180deg, #ffc65c, #ffb02e);
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 10px 24px -10px rgba(255, 176, 46, 0.55);
+    cursor: pointer;
+}
+
+.saveButton:hover {
+    filter: brightness(1.05);
+}
+
+.discardButton {
+    width: 100%;
+    margin-top: 10px;
+    padding: 13px;
+    font-size: 0.95rem;
+    font-weight: bold;
+    color: #eef2fb;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.discardButton:hover {
+    background: rgba(251, 113, 133, 0.12);
+    border-color: rgba(251, 113, 133, 0.4);
+    color: #fb7185;
+}
+
+.cancelLink {
+    display: inline-block;
+    margin-top: 16px;
+    background: none;
+    border: none;
+    padding: 0;
+    color: #9aa6c2;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.cancelLink:hover {
+    color: #eef2fb;
+    text-decoration: underline;
+}

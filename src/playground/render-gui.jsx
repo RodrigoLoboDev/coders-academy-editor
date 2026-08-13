@@ -14,6 +14,7 @@ import TemplatePicker from '../components/template-picker/template-picker.jsx';
 import PublicPlayer from '../components/public-player/public-player.jsx';
 import Divider from '../components/divider/divider.jsx';
 import TaskBanner from '../components/task-banner/task-banner.jsx';
+import ExitEditorGuard from '../components/exit-editor-guard/exit-editor-guard.jsx';
 import fetchSharedScratchAssets from '../lib/fetch-shared-scratch-assets';
 import {clearCodeSession, codeSessionMsRemaining} from '../lib/editor-access-code-session';
 
@@ -238,16 +239,15 @@ const StudentEditorRoute = ({WrappedGui}) => {
                     <div style={sessionInfoStyle}>
                         <span style={sessionNameStyle}>{student.firstName}</span>
                         <Divider className={menuBarStyles.divider} />
-                        <div
-                            className={classNames(menuBarStyles.menuBarItem, menuBarStyles.hoverable)}
-                            onClick={() => navigate(PATHS.projects)}
-                        >
-                            <img
-                                className={menuBarStyles.helpIcon}
-                                src={myProjectsIcon}
-                            />
-                            <span className={menuBarStyles.tutorialsLabel}>Mis Proyectos</span>
-                        </div>
+                        <ExitEditorGuard onExit={() => navigate(PATHS.projects)}>
+                            <div className={classNames(menuBarStyles.menuBarItem, menuBarStyles.hoverable)}>
+                                <img
+                                    className={menuBarStyles.helpIcon}
+                                    src={myProjectsIcon}
+                                />
+                                <span className={menuBarStyles.tutorialsLabel}>Mis Proyectos</span>
+                            </div>
+                        </ExitEditorGuard>
                     </div>
                 );
 
@@ -308,24 +308,22 @@ const TeacherEditorRoute = ({WrappedGui}) => {
                     <div style={sessionInfoStyle}>
                         <span style={sessionNameStyle}>{teacher.name}</span>
                         <Divider className={menuBarStyles.divider} />
-                        <button
-                            style={{...sessionButtonStyle, marginLeft: 0}}
-                            type="button"
-                            onClick={() => navigate(PATHS.templates)}
-                        >
-                            Mis plantillas
-                        </button>
-                        <button
-                            style={sessionButtonStyle}
-                            type="button"
-                            onClick={() => {
+                        <ExitEditorGuard onExit={() => navigate(PATHS.templates)}>
+                            <button style={{...sessionButtonStyle, marginLeft: 0}} type="button">
+                                Mis plantillas
+                            </button>
+                        </ExitEditorGuard>
+                        <ExitEditorGuard
+                            onExit={() => {
                                 sessionStorage.removeItem(TEACHER_SESSION_KEY);
                                 storage.setAuthToken(null);
                                 navigate(PATHS.role);
                             }}
                         >
-                            Cerrar sesión
-                        </button>
+                            <button style={sessionButtonStyle} type="button">
+                                Cerrar sesión
+                            </button>
+                        </ExitEditorGuard>
                     </div>
                 );
 
