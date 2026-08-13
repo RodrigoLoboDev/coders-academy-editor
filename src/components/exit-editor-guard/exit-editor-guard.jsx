@@ -88,12 +88,14 @@ const ExitEditorGuardComponent = ({
                         <p className={styles.subtitle}>
                             ¿Qué querés hacer con el proyecto antes de salir?
                         </p>
-                        <button className={styles.saveButton} type="button" onClick={handleSaveAndExit}>
-                            💾 Guardar cambios
-                        </button>
-                        <button className={styles.discardButton} type="button" onClick={handleDiscardAndExit}>
-                            🗑️ Descartar cambios
-                        </button>
+                        <div className={styles.actionsRow}>
+                            <button className={styles.saveButton} type="button" onClick={handleSaveAndExit}>
+                                💾 Guardar cambios
+                            </button>
+                            <button className={styles.discardButton} type="button" onClick={handleDiscardAndExit}>
+                                🗑️ Descartar cambios
+                            </button>
+                        </div>
                         <button className={styles.cancelLink} type="button" onClick={() => setConfirmOpen(false)}>
                             Seguir editando
                         </button>

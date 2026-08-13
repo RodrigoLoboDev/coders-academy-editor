@@ -39,17 +39,31 @@
     color: #9aa6c2;
 }
 
-.saveButton {
-    width: 100%;
-    padding: 13px;
-    font-size: 0.95rem;
+/* 13/08/2026 — lado a lado, 50% cada uno, en vez de apilados de ancho completo. min-width: 0
+   es necesario para que el texto del botón (que no rompe línea) pueda angostarse dentro de su
+   mitad en vez de forzar el flex item a su ancho de contenido y desbordar el .card. */
+.actionsRow {
+    display: flex;
+    gap: 10px;
+}
+
+.saveButton,
+.discardButton {
+    flex: 1 1 0;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 13px 10px;
+    font-size: 0.9rem;
     font-weight: bold;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.saveButton {
     color: #3a2a06;
     background: linear-gradient(180deg, #ffc65c, #ffb02e);
     border: none;
-    border-radius: 10px;
     box-shadow: 0 10px 24px -10px rgba(255, 176, 46, 0.55);
-    cursor: pointer;
 }
 
 .saveButton:hover {
@@ -57,16 +71,9 @@
 }
 
 .discardButton {
-    width: 100%;
-    margin-top: 10px;
-    padding: 13px;
-    font-size: 0.95rem;
-    font-weight: bold;
     color: #eef2fb;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 10px;
-    cursor: pointer;
 }
 
 .discardButton:hover {
