@@ -150,7 +150,11 @@ const buildConfig = baseConfig.clone()
         ...commonHtmlWebpackPluginOptions,
         chunks: ['gui'],
         template: 'src/playground/index.ejs',
-        title: 'Coders Academy Editor'
+        // Sesión 32 (pendiente), cerrado acá — mismo criterio de nombre que el resto de las apps
+        // (apps/actividades: "Coders Academy — Actividades", apps/web: "Coders Academy"). Los
+        // otros 3 entries (blocksonly/compatibilitytesting/player) son herramientas internas de
+        // dev, no se sirven en producción — quedan con su título descriptivo tal cual estaba.
+        title: 'Coders Academy — Crear'
     }))
     .addPlugin(new HtmlWebpackPlugin({
         ...commonHtmlWebpackPluginOptions,
