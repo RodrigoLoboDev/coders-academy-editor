@@ -1,10 +1,16 @@
 /*
- * Sesión 34 — mismo reskin de marca que project-picker.css/access-gate.css (navy + indigo/ámbar),
- * 100% desktop sin breakpoints mobile (compus del aula). Ya no respeta el toggle de modo oscuro
- * del editor (`data-theme`) — ver el comentario largo en access-gate.css para el porqué completo.
- * Antes esta pantalla tenía su propia paleta ad-hoc (azul Scratch #1a1aad, card blanca, sin
- * relación visual con el resto de la plataforma) — la única pantalla del editor que había quedado
- * afuera de esa ronda.
+ * 13/08/2026 — repaletizado de navy+indigo/ámbar (marca, mismo tono que access-gate.css) a la
+ * paleta neutra "mBlock" que ya usa el editor en sí en modo oscuro (gui.css sesión 34: marco
+ * #000000, panel base #1F1F1F, superficie elevada #363636, texto #E5E5E5) — mismo cambio que
+ * project-picker.css, mismo motivo: este picker es la pantalla que se ve justo antes/después de
+ * estar en el editor, tenía menos sentido que rompiera a un tono de color distinto (navy) en vez
+ * de sentirse parte de la misma superficie. Esquinas también menos redondeadas en toda la pantalla
+ * (24px→12px el card, resto escalado en proporción) — a pedido del usuario. El acento ámbar/indigo
+ * de marca (botones, hover de card seleccionada) se mantiene, es el mismo que ya usa el chrome del
+ * editor.
+ * Sigue sin respetar el toggle de modo oscuro del editor (`data-theme`) — ver el comentario largo
+ * en access-gate.css para el porqué completo (esta pantalla es oscura siempre, no tiene variante
+ * clara).
  */
 
 .backdrop {
@@ -15,12 +21,9 @@
     align-items: center;
     justify-content: center;
     padding: 24px;
-    background: #0a0f1c;
-    background-image:
-        radial-gradient(900px 520px at 8% -8%, rgba(108, 123, 255, 0.16), transparent 60%),
-        radial-gradient(820px 520px at 96% 0%, rgba(255, 176, 46, 0.1), transparent 55%),
-        radial-gradient(circle, rgba(255, 255, 255, 0.05) 1.1px, transparent 1.1px);
-    background-size: auto, auto, 24px 24px;
+    background: #000000;
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.05) 1.1px, transparent 1.1px);
+    background-size: 24px 24px;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
@@ -30,8 +33,8 @@
     width: 100%;
     max-width: 1160px;
     height: min(84vh, 800px);
-    border-radius: 24px;
-    background: #161e33;
+    border-radius: 12px;
+    background: #1f1f1f;
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
     overflow: hidden;
@@ -73,7 +76,7 @@
     white-space: nowrap;
     background: rgba(255, 176, 46, 0.12);
     border: 1px solid rgba(255, 176, 46, 0.3);
-    border-radius: 10px;
+    border-radius: 8px;
     cursor: pointer;
 }
 
@@ -95,16 +98,16 @@
     box-sizing: border-box;
     padding: 10px 14px 10px 38px;
     font-size: 0.95rem;
-    color: #eef2fb;
-    background: #1c2440;
+    color: #e5e5e5;
+    background: #363636;
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 10px;
+    border-radius: 8px;
     outline: none;
     transition: border-color 0.15s ease;
 }
 
 .searchInput::placeholder {
-    color: #5f6c8c;
+    color: #808080;
 }
 
 .searchInput:focus {
@@ -123,7 +126,7 @@
 .subtitle {
     margin: 4px 0 0;
     font-size: 0.85rem;
-    color: #9aa6c2;
+    color: #b3b3b3;
     text-align: center;
 }
 
@@ -135,10 +138,10 @@
     width: 36px;
     height: 36px;
     font-size: 1.1rem;
-    color: #9aa6c2;
+    color: #b3b3b3;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
+    border-radius: 8px;
     cursor: pointer;
     transition: background 0.15s ease, color 0.15s ease;
 }
@@ -170,9 +173,9 @@
     flex-direction: column;
     min-width: 0;
     aspect-ratio: 0.82;
-    background: #1c2440;
+    background: #363636;
     border: 2px solid transparent;
-    border-radius: 14px;
+    border-radius: 10px;
     cursor: pointer;
     transition: border-color 0.15s ease, transform 0.15s ease;
 }
@@ -191,8 +194,8 @@
     flex: 3;
     min-height: 0;
     overflow: hidden;
-    border-radius: 12px 12px 0 0;
-    background: #0f1629;
+    border-radius: 8px 8px 0 0;
+    background: #000000;
 }
 
 .thumb {
@@ -231,7 +234,7 @@
 .templateTitle {
     font-size: 0.85rem;
     font-weight: bold;
-    color: #eef2fb;
+    color: #e5e5e5;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -240,7 +243,7 @@
 .templateStory {
     margin-top: 2px;
     font-size: 0.72rem;
-    color: #9aa6c2;
+    color: #b3b3b3;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -264,10 +267,10 @@
     height: 26px;
     font-size: 1.1rem;
     line-height: 1;
-    color: #9aa6c2;
+    color: #b3b3b3;
     background: none;
     border: none;
-    border-radius: 6px;
+    border-radius: 4px;
     cursor: pointer;
 }
 
@@ -283,9 +286,9 @@
     right: 0;
     min-width: 148px;
     padding: 4px;
-    background: #1c2440;
+    background: #363636;
     border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 10px;
+    border-radius: 8px;
     box-shadow: 0 14px 32px rgba(0, 0, 0, 0.5);
     text-align: left;
 }
@@ -297,10 +300,10 @@
     padding: 6px 8px;
     font-size: 0.72rem;
     font-weight: 600;
-    color: #eef2fb;
+    color: #e5e5e5;
     background: none;
     border: none;
-    border-radius: 6px;
+    border-radius: 4px;
     text-align: left;
     cursor: pointer;
 }
@@ -326,10 +329,10 @@
     font-size: 0.85rem;
     font-weight: bold;
     font-family: inherit;
-    color: #eef2fb;
-    background: #0f1629;
+    color: #e5e5e5;
+    background: #000000;
     border: 1px solid rgba(108, 123, 255, 0.6);
-    border-radius: 4px;
+    border-radius: 3px;
     outline: none;
 }
 
@@ -350,12 +353,12 @@
     font-size: 0.98rem;
     font-weight: bold;
     border: none;
-    border-radius: 12px;
+    border-radius: 8px;
     cursor: pointer;
 }
 
 .confirmCancelButton {
-    color: #eef2fb;
+    color: #e5e5e5;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.14);
 }
@@ -381,7 +384,7 @@
 .hint {
     margin-top: 8px;
     font-size: 0.95rem;
-    color: #9aa6c2;
+    color: #b3b3b3;
     text-align: center;
 }
 
@@ -415,7 +418,7 @@
     font-size: 0.92rem;
     font-weight: bold;
     border: none;
-    border-radius: 10px;
+    border-radius: 8px;
     cursor: pointer;
     transition: transform 0.15s ease, filter 0.15s ease, background 0.15s ease;
 }
@@ -440,7 +443,7 @@
 }
 
 .footerButtonSecondary {
-    color: #eef2fb;
+    color: #e5e5e5;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.14);
 }
@@ -482,9 +485,9 @@
     overflow-y: auto;
     margin: auto;
     padding: 28px;
-    background: #161e33;
+    background: #1f1f1f;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
+    border-radius: 12px;
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
 }
 
@@ -498,7 +501,7 @@
 .panelSubtitle {
     margin: 0 0 20px;
     font-size: 0.92rem;
-    color: #9aa6c2;
+    color: #b3b3b3;
 }
 
 .label {
@@ -506,7 +509,7 @@
     margin: 16px 0 6px;
     font-size: 0.8rem;
     font-weight: bold;
-    color: #9aa6c2;
+    color: #b3b3b3;
 }
 
 .label:first-of-type {
@@ -521,17 +524,17 @@
     padding: 12px 14px;
     font-size: 0.95rem;
     font-family: inherit;
-    color: #eef2fb;
-    background: #1c2440;
+    color: #e5e5e5;
+    background: #363636;
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 10px;
+    border-radius: 8px;
     outline: none;
     transition: border-color 0.15s ease;
 }
 
 .input::placeholder,
 .textarea::placeholder {
-    color: #5f6c8c;
+    color: #808080;
 }
 
 .input:focus,
@@ -546,7 +549,7 @@
 }
 
 /* 13/08/2026 — editor de pasos de la misión (ObjectiveListEditor), reemplaza al textarea libre.
-   Mismo color de superficie que .input (#1c2440) por fila, número en un círculo ámbar (mismo tono
+   Mismo color de superficie que .input (#363636) por fila, número en un círculo ámbar (mismo tono
    que el resto de los acentos de marca del editor) en vez de depender del list-style nativo. */
 .objectiveList {
     display: flex;
@@ -587,7 +590,7 @@
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
-    color: #9aa6c2;
+    color: #b3b3b3;
     cursor: pointer;
     transition: background 0.15s ease, color 0.15s ease;
 }
@@ -608,10 +611,10 @@
     padding: 8px 14px;
     font-size: 0.85rem;
     font-weight: bold;
-    color: #9aa6c2;
+    color: #b3b3b3;
     background: none;
     border: 1px dashed rgba(255, 255, 255, 0.18);
-    border-radius: 10px;
+    border-radius: 8px;
     cursor: pointer;
     transition: border-color 0.15s ease, color 0.15s ease;
 }
@@ -622,8 +625,8 @@
 }
 
 .select option {
-    background: #1c2440;
-    color: #eef2fb;
+    background: #363636;
+    color: #e5e5e5;
 }
 
 .newButton {
@@ -635,7 +638,7 @@
     color: #3a2a06;
     background: linear-gradient(180deg, #ffc65c, #ffb02e);
     border: none;
-    border-radius: 10px;
+    border-radius: 8px;
     box-shadow: 0 10px 24px -10px rgba(255, 176, 46, 0.55);
     cursor: pointer;
     transition: filter 0.15s ease, transform 0.15s ease;
@@ -662,8 +665,8 @@
     text-align: center;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 10px;
-    color: #eef2fb;
+    border-radius: 8px;
+    color: #e5e5e5;
     font-size: 0.9rem;
     font-weight: bold;
     cursor: pointer;
@@ -686,8 +689,8 @@
     padding: 10px 12px;
     font-size: 0.9rem;
     text-align: left;
-    color: #eef2fb;
-    background: #1c2440;
+    color: #e5e5e5;
+    background: #363636;
     border: none;
     border-radius: 8px;
     cursor: pointer;
@@ -718,8 +721,8 @@
     gap: 8px;
     padding: 8px 12px;
     font-size: 0.85rem;
-    color: #9aa6c2;
-    background: #1c2440;
+    color: #b3b3b3;
+    background: #363636;
     border-radius: 8px;
 }
 
@@ -731,7 +734,7 @@
     color: #fb7185;
     background: none;
     border: 1px solid rgba(251, 113, 133, 0.4);
-    border-radius: 6px;
+    border-radius: 4px;
     cursor: pointer;
 }
 
