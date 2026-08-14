@@ -1,8 +1,10 @@
 /*
- * Mismo lenguaje visual que el resto del reskin de marca (navy + ámbar/indigo, sesión 34) — estos
- * son los mismos patrones que ya usan project-picker.css/template-picker.css para sus paneles
- * superpuestos, duplicados acá a propósito (convención ya existente en el repo: cada componente
- * tiene su propio CSS module, sin compartir clases entre archivos).
+ * 14/08/2026 — repaletizado de navy (#161e33/#1c2440, resabio de la marca vieja) a la paleta
+ * neutra "mBlock" que ya usa el resto del chrome oscuro del editor (project-picker.css/
+ * template-picker.css/exit-editor-guard.css: fondo #1f1f1f, superficie elevada #363636, texto
+ * secundario #b3b3b3) — mismo criterio de "no romper a un tono de color distinto" ya aplicado en
+ * esos otros paneles. El acento ámbar de marca (botón "Generar código nuevo", código actual) se
+ * mantiene — no es lo que se pidió cambiar.
  */
 
 /* 14/08/2026 — white-space: normal explícito: este panel se abre desde TemplatePicker, que ahora
@@ -29,9 +31,9 @@
     max-width: 420px;
     margin: auto;
     padding: 28px;
-    background: #161e33;
+    background: #1f1f1f;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
+    border-radius: 12px;
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
 }
 
@@ -46,7 +48,7 @@
     margin: 0 0 20px;
     font-size: 0.9rem;
     line-height: 1.4;
-    color: #9aa6c2;
+    color: #b3b3b3;
 }
 
 .currentCode {
@@ -56,7 +58,7 @@
     gap: 4px;
     margin-bottom: 20px;
     padding: 18px;
-    background: #1c2440;
+    background: #363636;
     border: 1px solid rgba(255, 176, 46, 0.35);
     border-radius: 14px;
 }
@@ -70,7 +72,7 @@
 
 .codeExpiry {
     font-size: 0.8rem;
-    color: #9aa6c2;
+    color: #b3b3b3;
 }
 
 .label {
@@ -78,7 +80,7 @@
     margin: 0 0 6px;
     font-size: 0.85rem;
     font-weight: 600;
-    color: #9aa6c2;
+    color: #b3b3b3;
 }
 
 .input {
@@ -87,8 +89,8 @@
     padding: 11px 14px;
     margin-bottom: 16px;
     font-size: 0.95rem;
-    color: #eef2fb;
-    background: #1c2440;
+    color: #e5e5e5;
+    background: #363636;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 10px;
     outline: none;
@@ -129,7 +131,7 @@
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 10px;
-    color: #eef2fb;
+    color: #e5e5e5;
     font-size: 0.9rem;
     cursor: pointer;
 }
@@ -140,7 +142,7 @@
 
 .hint {
     font-size: 0.9rem;
-    color: #9aa6c2;
+    color: #b3b3b3;
     text-align: center;
 }
 
