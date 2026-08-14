@@ -52,63 +52,6 @@
     gap: 4%;
 }
 
-/* 14/08/2026 — un solo breakpoint (no responsive mobile completo, esta pantalla sigue siendo
-   100% desktop): a partir de acá el ancho de ventana ya no es el de una netbook de 11", es una
-   notebook grande o un monitor de escritorio — recupera el ancho de layout que ya andaba bien
-   (90%) y agranda todo el texto de esta pantalla en la misma proporción entre las dos columnas.
-   1400px de corte, arriba de los ~1024-1366px típicos de una netbook, para no mezclarse con ese
-   rango. */
-@media (min-width: 1400px) {
-    .layout {
-        width: 90%;
-    }
-
-    .brandName {
-        font-size: 1.65rem;
-    }
-
-    .heading {
-        font-size: 2.2rem;
-    }
-
-    .tagline {
-        font-size: 1.15rem;
-    }
-
-    .roleItem {
-        font-size: 1.2rem;
-    }
-
-    .placeholder {
-        font-size: 1.15rem;
-    }
-
-    .panelHeading {
-        font-size: 1.35rem;
-    }
-
-    .panelSubtext {
-        font-size: 1.02rem;
-    }
-
-    .input {
-        font-size: 1.18rem;
-    }
-
-    .button {
-        font-size: 1.12rem;
-    }
-
-    .resultItem {
-        font-size: 1.08rem;
-    }
-
-    .error,
-    .hint {
-        font-size: 0.98rem;
-    }
-}
-
 .leftCol {
     flex: 0 0 36%;
     display: flex;
@@ -361,4 +304,67 @@
 .resultItemSelected:hover {
     background: rgba(108, 123, 255, 0.16);
     color: #ffffff;
+}
+
+/* 14/08/2026 — un solo breakpoint (no responsive mobile completo, esta pantalla sigue siendo
+   100% desktop): a partir de acá el ancho de ventana ya no es el de una netbook de 11", es una
+   notebook grande o un monitor de escritorio — recupera el ancho de layout que ya andaba bien
+   (90%) y agranda todo el texto de esta pantalla en la misma proporción entre las dos columnas.
+   1400px de corte, arriba de los ~1024-1366px típicos de una netbook, para no mezclarse con ese
+   rango.
+   IMPORTANTE — tiene que ir AL FINAL del archivo: con la misma especificidad (una sola clase),
+   CSS resuelve empates por orden de aparición, no por si el @media está activo. Puesto antes de
+   las reglas base (como quedó en el primer intento), la regla base — al aparecer después en el
+   archivo — le ganaba siempre a esta, sin importar el ancho de pantalla. Bug real encontrado
+   auditando con el usuario: el media query sí matcheaba (confirmado con matchMedia() en consola)
+   pero el font-size final nunca cambiaba. */
+@media (min-width: 1400px) {
+    .layout {
+        width: 90%;
+    }
+
+    .brandName {
+        font-size: 1.65rem;
+    }
+
+    .heading {
+        font-size: 2.3rem;
+    }
+
+    .tagline {
+        font-size: 1.2rem;
+    }
+
+    .roleItem {
+        font-size: 1.25rem;
+    }
+
+    .placeholder {
+        font-size: 1.2rem;
+    }
+
+    .panelHeading {
+        font-size: 1.35rem;
+    }
+
+    .panelSubtext {
+        font-size: 1.05rem;
+    }
+
+    .input {
+        font-size: 1.22rem;
+    }
+
+    .button {
+        font-size: 1.18rem;
+    }
+
+    .resultItem {
+        font-size: 1.1rem;
+    }
+
+    .error,
+    .hint {
+        font-size: 0.98rem;
+    }
 }
