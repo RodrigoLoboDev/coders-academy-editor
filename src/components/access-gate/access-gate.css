@@ -1,20 +1,22 @@
 /*
- * 13/08/2026 — repaletizado de navy+indigo/ámbar (marca compartida con apps/actividades y el
- * login del portal) a la paleta neutra "mBlock" que ya usa el editor en sí en modo oscuro
- * (gui.css sesión 34: marco #000000, panel base #1F1F1F, superficie elevada #363636, texto
- * #E5E5E5) — mismo cambio y mismo motivo que project-picker.css/template-picker.css: la mascota
- * robot JEN (compartida con apps/actividades) se saca de acá por el mismo motivo, ver EditorMark
- * en access-gate.jsx. El acento ámbar/indigo en botones/tiles se mantiene, es el mismo que ya usa
- * el resto del editor.
+ * 14/08/2026 — rediseño completo a pedido del usuario: de 4 pantallas tipo "hero" (una franja de
+ * marca grande, textos duplicados por paso, "Volver") a una sola pantalla de dos columnas, en la
+ * línea de una herramienta de trabajo (paleta neutra #000000/#1F1F1F/#363636/#E5E5E5, la misma
+ * que el resto del editor — ver docs/ui-scale-guidelines.md) en vez de una pantalla de bienvenida
+ * "de juego". Izquierda: marca + lista de rol, siempre visible (no hace falta "Volver", nunca
+ * desaparece). Derecha: contenido según el rol elegido. Sin emojis decorativos de fondo — el único
+ * ícono no-tipográfico es la flecha de la lista de rol.
  *
- * Esta pantalla sigue sin respetar el toggle de modo oscuro del editor (`data-theme`, ver
- * src/lib/dark-mode.js) — ese toggle es sobre los colores de los bloques de Scratch dentro del
- * editor ya logueado, ortogonal a esta pantalla de acceso. El diseño de acá es oscuro siempre.
+ * Segunda pasada, mismo día — sin la caja/tarjeta que envolvía las dos columnas (`.panel` con
+ * fondo/borde/sombra propios): mismo criterio que ya se aplicó en la primera versión de esta
+ * pantalla (texto suelto sobre el fondo en vez de una caja genérica). Layout más ancho (920px →
+ * 1180px) para que respire más en pantallas grandes. Los inputs/formularios de la derecha siguen
+ * teniendo su propia superficie chica (sí la necesitan para ser usables), pero ya no hay un
+ * contenedor grande alrededor de toda la pantalla.
  *
- * Escala pensada 100% para desktop, sin breakpoints mobile — decisión explícita del usuario
- * (08/08/2026): esta pantalla se usa en las computadoras del aula (mismo criterio que ya estaba
- * documentado en el comentario de `AccessGate` sobre "compu compartida del aula"), nunca en un
- * celular. No agregar `@media` mobile acá a menos que ese uso cambie.
+ * Sigue sin respetar el toggle de modo oscuro del editor (`data-theme`) ni tener breakpoints
+ * mobile — mismos motivos documentados históricamente acá: esta pantalla es oscura siempre y se
+ * usa 100% en las computadoras del aula.
  */
 
 .backdrop {
@@ -24,198 +26,160 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
-    padding: 16px;
+    padding: 24px;
     background: #000000;
-    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.05) 1.1px, transparent 1.1px);
-    background-size: 24px 24px;
+    /* 14/08/2026 — puntos un poco más grandes/visibles a pedido del usuario: radio 1.1px→1.6px,
+       opacidad 0.05→0.08. Separación (background-size) subida en la misma proporción para que no
+       se sientan amontonados al agrandarlos. */
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.08) 1.6px, transparent 1.6px);
+    background-size: 28px 28px;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
-/* Íconos flotantes de marca, mismo motivo que FloatingBackground (apps/web y apps/actividades). */
-.floatingIcon {
-    position: absolute;
-    opacity: 0.18;
-    pointer-events: none;
-    animation-name: caEditorFloat;
-    animation-timing-function: ease-in-out;
-    animation-iteration-count: infinite;
-}
-
-@keyframes caEditorFloat {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-7px); }
-}
-
-.mark {
-    display: block;
-    margin: 0 auto 18px;
-    animation: caEditorMarkFloat 3.4s ease-in-out infinite;
-}
-
-@keyframes caEditorMarkFloat {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
-}
-
-/* Reskin sesión 35 — las 4 pantallas de este componente (role/code/search/teacherLogin)
-   dejaron de usar una caja `.card` centrada con borde y sombra para todo (robot, título,
-   formulario, botones juntos): es esa caja genérica la que hacía sentir la pantalla "hecha por
-   una IA". Ahora el robot y el encabezado quedan sueltos sobre el fondo (`.hero`) y solo los
-   elementos que de verdad necesitan una superficie para ser usables (inputs, resultados) viven
-   en un contenedor propio, con el tinte de color del rol correspondiente. */
-.hero {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    max-width: 560px;
-    margin: 16px;
-    text-align: center;
-}
-
-.roleTiles {
+/* 14/08/2026 — ancho en porcentaje (no px fijo): las netbooks del aula tienen pantallas más
+   chicas que una notebook/monitor de escritorio, así que el layout tiene que angostarse con la
+   ventana en vez de quedarse en un ancho fijo. max-width sigue poniendo un techo para pantallas
+   grandes. Mismo criterio para .leftCol (36% del layout, no un px fijo) y el gap entre columnas
+   (4%, bajado de 96px fijos — quedaba mucho espacio muerto entre las dos). */
+.layout {
     display: flex;
-    gap: 14px;
-    margin-top: 34px;
+    align-items: center;
+    width: 90%;
+    max-width: 1180px;
+    gap: 4%;
 }
 
-.roleTile {
-    flex: 1;
+.leftCol {
+    flex: 0 0 36%;
     display: flex;
     flex-direction: column;
+}
+
+.rightCol {
+    flex: 1;
+    display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 34px 18px;
-    border-radius: 12px;
-    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
-    cursor: pointer;
-    transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    justify-content: center;
+    min-height: 420px;
 }
 
-.roleTile:hover {
-    transform: translateY(-4px);
+.brandRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
 }
 
-.roleTile:active {
-    transform: translateY(-1px);
-}
-
-/* Cada rol con su propio tinte de color (indigo / ámbar, ya usados en el resto de la
-   plataforma) en vez de dos cajas idénticas en gris — corta la sensación de "tiles clonados". */
-.roleTileStudent {
-    background: linear-gradient(160deg, rgba(108, 123, 255, 0.18), #1f1f1f 60%);
-    border: 1px solid rgba(108, 123, 255, 0.32);
-}
-
-.roleTileStudent:hover {
-    background: linear-gradient(160deg, rgba(108, 123, 255, 0.26), #363636 60%);
-    border-color: rgba(108, 123, 255, 0.55);
-}
-
-.roleTileTeacher {
-    background: linear-gradient(160deg, rgba(255, 176, 46, 0.16), #1f1f1f 60%);
-    border: 1px solid rgba(255, 176, 46, 0.3);
-}
-
-.roleTileTeacher:hover {
-    background: linear-gradient(160deg, rgba(255, 176, 46, 0.24), #363636 60%);
-    border-color: rgba(255, 176, 46, 0.5);
-}
-
-.roleTileIcon {
-    font-size: 2.6rem;
+.brandName {
+    font-size: 1.5rem;
+    font-weight: 700;
     line-height: 1;
-}
-
-.roleTileLabel {
-    font-size: 1.1rem;
-    font-weight: bold;
     color: #e5e5e5;
 }
 
-/* Pasos "code" y "search" (flujo alumno) — mismo criterio que .hero: el robot y el encabezado
-   quedan sueltos sobre el fondo. El formulario/resultados sí necesitan una superficie propia para
-   ser usables, con el mismo tinte indigo que ya identifica al rol alumno en la pantalla anterior
-   (en vez del gris genérico que tenía .card antes). */
-.authSurface {
-    position: relative;
-    z-index: 1;
-    margin-top: 30px;
-    padding: 30px 28px;
-    border-radius: 12px;
-    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
-    text-align: center;
-}
-
-.authSurfaceStudent {
-    background: linear-gradient(160deg, rgba(108, 123, 255, 0.14), #1f1f1f 55%);
-    border: 1px solid rgba(108, 123, 255, 0.28);
-}
-
-/* Paso "teacherLogin" — mismo tratamiento, con el tinte ámbar que ya identifica al rol docente
-   en la pantalla de inicio (tile "Soy docente"). */
-.authSurfaceTeacher {
-    background: linear-gradient(160deg, rgba(255, 176, 46, 0.13), #1f1f1f 55%);
-    border: 1px solid rgba(255, 176, 46, 0.26);
-}
-
-.eyebrow {
-    margin: 0 0 12px;
-    font-family: "SF Mono", "Roboto Mono", Consolas, monospace;
-    font-size: 0.8rem;
-    font-weight: bold;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: #ffb02e;
-}
-
-.title {
-    margin: 0 0 10px;
+.heading {
+    margin: 0 0 8px;
     font-size: 2rem;
-    font-weight: bold;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.2;
+}
+
+/* "Crear" (el nombre de la herramienta) se distingue del resto del saludo — mayúscula vía
+   text-transform (el texto en el JSX queda "Crear", legible/copiable normal) y el ámbar de marca
+   en vez del blanco del resto del título. */
+.headingAccent {
+    color: #ffb02e;
+    text-transform: uppercase;
+}
+
+.tagline {
+    margin: 0 0 32px;
+    font-size: 1.05rem;
+    color: #8a95ff;
+}
+
+.roleList {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.roleItem {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #b3b3b3;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.roleItem:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #e5e5e5;
+}
+
+.roleItemActive,
+.roleItemActive:hover {
+    background: rgba(108, 123, 255, 0.14);
+    border-color: rgba(108, 123, 255, 0.35);
     color: #ffffff;
 }
 
-.subtitle {
-    margin: 0 0 28px;
-    font-size: 1.1rem;
-    color: #b3b3b3;
-}
-
-/* Pantalla de inicio (paso "role") — el usuario pidió el texto (eyebrow/título/subtítulo) al
-   doble de tamaño ahí, sin tocar el resto de las pantallas (code/teacherLogin) que siguen
-   usando .eyebrow/.title/.subtitle como estaban. */
-.hero .eyebrow {
-    font-size: 1.25rem;
-}
-
-.hero .title {
-    font-size: 3.2rem;
-}
-
-.hero .subtitle {
-    font-size: 1.5rem;
-}
-
-/* Línea de contexto — le da identidad de producto a la pantalla de inicio sin sumarle ruido
-   visual (subordinada al subtítulo: más chica, color apagado). */
-.tagline {
-    margin: 0;
-    font-size: 1rem;
+.roleArrow {
+    width: 1em;
     color: #6c7bff;
+    font-weight: 700;
+}
+
+.placeholder {
+    margin: 0;
+    font-size: 1.05rem;
+    color: #808080;
+    text-align: center;
+}
+
+.panelForm {
+    width: 100%;
+    max-width: 350px;
+}
+
+.panelForm form > * + *,
+.panelForm > * + * {
+    margin-top: 12px;
+}
+
+.panelHeading {
+    margin: 0 0 4px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.panelSubtext {
+    margin: 0 0 18px;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    color: #b3b3b3;
 }
 
 .input {
     width: 100%;
     box-sizing: border-box;
-    padding: 15px 17px;
-    font-size: 1.22rem;
+    padding: 12px 14px;
+    font-size: 1.1rem;
     color: #e5e5e5;
     background: #363636;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
     outline: none;
-    text-align: center;
     transition: border-color 0.15s ease;
 }
 
@@ -227,17 +191,52 @@
     border-color: rgba(108, 123, 255, 0.6);
 }
 
+/* Input de código de clase — centrado y en negrita mientras se escribe (antes quedaba alineado a
+   la izquierda como cualquier otro campo de texto). La mayúscula ya la fuerza el propio JS
+   (onChange hace .toUpperCase()), acá solo se agrega el tratamiento visual. */
+.inputCode {
+    text-align: center;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.passwordWrap {
+    position: relative;
+}
+
+.passwordWrap .input {
+    padding-right: 42px;
+}
+
+.passwordToggle {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    background: none;
+    border: none;
+    color: #808080;
+    cursor: pointer;
+}
+
+.passwordToggle:hover {
+    color: #e5e5e5;
+}
+
 .button {
     width: 100%;
-    margin-top: 18px;
-    padding: 15px 17px;
-    font-size: 1.1rem;
-    font-weight: bold;
+    padding: 12px 16px;
+    font-size: 1.05rem;
+    font-weight: 700;
     color: #3a2a06;
     background: linear-gradient(180deg, #ffc65c, #ffb02e);
     border: none;
-    border-radius: 10px;
-    box-shadow: 0 10px 28px -10px rgba(255, 176, 46, 0.55);
+    border-radius: 8px;
+    box-shadow: 0 10px 24px -10px rgba(255, 176, 46, 0.5);
     cursor: pointer;
     transition: transform 0.15s ease, filter 0.15s ease;
 }
@@ -251,50 +250,41 @@
 }
 
 .button:disabled {
-    opacity: 0.5;
+    opacity: 0.45;
     cursor: not-allowed;
     box-shadow: none;
 }
 
-/* Acción secundaria (ej. "Soy docente") — mismo tratamiento que los pills/link de acceso equipo
-   del resto de la plataforma: superficie oscura sutil en vez de un segundo color competiendo con
-   el CTA ámbar. */
-.buttonSecondary {
-    composes: button;
-    color: #e5e5e5;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    box-shadow: none;
-}
-
-.buttonSecondary:hover:not(:disabled) {
-    filter: none;
-    background: rgba(255, 255, 255, 0.08);
-}
-
 .error {
-    margin-top: 13px;
+    margin-top: 10px;
     color: #fb7185;
-    font-size: 0.98rem;
+    font-size: 0.92rem;
+}
+
+.hint {
+    margin-top: 10px;
+    font-size: 0.92rem;
+    color: #808080;
 }
 
 .resultsList {
-    margin-top: 18px;
-    max-height: 280px;
+    max-height: 220px;
     overflow-y: auto;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
     text-align: left;
 }
 
 .resultItem {
+    display: block;
     width: 100%;
-    padding: 14px 17px;
+    box-sizing: border-box;
+    padding: 11px 14px;
     background: none;
     border: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     text-align: left;
-    font-size: 1.1rem;
+    font-size: 1rem;
     color: #e5e5e5;
     cursor: pointer;
 }
@@ -307,25 +297,8 @@
     background: rgba(255, 255, 255, 0.06);
 }
 
-.hint {
-    margin-top: 17px;
-    font-size: 0.92rem;
-    color: #808080;
-    text-align: center;
-}
-
-.backLink {
-    display: inline-block;
-    margin-top: 18px;
-    background: none;
-    border: none;
-    padding: 0;
-    color: #ffb02e;
-    font-size: 0.98rem;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.backLink:hover {
-    text-decoration: underline;
+.resultItemSelected,
+.resultItemSelected:hover {
+    background: rgba(108, 123, 255, 0.16);
+    color: #ffffff;
 }
