@@ -15,6 +15,9 @@ import PublicPlayer from '../components/public-player/public-player.jsx';
 import Divider from '../components/divider/divider.jsx';
 import TaskBanner from '../components/task-banner/task-banner.jsx';
 import ExitEditorGuard from '../components/exit-editor-guard/exit-editor-guard.jsx';
+import SettingsMenu from '../components/settings-menu/settings-menu.jsx';
+import EditorTitleAutosave from '../components/editor-title-autosave/editor-title-autosave.jsx';
+import SaveToast from '../components/save-toast/save-toast.jsx';
 import fetchSharedScratchAssets from '../lib/fetch-shared-scratch-assets';
 import {clearCodeSession, codeSessionMsRemaining} from '../lib/editor-access-code-session';
 
@@ -23,6 +26,7 @@ import {clearCodeSession, codeSessionMsRemaining} from '../lib/editor-access-cod
 // Tutoriales) en vez de duplicar esos estilos acá — el nombre físico de la clase es el mismo sin
 // importar desde qué archivo se importe el módulo CSS.
 import menuBarStyles from '../components/menu-bar/menu-bar.css';
+import settingsMenuStyles from '../components/settings-menu/settings-menu.css';
 import myProjectsIcon from '../components/menu-bar/icon--my-projects.svg';
 
 // Sobrevive un refresh accidental de la página sin perder al alumno ya identificado (el código de
@@ -133,17 +137,22 @@ const sessionButtonStyle = {
 // compartir/recargar en la pantalla en la que estás y usar
 // atrás/adelante del navegador. El catch-all de Vercel (vercel.json) y `historyApiFallback` del
 // dev server (webpack.config.js) ya cubrían esto de antes, no hizo falta tocar infra.
+// 14/08/2026 — PATHS.templates (/docente/plantillas) se saca: "Mis plantillas" dejó de ser una
+// ruta propia, ahora es un modal superpuesto al editor (ver TeacherEditorRoute) — no hay ningún
+// otro lado del código que necesite navegar ahí como pantalla completa.
 const PATHS = {
     role: '/',
     projects: '/proyectos',
     editor: id => `/editor/${id}`,
-    templates: '/docente/plantillas',
     template: id => `/docente/plantilla/${id}`
 };
 
 /*
  * Pantalla inicial: si ya hay sesión de alumno o docente guardada (refresh, o volver con
  * atrás/adelante del navegador), redirige directo a su picker en vez de mostrar el rol de nuevo.
+ * 14/08/2026 — el docente entra siempre a una plantilla nueva en blanco (PATHS.template('nuevo')),
+ * ya no a "Mis plantillas" — mismo destino tanto para el login recién hecho como para volver con
+ * una sesión ya guardada, por consistencia (ver TeacherEditorRoute para el sentinela 'nuevo'→'0').
  */
 const RoleRoute = () => {
     const navigate = useNavigate();
@@ -151,7 +160,7 @@ const RoleRoute = () => {
     const teacher = readStoredTeacher();
 
     if (student) return <Navigate replace to={PATHS.projects} />;
-    if (teacher) return <Navigate replace to={PATHS.templates} />;
+    if (teacher) return <Navigate replace to={PATHS.template('nuevo')} />;
 
     // Fase 6 (punto 2, sesión real por alumno) — `token` ahora es parte de la sesión guardada:
     // AccessGate ya lo pidió (POST /editor-student-auth/:id) antes de llamar acá. Sin este token,
@@ -165,7 +174,7 @@ const RoleRoute = () => {
     const handleTeacherLogin = (token, user) => {
         localStorage.setItem(TEACHER_SESSION_KEY, JSON.stringify({token, name: user.name}));
         storage.setAuthToken(token);
-        navigate(PATHS.templates);
+        navigate(PATHS.template('nuevo'));
     };
 
     return <AccessGate onSelectStudent={handleSelectStudent} onTeacherLogin={handleTeacherLogin} />;
@@ -303,53 +312,65 @@ const StudentEditorRoute = ({WrappedGui}) => {
     );
 };
 
-const TemplatesRoute = () => {
-    const navigate = useNavigate();
-    return (
-        <RequireTeacher>
-            {teacher => (
-                <TemplatePicker
-                    token={teacher.token}
-                    onLogout={() => {
-                        localStorage.removeItem(TEACHER_SESSION_KEY);
-                        storage.setAuthToken(null);
-                        navigate(PATHS.role);
-                    }}
-                    onSelectTemplate={id => navigate(PATHS.template(id))}
-                />
-            )}
-        </RequireTeacher>
-    );
-};
-
+// 14/08/2026 — "Mis plantillas" dejó de ser una ruta propia (TemplatesRoute, eliminada): ahora es
+// un modal que se abre desde "Ajustes" DENTRO del editor, sin navegar a ningún lado — el editor
+// sigue montado atrás, con su fondo semi-visible (ver template-picker.css). El docente entra
+// siempre directo acá (PATHS.template('nuevo'), ver RoleRoute) en vez de a un picker primero;
+// "Archivo → Nuevo" del propio editor (mecanismo nativo de scratch-gui) es el único otro punto de
+// entrada para arrancar una plantilla adicional sin cerrar sesión.
 const TeacherEditorRoute = ({WrappedGui}) => {
     const navigate = useNavigate();
     const {templateId} = useParams();
+    // Mismo sentinela que usa StudentEditorRoute para "nuevo" ('0', defaultProjectId en
+    // reducers/project-state.js) — carga el proyecto en blanco local de scratch-gui en vez de
+    // pedirle uno a la API. La plantilla real recién se crea en el primer guardado (blur/Enter en
+    // el título, o "Guardar ahora"), ver EditorTitleAutosave.
+    const effectiveTemplateId = templateId === 'nuevo' ? '0' : templateId;
+    const [showTemplatesModal, setShowTemplatesModal] = useState(false);
 
     return (
         <RequireTeacher>
             {teacher => {
                 const apiScratchTemplatesHost = `${process.env.API_URL}/admin/scratch-templates`;
+                // El modal de "Mis plantillas" se monta ACÁ (dentro de rightContent, no como
+                // hermano de <WrappedGui>) a propósito: rightContent es la única forma de que algo
+                // termine dentro del <Provider> redux interno que arma AppStateHOC alrededor de
+                // GUI — position:fixed lo hace ver como si cubriera toda la pantalla igual, pero
+                // sin eso ExitEditorGuard (usado adentro, al elegir otra plantilla) no encontraría
+                // el store y rompería. Mismo truco que ya usa ExitEditorGuard/EditorTitleAutosave.
                 const teacherRightContent = (
                     <div style={sessionInfoStyle}>
                         <span style={sessionNameStyle}>{teacher.name}</span>
                         <Divider className={menuBarStyles.divider} />
-                        <ExitEditorGuard onExit={() => navigate(PATHS.templates)}>
-                            <button style={{...sessionButtonStyle, marginLeft: 0}} type="button">
+                        <SettingsMenu>
+                            <button className={settingsMenuStyles.item} type="button" onClick={() => setShowTemplatesModal(true)}>
                                 Mis plantillas
                             </button>
-                        </ExitEditorGuard>
-                        <ExitEditorGuard
-                            onExit={() => {
-                                localStorage.removeItem(TEACHER_SESSION_KEY);
-                                storage.setAuthToken(null);
-                                navigate(PATHS.role);
-                            }}
-                        >
-                            <button style={sessionButtonStyle} type="button">
-                                Cerrar sesión
-                            </button>
-                        </ExitEditorGuard>
+                            <div className={settingsMenuStyles.divider} />
+                            <ExitEditorGuard
+                                onExit={() => {
+                                    localStorage.removeItem(TEACHER_SESSION_KEY);
+                                    storage.setAuthToken(null);
+                                    navigate(PATHS.role);
+                                }}
+                            >
+                                <button className={settingsMenuStyles.item} type="button">
+                                    Cerrar sesión
+                                </button>
+                            </ExitEditorGuard>
+                        </SettingsMenu>
+                        <EditorTitleAutosave />
+                        <SaveToast />
+                        {showTemplatesModal && (
+                            <TemplatePicker
+                                token={teacher.token}
+                                onClose={() => setShowTemplatesModal(false)}
+                                onSelectTemplate={id => {
+                                    setShowTemplatesModal(false);
+                                    navigate(PATHS.template(id));
+                                }}
+                            />
+                        )}
                     </div>
                 );
 
@@ -359,7 +380,7 @@ const TeacherEditorRoute = ({WrappedGui}) => {
                         canSave
                         projectHost={apiScratchTemplatesHost}
                         assetHost={apiScratchTemplatesHost}
-                        projectId={templateId}
+                        projectId={effectiveTemplateId}
                         rightContent={teacherRightContent}
                         onClickLogo={onClickLogo}
                         onUpdateProjectThumbnail={saveThumbnailToServer}
@@ -412,7 +433,6 @@ const PlaygroundRouter = ({WrappedGui}) => (
             <Route element={<RoleRoute />} path={PATHS.role} />
             <Route element={<ProjectsRoute />} path={PATHS.projects} />
             <Route element={<StudentEditorRoute WrappedGui={WrappedGui} />} path="/editor/:projectId" />
-            <Route element={<TemplatesRoute />} path={PATHS.templates} />
             <Route element={<TeacherEditorRoute WrappedGui={WrappedGui} />} path="/docente/plantilla/:templateId" />
             <Route element={<PublicPlayerRoute WrappedGui={WrappedGui} />} path="/jugar/:projectId" />
             <Route element={<Navigate replace to={PATHS.role} />} path="*" />

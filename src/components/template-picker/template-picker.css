@@ -13,6 +13,10 @@
  * clara).
  */
 
+/* 14/08/2026 — deja de ser el fondo de una pantalla propia (ya no existe /docente/plantillas como
+   ruta): ahora este picker vive siempre como modal superpuesto AL editor (ver "Ajustes" en
+   render-gui.jsx), así que el fondo pasa de opaco a translúcido + difuminado — se tiene que seguir
+   viendo el editor detrás, apagado. */
 .backdrop {
     position: fixed;
     inset: 0;
@@ -21,9 +25,8 @@
     align-items: center;
     justify-content: center;
     padding: 24px;
-    background: #000000;
-    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.05) 1.1px, transparent 1.1px);
-    background-size: 24px 24px;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(6px);
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 

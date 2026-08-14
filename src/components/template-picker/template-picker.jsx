@@ -3,58 +3,19 @@ import PropTypes from 'prop-types';
 
 import styles from './template-picker.css';
 import AccessCodePanel from '../access-code-panel/access-code-panel.jsx';
+import ExitEditorGuard from '../exit-editor-guard/exit-editor-guard.jsx';
 
 const formatDate = isoString => new Date(isoString).toLocaleDateString('es-AR', {
     day: 'numeric',
     month: 'short'
 });
 
-// Lienzo vacío mínimo (solo Stage, sin sprites ni sonidos) — arranque real de una plantilla nueva.
-// A diferencia del alumno, el docente no parte del gato/proyecto default embebido (ese vive solo
-// localmente vía storage.js, pensado para SHOWING_WITHOUT_ID, no para crear un registro real de
-// entrada) — acá la plantilla ya existe como fila real desde el vamos, así que el JSON inicial se
-// arma a mano, mínimo pero válido.
-// Bug real encontrado probando: un Stage con costumes:[] (sin ningún fondo) hace que scratch-vm
-// tire "Non-ascii character in FixedAsciiString" al cargarlo — mensaje engañoso (viene de
-// scratch-sb1-converter, formato viejísimo), la causa real es currentCostume:0 apuntando a un
-// array vacío. Fix: usar el mismo fondo blanco default que trae scratch-gui (mismo assetId que
-// default-project/project-data.js), que ya resuelve bien contra el CDN de Scratch vía el fallback
-// de getAssetGetConfig en storage.js — no hace falta subir un asset propio para esto.
-const blankTemplateProjectJson = () => ({
-    targets: [{
-        isStage: true,
-        name: 'Stage',
-        variables: {},
-        lists: {},
-        broadcasts: {},
-        blocks: {},
-        comments: {},
-        currentCostume: 0,
-        costumes: [{
-            assetId: 'cd21514d0531fdffb22204e0ec5ed84a',
-            name: 'backdrop1',
-            md5ext: 'cd21514d0531fdffb22204e0ec5ed84a.svg',
-            dataFormat: 'svg',
-            rotationCenterX: 240,
-            rotationCenterY: 180
-        }],
-        sounds: [],
-        volume: 100,
-        layerOrder: 0,
-        tempo: 60,
-        videoTransparency: 50,
-        videoState: 'on',
-        textToSpeechLanguage: null
-    }],
-    monitors: [],
-    extensions: [],
-    meta: {semver: '3.0.0', vm: '2.3.0', agent: ''}
-});
-
 // 13/08/2026 — la "misión" del docente pasó de un textarea libre a una lista de pasos
 // (1., 2., 3.…) que el docente arma agregando/quitando ítems — pensado para instrucciones paso a
 // paso ("programá al robot para que gire", "después que avance", ...), que antes quedaban todas
-// amontonadas en un solo párrafo. Reusado por NewTemplateForm y EditInfoPanel.
+// amontonadas en un solo párrafo. Usado por EditInfoPanel — único lugar donde se edita relato/
+// misión desde 14/08/2026 (ver comentario de TemplatePicker más abajo sobre el nuevo flujo de
+// creación).
 //
 // El dato sigue viajando como un string plano al backend, sin tocar el schema: cada paso se une
 // con "\n" al guardar (buildObjectiveText más abajo) y se vuelve a separar al leer (acá y en
@@ -120,74 +81,6 @@ const ObjectiveListEditor = ({items, onChange}) => {
 ObjectiveListEditor.propTypes = {
     items: PropTypes.arrayOf(PropTypes.string).isRequired,
     onChange: PropTypes.func.isRequired
-};
-
-// Sesión 34 — reskin: antes reemplazaba el card principal entero (early return); ahora es un panel
-// superpuesto sobre el grid, mismo patrón que AssignPanel más abajo — el grid de plantillas sigue
-// vivo detrás, se puede cancelar sin perder el scroll/búsqueda que tenía el docente.
-const NewTemplateForm = ({onCreate, onCancel, creating, error}) => {
-    const [title, setTitle] = useState('');
-    const [story, setStory] = useState('');
-    const [objectiveItems, setObjectiveItems] = useState(['']);
-    const objectiveText = buildObjectiveText(objectiveItems);
-
-    const handleSubmit = e => {
-        e.preventDefault();
-        onCreate({title: title.trim(), story: story.trim(), objective: objectiveText});
-    };
-
-    return (
-        <div className={styles.panelBackdrop} onMouseDown={onCancel}>
-            <div className={styles.panelCard} onMouseDown={e => e.stopPropagation()}>
-                <h2 className={styles.panelTitle}>🍎 Nueva plantilla</h2>
-                <p className={styles.panelSubtitle}>
-                    Completá el título, el relato y la misión — después armás el proyecto en el editor.
-                </p>
-                <form onSubmit={handleSubmit}>
-                    <label className={styles.label} htmlFor="template-title">Título</label>
-                    <input
-                        autoFocus
-                        className={styles.input}
-                        id="template-title"
-                        placeholder="Ej: El rescate del robot"
-                        type="text"
-                        value={title}
-                        onChange={e => setTitle(e.target.value)}
-                    />
-                    <label className={styles.label} htmlFor="template-story">
-                        Relato (el juego, la historia, el cuento)
-                    </label>
-                    <textarea
-                        className={styles.textarea}
-                        id="template-story"
-                        placeholder="Ej: Un robot quedó atrapado en una cueva y necesita tu ayuda para salir."
-                        value={story}
-                        onChange={e => setStory(e.target.value)}
-                    />
-                    <label className={styles.label}>Objetivo / misión (paso a paso)</label>
-                    <ObjectiveListEditor items={objectiveItems} onChange={setObjectiveItems} />
-                    <button
-                        className={styles.newButton}
-                        disabled={creating || !title.trim() || !story.trim() || !objectiveText}
-                        type="submit"
-                    >
-                        {creating ? 'Creando…' : '✅ Crear y empezar a armarla'}
-                    </button>
-                    {error && <p className={styles.error}>{error}</p>}
-                    <button className={styles.backLink} type="button" onClick={onCancel}>
-                        Cancelar
-                    </button>
-                </form>
-            </div>
-        </div>
-    );
-};
-
-NewTemplateForm.propTypes = {
-    creating: PropTypes.bool.isRequired,
-    error: PropTypes.string,
-    onCancel: PropTypes.func.isRequired,
-    onCreate: PropTypes.func.isRequired
 };
 
 // Fase 4 del plan (docs/plan-fases-scratch-plataforma.md, monorepo privado) — submenú "⋮" con
@@ -273,15 +166,19 @@ ConfirmDeleteModal.propTypes = {
 // muestra el texto completo sin truncar, la franja achicada no aportaba nada que no se viera ya.
 const EditInfoPanel = ({token, template, onClose, onSaved}) => {
     const [title, setTitle] = useState(template.title);
-    const [story, setStory] = useState(template.story);
+    // 14/08/2026 — story/objective ahora pueden venir null (una plantilla creada desde el editor
+    // nace solo con el título, sin pasar por este panel) — value=null en un input/textarea
+    // controlado tira warning de React, || '' lo resuelve sin cambiar el comportamiento cuando sí
+    // hay texto.
+    const [story, setStory] = useState(template.story || '');
     const [objectiveItems, setObjectiveItems] = useState(parseObjectiveText(template.objective));
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState(null);
 
     const objectiveText = buildObjectiveText(objectiveItems);
     const hasChanges = title.trim() !== template.title ||
-        story.trim() !== template.story ||
-        objectiveText !== template.objective;
+        story.trim() !== (template.story || '') ||
+        objectiveText !== (template.objective || '');
 
     const handleSave = () => {
         const nextTitle = title.trim();
@@ -361,8 +258,8 @@ EditInfoPanel.propTypes = {
     onSaved: PropTypes.func.isRequired,
     template: PropTypes.shape({
         id: PropTypes.string.isRequired,
-        objective: PropTypes.string.isRequired,
-        story: PropTypes.string.isRequired,
+        objective: PropTypes.string,
+        story: PropTypes.string,
         title: PropTypes.string.isRequired
     }).isRequired,
     token: PropTypes.string.isRequired
@@ -680,19 +577,27 @@ AssignPanel.propTypes = {
 };
 
 /*
- * Selector de plantillas para el docente — mismo tratamiento visual que ProjectPicker (sesión 34):
- * header fijo (buscador + título + cerrar), grid de 6 columnas con scroll propio, selección de
- * card + botón "Editar plantilla" separado del click (en vez de abrir directo al primer click),
- * "Nueva plantilla" y "Asignar" como paneles superpuestos en vez de reemplazar la pantalla entera.
+ * Selector de plantillas para el docente — mismo tratamiento visual que ProjectPicker (sesión 34).
+ * 14/08/2026 — dejó de ser una pantalla propia (ruta /docente/plantillas): ahora es un modal que
+ * se superpone SOBRE el editor sin salir de él (ver "Ajustes" en render-gui.jsx), con el editor
+ * de fondo semi-visible detrás (backdrop translúcido/difuminado, ver template-picker.css). Por
+ * eso "onClose" (antes "onLogout") ya no cierra sesión — cerrar sesión ahora vive en el menú de
+ * Ajustes, separado; acá "cerrar" es solo ocultar este modal y volver a ver el editor, con la ✕ o
+ * el nuevo botón "Cancelar" del footer, los dos hacen lo mismo.
+ *
+ * "Crear plantilla nueva" se sacó — para eso ya está "Archivo → Nuevo" del propio editor (mismo
+ * mecanismo nativo de scratch-gui que ya existía, en vez de duplicar un flujo de creación
+ * separado). Una plantilla nueva nace sin id ni story/objective; el primer guardado (blur/Enter
+ * en el campo de título, o "Guardar ahora") la crea de verdad contra la API — ver
+ * EditorTitleAutosave en render-gui.jsx. Relato y misión se completan después, si se quiere,
+ * únicamente desde "Editar info" en el menú "⋮" de una plantilla ya guardada — nunca en la
+ * creación.
  */
-const TemplatePicker = ({token, onSelectTemplate, onLogout}) => {
+const TemplatePicker = ({token, onSelectTemplate, onClose}) => {
     const [templates, setTemplates] = useState(null);
     const [error, setError] = useState(null);
     const [query, setQuery] = useState('');
     const [selectedId, setSelectedId] = useState(null);
-    const [creatingNew, setCreatingNew] = useState(false);
-    const [createError, setCreateError] = useState(null);
-    const [submitting, setSubmitting] = useState(false);
     const [assigningTemplate, setAssigningTemplate] = useState(null);
     const [editingTemplate, setEditingTemplate] = useState(null);
     const [openMenuId, setOpenMenuId] = useState(null);
@@ -713,26 +618,6 @@ const TemplatePicker = ({token, onSelectTemplate, onLogout}) => {
             .then(setTemplates)
             .catch(() => setError('No se pudieron cargar las plantillas.'));
     }, [token]);
-
-    const handleCreate = ({title, story, objective}) => {
-        setSubmitting(true);
-        setCreateError(null);
-        fetch(`${process.env.API_URL}/admin/scratch-templates`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify({title, story, objective, projectJson: blankTemplateProjectJson()})
-        })
-            .then(response => {
-                if (!response.ok) throw new Error(response.status);
-                return response.json();
-            })
-            .then(template => onSelectTemplate(template.id))
-            .catch(() => setCreateError('No se pudo crear la plantilla.'))
-            .finally(() => setSubmitting(false));
-    };
 
     const startRename = template => {
         setOpenMenuId(null);
@@ -798,7 +683,7 @@ const TemplatePicker = ({token, onSelectTemplate, onLogout}) => {
                         </button>
                     </div>
                     <h1 className={styles.title}>Mis plantillas</h1>
-                    <button className={styles.closeButton} type="button" onClick={onLogout}>
+                    <button className={styles.closeButton} type="button" onClick={onClose}>
                         ✕
                     </button>
                 </div>
@@ -895,32 +780,20 @@ const TemplatePicker = ({token, onSelectTemplate, onLogout}) => {
                 </div>
 
                 <div className={styles.footer}>
-                    <button
-                        className={styles.footerButtonPrimary}
-                        type="button"
-                        onClick={() => setCreatingNew(true)}
-                    >
-                        ➕ Crear plantilla nueva
+                    <button className={styles.footerButtonSecondary} type="button" onClick={onClose}>
+                        Cancelar
                     </button>
-                    <button
-                        className={styles.footerButtonSecondary}
-                        disabled={!selectedId}
-                        type="button"
-                        onClick={() => onSelectTemplate(selectedId)}
-                    >
-                        ✏️ Editar plantilla
-                    </button>
+                    {/* Cambiar de plantilla mientras se está editando otra puede perder cambios sin
+                    guardar del proyecto abierto atrás — mismo guardián que ya protege "Mis
+                    plantillas"/"Cerrar sesión" en render-gui.jsx (guarda/descarta antes de
+                    seguir). */}
+                    <ExitEditorGuard onExit={() => onSelectTemplate(selectedId)}>
+                        <button className={styles.footerButtonPrimary} disabled={!selectedId} type="button">
+                            ✏️ Editar plantilla
+                        </button>
+                    </ExitEditorGuard>
                 </div>
             </div>
-
-            {creatingNew && (
-                <NewTemplateForm
-                    creating={submitting}
-                    error={createError}
-                    onCancel={() => setCreatingNew(false)}
-                    onCreate={handleCreate}
-                />
-            )}
 
             {assigningTemplate && (
                 <AssignPanel
@@ -955,11 +828,9 @@ const TemplatePicker = ({token, onSelectTemplate, onLogout}) => {
 };
 
 TemplatePicker.propTypes = {
-    onLogout: PropTypes.func.isRequired,
+    onClose: PropTypes.func.isRequired,
     onSelectTemplate: PropTypes.func.isRequired,
     token: PropTypes.string.isRequired
 };
 
-// exportado para reuso/tests puntuales del skeleton de proyecto en blanco
-export {blankTemplateProjectJson};
 export default TemplatePicker;

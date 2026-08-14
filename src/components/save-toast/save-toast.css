@@ -1,0 +1,51 @@
+/*
+ * 14/08/2026 — mismo lenguaje visual que exit-editor-guard.css (navy + ámbar, esquinas poco
+ * redondeadas): superficie oscura con acento de éxito verde, no ámbar (ámbar es CTA/marca, verde
+ * es "esto salió bien" — mismo criterio de color que el resto de la plataforma).
+ */
+
+.toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 4000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 18px;
+    background: #1f1f1f;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.5);
+    color: #e5e5e5;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    pointer-events: none;
+    animation: caSaveToastIn 0.2s ease;
+}
+
+.check {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #3ecfa0;
+    color: #10173a;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+@keyframes caSaveToastIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
