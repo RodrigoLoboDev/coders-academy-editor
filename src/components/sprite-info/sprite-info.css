@@ -2,8 +2,8 @@
 @import "../../css/colors.css";
 
 .sprite-info {
-    /* Sesión 34 — ×1.25 (+25%), original 0.75rem. */
-    padding: 0.94rem;
+    /* 14/08/2026 — bajado de ×1.25 a ×1.12 (ver docs/ui-scale-guidelines.md), original 0.75rem. */
+    padding: 0.84rem;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     background-color: white;
     color: $text-primary;
@@ -12,33 +12,33 @@
     border-bottom: 1px solid $ui-black-transparent;
 }
 
-/* Sesión 34 — texto y campos del panel (Objeto/x/y/Mostrar/Tamaño/Dirección) agrandados ×1.25
-   (+25%), mismo factor que las pestañas Código/Disfraces/Sonidos de esta ronda. Los campos
-   (`<input>`) vienen del componente compartido src/components/forms/input.jsx — se escalan acá
-   con selector de tag scoped a `.sprite-info` (mismo patrón ya usado más abajo para el color de
-   fondo en dark mode) en vez de tocar forms/input.css directo, porque ese componente también lo
-   usa el campo de título del proyecto en la barra superior, que no tiene que crecer acá. Las
-   etiquetas (Objeto/x/y/Mostrar/Tamaño/Dirección) vienen de src/components/forms/label.jsx, otro
-   módulo CSS — su clase real sale hasheada (`[name]_[local]_[hash]`, localIdentName en
-   scratch-webpack-configuration/src/index.cjs), se apunta por el prefijo estable del nombre local
-   vía selector de atributo, scoped igual bajo `.sprite-info` para no afectar otras pantallas que
-   reusan el mismo Label (ej. el popup de "preguntar y esperar"). Original 0.625rem→0.78rem. */
+/* 14/08/2026 — bajado de ×1.25 a ×1.12 (ver docs/ui-scale-guidelines.md), mismo factor que las
+   pestañas Código/Disfraces/Sonidos. Los campos (`<input>`) vienen del componente compartido
+   src/components/forms/input.jsx — se escalan acá con selector de tag scoped a `.sprite-info`
+   (mismo patrón ya usado más abajo para el color de fondo en dark mode) en vez de tocar
+   forms/input.css directo, porque ese componente también lo usa el campo de título del proyecto
+   en la barra superior, que no tiene que crecer acá. Las etiquetas (Objeto/x/y/Mostrar/Tamaño/
+   Dirección) vienen de src/components/forms/label.jsx, otro módulo CSS — su clase real sale
+   hasheada (`[name]_[local]_[hash]`, localIdentName en scratch-webpack-configuration/src/index.cjs),
+   se apunta por el prefijo estable del nombre local vía selector de atributo, scoped igual bajo
+   `.sprite-info` para no afectar otras pantallas que reusan el mismo Label (ej. el popup de
+   "preguntar y esperar"). Original 0.625rem (font-size) / 2rem (height). */
 .sprite-info input {
-    font-size: 0.78rem;
-    height: 2.5rem;
+    font-size: 0.7rem;
+    height: 2.24rem;
 }
 
 .sprite-info :global([class*="_input-label_"]),
 .sprite-info :global([class*="_input-label-secondary_"]) {
-    font-size: 0.78rem;
+    font-size: 0.7rem;
 }
 
 /* Botones Mostrar/Ocultar (ojo) — mismo criterio, scoped bajo `.sprite-info` porque
    toggle-buttons.jsx también lo usa el selector de tamaño de escenario (stage-header), que no
    tiene que crecer. Original 34px. */
 .sprite-info :global([class*="_button_"]) {
-    width: 42px;
-    height: 42px;
+    width: 38px;
+    height: 38px;
 }
 
 .row {
@@ -70,10 +70,10 @@
 
 .icon-wrapper {
     display: inline-block;
-    /* Sesión 34 — ×1.25, original calc(2rem + 2px) / 0.5rem. */
-    width: calc(2.5rem + 2px);
-    height: calc(2.5rem + 2px);
-    padding: 0.63rem;
+    /* 14/08/2026 — bajado de ×1.25 a ×1.12, original calc(2rem + 2px) / 0.5rem. */
+    width: calc(2.24rem + 2px);
+    height: calc(2.24rem + 2px);
+    padding: 0.56rem;
     outline: none;
     user-select: none;
 }
@@ -98,13 +98,13 @@
 }
 
 .larger-input input {
-    /* Sesión 34 — ×1.25, original 4rem. */
-    width: 5rem;
+    /* 14/08/2026 — bajado de ×1.25 a ×1.12, original 4rem. */
+    width: 4.48rem;
 }
 
 .sprite-input {
-    /* Sesión 34 — ×1.25, original 8rem. */
-    width: 10rem;
+    /* 14/08/2026 — bajado de ×1.25 a ×1.12, original 8rem. */
+    width: 8.96rem;
 }
 
 /* Sesión 34 (paso 2) — gap real encontrado al comparar contra mBlock: este panel (nombre del

@@ -38,11 +38,13 @@ const STAGE_DISPLAY_SIZES = keyMirror({
 });
 
 // zoom level to start with
-// Sesión 34 — mismo factor ×1.308 (+30.8%) que el resto de esta ronda (0.65rem→0.85rem de la
-// letra de categorías), aplicado acá para que los bloques (en la paleta y en el workspace) crezcan
-// en la misma proporción que todo lo demás. Antes se había probado subir esto sin un criterio
-// concreto y se revirtió — esta vez sí hay una proporción documentada detrás.
-const BLOCKS_DEFAULT_SCALE = 0.88;
+// 14/08/2026 — bajado de 0.88 (+30.4% vs. el 0.675 original de scratch-gui, aplicado en sesión 34
+// "porque sí" para acompañar a la barra de categorías) a 0.76 (+12.6%), después de investigar
+// cómo escalan esto scratch.mit.edu (0.675, sin cambios), animaciones.educabot.com (0.675, sin
+// cambios) y mBlock (~+18% inferido de la altura real de bloque medida: 45px vs. los 38px de
+// Scratch). Ver docs/ui-scale-guidelines.md para la tabla comparativa completa y el criterio de
+// "un solo factor ~1.12× salvo excepción documentada" a usar en el próximo componente que crezca.
+const BLOCKS_DEFAULT_SCALE = 0.76;
 
 const STAGE_DISPLAY_SCALES = {};
 STAGE_DISPLAY_SCALES[STAGE_DISPLAY_SIZES.large] = 1; // large mode, wide browser (standard)

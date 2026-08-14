@@ -68,10 +68,11 @@
 
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-weight: 500;
-    /* Sesión 34 — factor ×1.25 (+25%) sobre la letra/padding/ícono de las pestañas
-       Código/Disfraces/Sonidos. Bajado del ×1.308 (+30.8%) probado antes, quedaba grande para
-       esta sección. Original 0.80rem. */
-    font-size: 1.0rem;
+    /* 14/08/2026 — bajado de ×1.25 (1.0rem) a ×1.12 (+12%, mismo factor único de referencia en
+       toda esta ronda, ver docs/ui-scale-guidelines.md) sobre el 0.80rem original de scratch-gui.
+       El alto de la fila ($stage-menu-height, más abajo en este archivo) nunca había crecido —
+       quedaba texto más grande apretado en el mismo contenedor de siempre. */
+    font-size: 0.9rem;
 
     /* Overrides for react-tabs styling */
     margin: 0 !important;
@@ -86,9 +87,9 @@
     border-radius: 1rem 1rem 0 0;
     border: 1px solid $ui-black-transparent;
 
-    /* Sesión 34 — ×1.25, original 0.125rem 1.25rem 0 / font-size 0.75rem. */
-    padding: 0.16rem 1.56rem 0;
-    font-size: 0.94rem;
+    /* 14/08/2026 — bajado de ×1.25 a ×1.12, original 0.125rem 1.25rem 0 / font-size 0.75rem. */
+    padding: 0.14rem 1.4rem 0;
+    font-size: 0.84rem;
 
     background-color: $ui-tertiary;
     color: $text-primary-transparent;
@@ -140,8 +141,8 @@
 }
 
 .tab img {
-    /* Sesión 34 — ×1.25, original 1.375rem. */
-    width: 1.72rem;
+    /* 14/08/2026 — bajado de ×1.25 a ×1.12, original 1.375rem. */
+    width: 1.54rem;
     filter: grayscale(100%);
 }
 
