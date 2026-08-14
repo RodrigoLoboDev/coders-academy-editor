@@ -17,6 +17,8 @@
    ruta): ahora este picker vive siempre como modal superpuesto AL editor (ver "Ajustes" en
    render-gui.jsx), así que el fondo pasa de opaco a translúcido + difuminado — se tiene que seguir
    viendo el editor detrás, apagado. */
+/* white-space: normal explícito — mismo motivo que .panelBackdrop más abajo en este archivo (el
+   modal vive anidado dentro de un div con white-space: nowrap en render-gui.jsx). */
 .backdrop {
     position: fixed;
     inset: 0;
@@ -28,6 +30,7 @@
     background: rgba(0, 0, 0, 0.55);
     backdrop-filter: blur(6px);
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    white-space: normal;
 }
 
 .card {
@@ -469,6 +472,12 @@
    borrado) — un panel angosto centrado sobre un scrim, para un flujo de un solo propósito en vez
    del grid principal. */
 
+/* 14/08/2026 — white-space: normal explícito: este modal ahora vive anidado adentro del div
+   `rightContent` de la barra del editor (ver render-gui.jsx, necesario para que ExitEditorGuard
+   pueda usar el <Provider> interno) — ese div tiene `white-space: nowrap` puesto para que el
+   nombre del docente no salte de línea, y al ser una propiedad heredada, cualquier texto anidado
+   más abajo (como .panelSubtitle acá) lo heredaba sin querer, saliéndose del contenedor en vez de
+   pasar a la línea de abajo. Bug real reportado por el usuario. */
 .panelBackdrop {
     position: fixed;
     inset: 0;
@@ -479,6 +488,7 @@
     padding: 24px;
     background: rgba(5, 8, 18, 0.72);
     overflow-y: auto;
+    white-space: normal;
 }
 
 .panelCard {
@@ -750,8 +760,22 @@
    11" del aula — mermar un poco todo (header, footer, botones, grid). Al final del archivo a
    propósito, mismo motivo documentado en project-picker.css. */
 @media (max-width: 1400px) {
+    /* 14/08/2026 — mismo cambio que project-picker.css (mismo .card padre, "Mis Proyectos" y
+       "Mis plantillas" son la misma caja con distintas opciones): se achica bastante
+       (1160px→880px) para no irse a las orillas en una netbook; sigue siendo grilla de 6 columnas,
+       cada columna más angosta — por eso el texto/padding de cada card también se achica acá. Nada
+       de esto se toca en pantallas grandes. */
+    .card {
+        max-width: 880px;
+    }
+
     .header {
         padding: 10px 20px;
+    }
+
+    .searchInput {
+        padding: 8px 12px 8px 34px;
+        font-size: 0.85rem;
     }
 
     .content {
@@ -764,6 +788,18 @@
 
     .title {
         font-size: 1.2rem;
+    }
+
+    .thumbPlaceholder {
+        font-size: 1.8rem;
+    }
+
+    .templateTitle {
+        font-size: 0.75rem;
+    }
+
+    .templateStory {
+        font-size: 0.64rem;
     }
 
     .footer {

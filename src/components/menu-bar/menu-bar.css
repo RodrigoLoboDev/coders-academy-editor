@@ -27,14 +27,20 @@
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: $menu-bar-standard-font-size;
     font-weight: bold;
-    /* Sesión 34 — mismo navy que AccessGate/ProjectPicker (#161E33) en vez del violeta por
-       defecto de Scratch ($looks-secondary, #855CD6). No se usa la variable de color compartida
-       a propósito: $looks-secondary también define el color de la categoría "Apariencia" en la
-       paleta de bloques, tocarla ahí rompería un color que los chicos ya conocen de Scratch real.
+    /* 14/08/2026 — repaletizado de #161E33 (navy de marca, sesión 34, reemplazaba al violeta por
+       defecto de Scratch $looks-secondary #855CD6) al tono neutro "mBlock" que ya usa el resto del
+       editor en modo oscuro (gui.css: marco/recesado #000000, panel base #1F1F1F) — para cuando
+       este cambio se hizo, AccessGate/ProjectPicker/TemplatePicker todavía eran navy también; esos
+       tres ya se repaletizaron al tono neutro, esta barra había quedado como la última pieza en el
+       navy viejo. #000000 acá (no #1F1F1F) a propósito: mismo criterio de jerarquía visual que ya
+       usan esas otras pantallas (fondo/marco más oscuro que la superficie de contenido debajo).
+       No se usa la variable de color compartida a propósito: $looks-secondary también define el
+       color de la categoría "Apariencia" en la paleta de bloques, tocarla ahí rompería un color
+       que los chicos ya conocen de Scratch real.
        Fija siempre (no varía con el toggle data-theme, mismo criterio que AccessGate) — el toggle
        de modo oscuro (ver dark-mode-toggle.jsx) sigue controlando los colores de los bloques, algo
        aparte de esta barra. */
-    background-color: #161e33;
+    background-color: #000000;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     color: $ui-white;
 }

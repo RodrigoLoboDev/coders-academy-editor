@@ -3,6 +3,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
 
 import styles from './project-picker.css';
+import ExitEditorGuard from '../exit-editor-guard/exit-editor-guard.jsx';
 
 // Sesión 34 — mismo relative-time en español que el resto de la plataforma usa para "hace X" (ej.
 // notificaciones del portal de familias), acá sin dependencia nueva (date-fns no está instalado en
@@ -129,8 +130,16 @@ ConfirmDeleteModal.propTypes = {
  * scroll propio, selección de card + botón "Cargar proyecto" en vez de abrir directo al primer
  * click (mismo patrón que un selector de archivos nativo), y acciones secundarias (renombrar,
  * publicar, borrar) movidas a un submenú "⋮" por card.
+ *
+ * 14/08/2026 — mismo cambio que TemplatePicker: deja de ser una pantalla propia
+ * (/proyectos, eliminada) para vivir como modal superpuesto AL editor (ver "Ajustes" en
+ * render-gui.jsx) — por eso "onClose" (antes "onExit") ya no cierra sesión, solo oculta el modal;
+ * cerrar sesión ahora vive en el menú de Ajustes ("Salir"), separado. Elegir otro proyecto/tarea o
+ * empezar uno nuevo mientras hay cambios sin guardar en el que está abierto atrás puede perderlos
+ * — esos tres triggers (Nuevo proyecto, Cargar proyecto, Empezar/Continuar tarea) pasan por
+ * ExitEditorGuard, mismo guardián que ya protege "Editar plantilla" del lado docente.
  */
-const ProjectPicker = ({studentId, token, onSelectProject, onCreateNew, onExit}) => {
+const ProjectPicker = ({studentId, token, onSelectProject, onCreateNew, onClose}) => {
     // Fase 4 del plan (docs/plan-fases-scratch-plataforma.md, monorepo privado) — pestaña nueva
     // "Tareas asignadas" al lado de "Mis Proyectos", mismo picker (header/footer/grid) en vez de
     // un componente aparte, para no duplicar el chrome del modal.
@@ -295,7 +304,7 @@ const ProjectPicker = ({studentId, token, onSelectProject, onCreateNew, onExit})
                             {tasks && tasks.length > 0 && <span className={styles.tabBadge}>{tasks.length}</span>}
                         </button>
                     </div>
-                    <button className={styles.closeButton} type="button" onClick={onExit}>
+                    <button className={styles.closeButton} type="button" onClick={onClose}>
                         ✕
                     </button>
                 </div>
@@ -428,18 +437,19 @@ const ProjectPicker = ({studentId, token, onSelectProject, onCreateNew, onExit})
                                     <div className={styles.taskMeta}>
                                         <span className={styles.taskTitle}>{template.title}</span>
                                         <p className={styles.taskStory}>{template.story}</p>
-                                        <button
-                                            className={styles.taskAction}
-                                            disabled={startingTaskId === template.id}
-                                            type="button"
-                                            onClick={() => handleStartTask(template.id)}
-                                        >
-                                            {startingTaskId === template.id
-                                                ? 'Abriendo…'
-                                                : hasProgress(template.id)
-                                                    ? '↻ Continuar'
-                                                    : '▶ Empezar'}
-                                        </button>
+                                        <ExitEditorGuard onExit={() => handleStartTask(template.id)}>
+                                            <button
+                                                className={styles.taskAction}
+                                                disabled={startingTaskId === template.id}
+                                                type="button"
+                                            >
+                                                {startingTaskId === template.id
+                                                    ? 'Abriendo…'
+                                                    : hasProgress(template.id)
+                                                        ? '↻ Continuar'
+                                                        : '▶ Empezar'}
+                                            </button>
+                                        </ExitEditorGuard>
                                     </div>
                                 </div>
                             ))}
@@ -449,24 +459,19 @@ const ProjectPicker = ({studentId, token, onSelectProject, onCreateNew, onExit})
 
                 {activeTab === 'projects' && (
                     <div className={styles.footer}>
-                        <button className={styles.footerButtonPrimary} type="button" onClick={onCreateNew}>
-                            ➕ Nuevo proyecto
-                        </button>
-                        <button
-                            className={styles.footerButtonSecondary}
-                            disabled={!selectedId}
-                            type="button"
-                            onClick={() => onSelectProject(selectedId)}
-                        >
-                            📂 Cargar proyecto
-                        </button>
+                        <ExitEditorGuard onExit={onCreateNew}>
+                            <button className={styles.footerButtonSecondary} type="button">
+                                ➕ Nuevo proyecto
+                            </button>
+                        </ExitEditorGuard>
+                        <ExitEditorGuard onExit={() => onSelectProject(selectedId)}>
+                            <button className={styles.footerButtonPrimary} disabled={!selectedId} type="button">
+                                📂 Cargar proyecto
+                            </button>
+                        </ExitEditorGuard>
                     </div>
                 )}
             </div>
-
-            {/* Sesión 32 — antes "No soy yo, cambiar de alumno" (buscaba otro alumno sin salir de
-            la sesión). Ahora es una salida completa: vuelve a la pantalla inicial de rol (¿sos
-            alumno o docente?), ver handleExitToStart en render-gui.jsx — botón X del header. */}
 
             {deleteTarget && (
                 <ConfirmDeleteModal
@@ -481,8 +486,8 @@ const ProjectPicker = ({studentId, token, onSelectProject, onCreateNew, onExit})
 };
 
 ProjectPicker.propTypes = {
+    onClose: PropTypes.func.isRequired,
     onCreateNew: PropTypes.func.isRequired,
-    onExit: PropTypes.func.isRequired,
     onSelectProject: PropTypes.func.isRequired,
     studentId: PropTypes.string.isRequired,
     token: PropTypes.string.isRequired

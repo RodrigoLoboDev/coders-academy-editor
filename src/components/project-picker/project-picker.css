@@ -13,6 +13,13 @@
  * clara).
  */
 
+/* 14/08/2026 — deja de ser el fondo de una pantalla propia (ya no existe /proyectos como ruta):
+   "Mis Proyectos" pasa a vivir siempre como modal superpuesto AL editor (mismo cambio que
+   TemplatePicker, ver "Ajustes" en render-gui.jsx), así que el fondo pasa de opaco con puntitos a
+   translúcido + difuminado — se tiene que seguir viendo el editor detrás, apagado. Mismo valor
+   exacto que template-picker.css para que las dos pantallas se sientan la misma superficie.
+   white-space: normal explícito por el mismo motivo que template-picker.css: este modal vive
+   anidado adentro de un div con white-space: nowrap en render-gui.jsx. */
 .backdrop {
     position: fixed;
     inset: 0;
@@ -21,10 +28,10 @@
     align-items: center;
     justify-content: center;
     padding: 24px;
-    background: #000000;
-    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.05) 1.1px, transparent 1.1px);
-    background-size: 24px 24px;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(6px);
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    white-space: normal;
 }
 
 .card {
@@ -555,6 +562,7 @@
 
 /* ── Modal de confirmación de borrado ──────────────────────────────────── */
 
+/* white-space: normal — mismo motivo que .backdrop más arriba en este archivo. */
 .confirmBackdrop {
     position: fixed;
     inset: 0;
@@ -564,6 +572,7 @@
     justify-content: center;
     padding: 24px;
     background: rgba(5, 8, 18, 0.72);
+    white-space: normal;
 }
 
 .confirmCard {
@@ -643,8 +652,27 @@
    sin importar si el media query está activo (bug real ya encontrado una vez en access-gate.css,
    mismo cuidado acá). */
 @media (max-width: 1400px) {
+    /* 14/08/2026 — el div padre (.card) se achica bastante (1160px→880px) para no irse a las
+       orillas en una netbook; sigue siendo una grilla de 6 columnas (grid-template-columns no
+       cambia), cada columna simplemente queda más angosta — por eso el texto/padding/íconos de
+       cada card también se achican acá, si no el contenido de cada una queda apretado/cortado a
+       ese ancho menor. Nada de esto se toca en pantallas grandes (fuera de este media query). */
+    .card {
+        max-width: 880px;
+    }
+
     .header {
         padding: 10px 20px;
+    }
+
+    .searchInput {
+        padding: 8px 12px 8px 34px;
+        font-size: 0.85rem;
+    }
+
+    .tabButton {
+        padding: 6px 12px;
+        font-size: 0.82rem;
     }
 
     .content {
@@ -657,6 +685,29 @@
 
     .title {
         font-size: 1.2rem;
+    }
+
+    .thumbPlaceholder,
+    .taskThumbPlaceholder {
+        font-size: 1.8rem;
+    }
+
+    .projectTitle,
+    .taskTitle {
+        font-size: 0.75rem;
+    }
+
+    .projectDate {
+        font-size: 0.64rem;
+    }
+
+    .taskStory {
+        font-size: 0.68rem;
+    }
+
+    .taskAction {
+        padding: 6px 10px;
+        font-size: 0.72rem;
     }
 
     .footer {

@@ -1,4 +1,3 @@
-import classNames from 'classnames';
 import React, {useEffect, useState} from 'react';
 import ReactDOM from 'react-dom';
 import {BrowserRouter, Routes, Route, Navigate, useNavigate, useParams} from 'react-router-dom';
@@ -27,7 +26,6 @@ import {clearCodeSession, codeSessionMsRemaining} from '../lib/editor-access-cod
 // importar desde qué archivo se importe el módulo CSS.
 import menuBarStyles from '../components/menu-bar/menu-bar.css';
 import settingsMenuStyles from '../components/settings-menu/settings-menu.css';
-import myProjectsIcon from '../components/menu-bar/icon--my-projects.svg';
 
 // Sobrevive un refresh accidental de la página sin perder al alumno ya identificado (el código de
 // acceso ya se guarda aparte, ver access-gate.jsx) — se borra solo al cerrar la pestaña/navegador,
@@ -137,29 +135,31 @@ const sessionButtonStyle = {
 // compartir/recargar en la pantalla en la que estás y usar
 // atrás/adelante del navegador. El catch-all de Vercel (vercel.json) y `historyApiFallback` del
 // dev server (webpack.config.js) ya cubrían esto de antes, no hizo falta tocar infra.
-// 14/08/2026 — PATHS.templates (/docente/plantillas) se saca: "Mis plantillas" dejó de ser una
-// ruta propia, ahora es un modal superpuesto al editor (ver TeacherEditorRoute) — no hay ningún
-// otro lado del código que necesite navegar ahí como pantalla completa.
+// 14/08/2026 — PATHS.templates (/docente/plantillas) Y PATHS.projects (/proyectos) se sacan: ni
+// "Mis plantillas" ni "Mis Proyectos" son rutas propias ya — las dos son modales superpuestos al
+// editor (ver "Ajustes" en TeacherEditorRoute/StudentEditorRoute) — no hay ningún otro lado del
+// código que necesite navegar ahí como pantalla completa.
 const PATHS = {
     role: '/',
-    projects: '/proyectos',
     editor: id => `/editor/${id}`,
     template: id => `/docente/plantilla/${id}`
 };
 
 /*
  * Pantalla inicial: si ya hay sesión de alumno o docente guardada (refresh, o volver con
- * atrás/adelante del navegador), redirige directo a su picker en vez de mostrar el rol de nuevo.
- * 14/08/2026 — el docente entra siempre a una plantilla nueva en blanco (PATHS.template('nuevo')),
- * ya no a "Mis plantillas" — mismo destino tanto para el login recién hecho como para volver con
- * una sesión ya guardada, por consistencia (ver TeacherEditorRoute para el sentinela 'nuevo'→'0').
+ * atrás/adelante del navegador), redirige directo al editor en vez de mostrar el rol de nuevo.
+ * 14/08/2026 — tanto alumno como docente entran siempre a un proyecto/plantilla nuevo en blanco
+ * (PATHS.editor('nuevo')/PATHS.template('nuevo')), ya no a un picker primero — mismo destino tanto
+ * para el login recién hecho como para volver con una sesión ya guardada. Retomar algo ya
+ * guardado se hace desde "Ajustes" dentro del editor (ver sentinela 'nuevo'→'0' en
+ * Student/TeacherEditorRoute).
  */
 const RoleRoute = () => {
     const navigate = useNavigate();
     const student = readStoredStudent();
     const teacher = readStoredTeacher();
 
-    if (student) return <Navigate replace to={PATHS.projects} />;
+    if (student) return <Navigate replace to={PATHS.editor('nuevo')} />;
     if (teacher) return <Navigate replace to={PATHS.template('nuevo')} />;
 
     // Fase 6 (punto 2, sesión real por alumno) — `token` ahora es parte de la sesión guardada:
@@ -168,7 +168,7 @@ const RoleRoute = () => {
     // /scratch-projects/:studentId/... aunque el id sea el correcto.
     const handleSelectStudent = (id, firstName, token) => {
         sessionStorage.setItem(STUDENT_SESSION_KEY, JSON.stringify({id, firstName, token}));
-        navigate(PATHS.projects);
+        navigate(PATHS.editor('nuevo'));
     };
 
     const handleTeacherLogin = (token, user) => {
@@ -198,26 +198,11 @@ const RequireTeacher = ({children}) => {
     return children(teacher);
 };
 
-const ProjectsRoute = () => {
-    const navigate = useNavigate();
-    return (
-        <RequireStudent>
-            {student => (
-                <ProjectPicker
-                    studentId={student.id}
-                    token={student.token}
-                    onCreateNew={() => navigate(PATHS.editor('nuevo'))}
-                    onExit={() => {
-                        sessionStorage.removeItem(STUDENT_SESSION_KEY);
-                        navigate(PATHS.role);
-                    }}
-                    onSelectProject={id => navigate(PATHS.editor(id))}
-                />
-            )}
-        </RequireStudent>
-    );
-};
-
+// 14/08/2026 — "Mis Proyectos" dejó de ser una ruta propia (ProjectsRoute, eliminada): ahora es un
+// modal que se abre desde "Ajustes" DENTRO del editor, sin navegar a ningún lado — mismo patrón
+// que TeacherEditorRoute/"Mis plantillas" (ver ese comentario para el detalle completo del truco
+// de montar el modal vía `rightContent`). El alumno entra siempre directo acá
+// (PATHS.editor('nuevo'), ver RoleRoute) en vez de a un picker primero.
 const StudentEditorRoute = ({WrappedGui}) => {
     const navigate = useNavigate();
     const {projectId} = useParams();
@@ -234,6 +219,7 @@ const StudentEditorRoute = ({WrappedGui}) => {
     // HashParserHOC, ver más abajo por qué no se usa ese HOC.
     const effectiveProjectId = projectId === 'nuevo' ? '0' : projectId;
     const apiScratchProjectsHost = student ? `${process.env.API_URL}/scratch-projects/${student.id}` : null;
+    const [showProjectsModal, setShowProjectsModal] = useState(false);
 
     // Fase 4 del plan (docs/plan-fases-scratch-plataforma.md, monorepo privado) — fetch propio y
     // liviano (solo metadata, no el projectJson pesado que ya trae fetch-project-from-server.js
@@ -274,15 +260,40 @@ const StudentEditorRoute = ({WrappedGui}) => {
                     <div style={sessionInfoStyle}>
                         <span style={sessionNameStyle}>{student.firstName}</span>
                         <Divider className={menuBarStyles.divider} />
-                        <ExitEditorGuard onExit={() => navigate(PATHS.projects)}>
-                            <div className={classNames(menuBarStyles.menuBarItem, menuBarStyles.hoverable)}>
-                                <img
-                                    className={menuBarStyles.helpIcon}
-                                    src={myProjectsIcon}
-                                />
-                                <span className={menuBarStyles.tutorialsLabel}>Mis Proyectos</span>
-                            </div>
-                        </ExitEditorGuard>
+                        <SettingsMenu>
+                            <button className={settingsMenuStyles.item} type="button" onClick={() => setShowProjectsModal(true)}>
+                                Mis Proyectos
+                            </button>
+                            <div className={settingsMenuStyles.divider} />
+                            <ExitEditorGuard
+                                confirmMessage="¿Estás seguro que querés salir?"
+                                onExit={() => {
+                                    sessionStorage.removeItem(STUDENT_SESSION_KEY);
+                                    navigate(PATHS.role);
+                                }}
+                            >
+                                <button className={settingsMenuStyles.item} type="button">
+                                    Salir
+                                </button>
+                            </ExitEditorGuard>
+                        </SettingsMenu>
+                        <EditorTitleAutosave />
+                        <SaveToast />
+                        {showProjectsModal && (
+                            <ProjectPicker
+                                studentId={student.id}
+                                token={student.token}
+                                onClose={() => setShowProjectsModal(false)}
+                                onCreateNew={() => {
+                                    setShowProjectsModal(false);
+                                    navigate(PATHS.editor('nuevo'));
+                                }}
+                                onSelectProject={id => {
+                                    setShowProjectsModal(false);
+                                    navigate(PATHS.editor(id));
+                                }}
+                            />
+                        )}
                     </div>
                 );
 
@@ -348,6 +359,7 @@ const TeacherEditorRoute = ({WrappedGui}) => {
                             </button>
                             <div className={settingsMenuStyles.divider} />
                             <ExitEditorGuard
+                                confirmMessage="¿Estás seguro que querés cerrar sesión?"
                                 onExit={() => {
                                     localStorage.removeItem(TEACHER_SESSION_KEY);
                                     storage.setAuthToken(null);
@@ -431,7 +443,6 @@ const PlaygroundRouter = ({WrappedGui}) => (
         <AccessCodeWatcher />
         <Routes>
             <Route element={<RoleRoute />} path={PATHS.role} />
-            <Route element={<ProjectsRoute />} path={PATHS.projects} />
             <Route element={<StudentEditorRoute WrappedGui={WrappedGui} />} path="/editor/:projectId" />
             <Route element={<TeacherEditorRoute WrappedGui={WrappedGui} />} path="/docente/plantilla/:templateId" />
             <Route element={<PublicPlayerRoute WrappedGui={WrappedGui} />} path="/jugar/:projectId" />

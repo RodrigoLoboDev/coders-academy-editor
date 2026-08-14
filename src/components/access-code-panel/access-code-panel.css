@@ -5,6 +5,12 @@
  * tiene su propio CSS module, sin compartir clases entre archivos).
  */
 
+/* 14/08/2026 — white-space: normal explícito: este panel se abre desde TemplatePicker, que ahora
+   vive anidado adentro del div `rightContent` de la barra del editor (necesario para que
+   ExitEditorGuard pueda usar el <Provider> interno, ver render-gui.jsx) — ese div tiene
+   `white-space: nowrap` puesto para que el nombre del docente no salte de línea, y al ser una
+   propiedad heredada, el texto de acá abajo (.panelSubtitle) lo heredaba sin querer, saliéndose
+   del contenedor en vez de pasar a la línea de abajo. Bug real reportado por el usuario. */
 .panelBackdrop {
     position: fixed;
     inset: 0;
@@ -15,6 +21,7 @@
     padding: 24px;
     background: rgba(5, 8, 18, 0.72);
     overflow-y: auto;
+    white-space: normal;
 }
 
 .panelCard {

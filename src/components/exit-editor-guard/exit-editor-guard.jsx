@@ -23,9 +23,16 @@ import styles from './exit-editor-guard.css';
  * Reusable: recibe un único hijo (el botón/div ya estilado tal cual se veía antes) y le inyecta el
  * onClick por clonado — así "Mis Proyectos" (div con ícono) y "Mis plantillas"/"Cerrar sesión"
  * (button con estilo inline) no necesitan compartir ninguna marca visual, solo este comportamiento.
+ *
+ * 14/08/2026 — `confirmMessage` opcional: para "Cerrar sesión"/"Salir" (una acción más difícil de
+ * deshacer que simplemente abrir "Mis Proyectos"/"Mis plantillas"), agrega un primer paso "¿Estás
+ * seguro?" con Aceptar/Cancelar ANTES de la lógica de siempre (guardado/descarte si hay cambios
+ * sin guardar) — las dos confirmaciones son independientes, un logout con cambios sin guardar
+ * pasa por las dos. Sin este prop, el comportamiento es exactamente el de antes.
  */
 const ExitEditorGuardComponent = ({
     children,
+    confirmMessage,
     isShowingWithoutId,
     onClickCreateNew,
     onClickSave,
@@ -33,6 +40,7 @@ const ExitEditorGuardComponent = ({
     projectChanged,
     vm
 }) => {
+    const [areYouSureOpen, setAreYouSureOpen] = useState(false);
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [pendingSave, setPendingSave] = useState(false);
 
@@ -55,12 +63,32 @@ const ExitEditorGuardComponent = ({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [projectChanged, pendingSave]);
 
-    const handleClick = () => {
+    const proceedPastAreYouSure = () => {
         if (projectChanged) {
             setConfirmOpen(true);
         } else {
             doExit();
         }
+    };
+
+    const handleClick = e => {
+        // SettingsMenu envuelve estos botones en un dropdown que se auto-cierra al detectar
+        // cualquier click adentro (para que "Mis Proyectos"/"Mis plantillas" lo cierren solos).
+        // El modal de "¿Estás seguro?" de acá abajo vive DENTRO de ese mismo dropdown — sin
+        // stopPropagation, el click también le llegaba al dropdown, que se cerraba y desmontaba
+        // todo su contenido (incluido este componente) antes de que React llegara a pintar el
+        // modal recién abierto. Resultado: "no aparece nada" al tocar Cerrar sesión/Salir.
+        if (e) e.stopPropagation();
+        if (confirmMessage) {
+            setAreYouSureOpen(true);
+            return;
+        }
+        proceedPastAreYouSure();
+    };
+
+    const handleConfirmAreYouSure = () => {
+        setAreYouSureOpen(false);
+        proceedPastAreYouSure();
     };
 
     const handleSaveAndExit = () => {
@@ -81,6 +109,21 @@ const ExitEditorGuardComponent = ({
     return (
         <React.Fragment>
             {React.cloneElement(children, {onClick: handleClick})}
+            {areYouSureOpen && (
+                <div className={styles.backdrop} onMouseDown={() => setAreYouSureOpen(false)}>
+                    <div className={styles.card} onMouseDown={e => e.stopPropagation()}>
+                        <h2 className={styles.title}>{confirmMessage}</h2>
+                        <div className={styles.actionsRow}>
+                            <button className={styles.discardButton} type="button" onClick={() => setAreYouSureOpen(false)}>
+                                Cancelar
+                            </button>
+                            <button className={styles.saveButton} type="button" onClick={handleConfirmAreYouSure}>
+                                Aceptar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             {confirmOpen && (
                 <div className={styles.backdrop} onMouseDown={() => setConfirmOpen(false)}>
                     <div className={styles.card} onMouseDown={e => e.stopPropagation()}>
@@ -108,6 +151,7 @@ const ExitEditorGuardComponent = ({
 
 ExitEditorGuardComponent.propTypes = {
     children: PropTypes.element.isRequired,
+    confirmMessage: PropTypes.string,
     isShowingWithoutId: PropTypes.bool,
     onClickCreateNew: PropTypes.func.isRequired,
     onClickSave: PropTypes.func.isRequired,

@@ -28,11 +28,11 @@
     justify-content: center;
     padding: 24px;
     background: #000000;
-    /* 14/08/2026 — puntos un poco más grandes/visibles a pedido del usuario: radio 1.1px→1.6px,
-       opacidad 0.05→0.08. Separación (background-size) subida en la misma proporción para que no
-       se sientan amontonados al agrandarlos. */
-    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.08) 1.6px, transparent 1.6px);
-    background-size: 28px 28px;
+    /* 14/08/2026, segunda pasada — apenas más chicos que la pasada anterior (1.6px→1.4px) y más
+       densos (28px→20px de separación) a pedido del usuario. Mismo valor que project-picker.css
+       para que las dos pantallas se sientan la misma superficie. */
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.08) 1.4px, transparent 1.4px);
+    background-size: 20px 20px;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
