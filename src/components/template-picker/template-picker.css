@@ -11,55 +11,31 @@
  * Sigue sin respetar el toggle de modo oscuro del editor (`data-theme`) — ver el comentario largo
  * en access-gate.css para el porqué completo (esta pantalla es oscura siempre, no tiene variante
  * clara).
+ *
+ * 14/08/2026 — item 7: las clases que eran 100% idénticas a project-picker.css (misma caja padre,
+ * "Mis Proyectos"/"Mis plantillas") se movieron a picker-shared.css vía `composes:` — CSS Modules
+ * estándar, cero cambio visual. Lo que queda acá abajo es solo lo genuinamente propio de este
+ * picker (código de la clase, paneles de nueva plantilla/asignar, editor de pasos de la misión).
  */
 
-/* 14/08/2026 — deja de ser el fondo de una pantalla propia (ya no existe /docente/plantillas como
-   ruta): ahora este picker vive siempre como modal superpuesto AL editor (ver "Ajustes" en
-   render-gui.jsx), así que el fondo pasa de opaco a translúcido + difuminado — se tiene que seguir
-   viendo el editor detrás, apagado. */
-/* white-space: normal explícito — mismo motivo que .panelBackdrop más abajo en este archivo (el
-   modal vive anidado dentro de un div con white-space: nowrap en render-gui.jsx). */
 .backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    background: rgba(0, 0, 0, 0.55);
-    backdrop-filter: blur(6px);
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    white-space: normal;
+    composes: backdrop from '../picker-shared/picker-shared.css';
 }
 
 .card {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    max-width: 1160px;
-    height: min(84vh, 800px);
-    border-radius: 12px;
-    background: #1f1f1f;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
-    overflow: hidden;
+    composes: card from '../picker-shared/picker-shared.css';
 }
 
 /* ── Header ────────────────────────────────────────────────────────────── */
 
 .header {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items: center;
-    gap: 16px;
-    padding: 14px 28px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    composes: header from '../picker-shared/picker-shared.css';
 }
 
 /* Fase 6 del plan (docs/plan-fases-scratch-plataforma.md) — agrupa el buscador + el botón nuevo
    de "Código de la clase" en la misma celda del grid (columna 1, 1fr), sin tocar el layout de 3
-   columnas que ya tenía el header. */
+   columnas que ya tenía el header. Sin equivalente en project-picker.css (ese picker no tiene
+   botón de código de clase) — se queda local. */
 .headerLeft {
     display: flex;
     align-items: center;
@@ -91,42 +67,15 @@
 }
 
 .searchIcon {
-    position: absolute;
-    top: 50%;
-    left: 14px;
-    transform: translateY(-50%);
-    font-size: 0.95rem;
-    opacity: 0.6;
+    composes: searchIcon from '../picker-shared/picker-shared.css';
 }
 
 .searchInput {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 10px 14px 10px 38px;
-    font-size: 0.95rem;
-    color: #e5e5e5;
-    background: #363636;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
-    outline: none;
-    transition: border-color 0.15s ease;
-}
-
-.searchInput::placeholder {
-    color: #808080;
-}
-
-.searchInput:focus {
-    border-color: rgba(108, 123, 255, 0.6);
+    composes: searchInput from '../picker-shared/picker-shared.css';
 }
 
 .title {
-    margin: 0;
-    justify-self: center;
-    font-size: 1.35rem;
-    font-weight: bold;
-    color: #ffffff;
-    white-space: nowrap;
+    composes: title from '../picker-shared/picker-shared.css';
 }
 
 .subtitle {
@@ -137,39 +86,17 @@
 }
 
 .closeButton {
-    justify-self: end;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    font-size: 1.1rem;
-    color: #b3b3b3;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease;
-}
-
-.closeButton:hover {
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.1);
+    composes: closeButton from '../picker-shared/picker-shared.css';
 }
 
 /* ── Grid de plantillas ────────────────────────────────────────────────── */
 
 .content {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 24px 28px;
+    composes: content from '../picker-shared/picker-shared.css';
 }
 
 .grid {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 18px;
+    composes: grid from '../picker-shared/picker-shared.css';
 }
 
 /* min-width:0 — mismo fix de CSS Grid que project-picker.css (sin esto, un título largo empuja
@@ -196,63 +123,31 @@
 }
 
 .thumbWrap {
-    position: relative;
-    flex: 3;
-    min-height: 0;
-    overflow: hidden;
-    border-radius: 8px 8px 0 0;
-    background: #000000;
+    composes: thumbWrap from '../picker-shared/picker-shared.css';
 }
 
 .thumb {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
+    composes: thumb from '../picker-shared/picker-shared.css';
 }
 
 .thumbPlaceholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2.2rem;
+    composes: thumbPlaceholder from '../picker-shared/picker-shared.css';
 }
 
 .meta {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 6px;
-    padding: 8px 10px;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    composes: meta from '../picker-shared/picker-shared.css';
 }
 
 .metaText {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
+    composes: metaText from '../picker-shared/picker-shared.css';
 }
 
 .templateTitle {
-    font-size: 0.85rem;
-    font-weight: normal;
-    color: #e5e5e5;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    composes: itemTitle from '../picker-shared/picker-shared.css';
 }
 
 .templateStory {
-    margin-top: 2px;
-    font-size: 0.72rem;
-    color: #b3b3b3;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    composes: itemSubtitle from '../picker-shared/picker-shared.css';
 }
 
 /* ── Submenú "⋮" (asignar / renombrar / eliminar) — mismo patrón que project-picker.css ─────
@@ -261,57 +156,19 @@
    acciones, en vez de quedar como acción rápida separada. */
 
 .menuAnchor {
-    position: relative;
-    flex-shrink: 0;
+    composes: menuAnchor from '../picker-shared/picker-shared.css';
 }
 
 .menuButton {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 26px;
-    height: 26px;
-    font-size: 1.1rem;
-    line-height: 1;
-    color: #b3b3b3;
-    background: none;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.menuButton:hover {
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.08);
+    composes: menuButton from '../picker-shared/picker-shared.css';
 }
 
 .templateMenu {
-    position: absolute;
-    z-index: 50;
-    bottom: calc(100% + 6px);
-    right: 0;
-    min-width: 148px;
-    padding: 4px;
-    background: #363636;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 8px;
-    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.5);
-    text-align: left;
+    composes: cardMenu from '../picker-shared/picker-shared.css';
 }
 
 .templateMenuItem {
-    display: block;
-    width: 100%;
-    box-sizing: border-box;
-    padding: 6px 8px;
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: #e5e5e5;
-    background: none;
-    border: none;
-    border-radius: 4px;
-    text-align: left;
-    cursor: pointer;
+    composes: cardMenuItem from '../picker-shared/picker-shared.css';
 }
 
 .templateMenuItem:hover {
@@ -328,18 +185,7 @@
 }
 
 .renameInput {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 1px 4px;
-    margin: -1px -4px;
-    font-size: 0.85rem;
-    font-weight: bold;
-    font-family: inherit;
-    color: #e5e5e5;
-    background: #000000;
-    border: 1px solid rgba(108, 123, 255, 0.6);
-    border-radius: 3px;
-    outline: none;
+    composes: renameInput from '../picker-shared/picker-shared.css';
 }
 
 /* ── Modal de confirmación de borrado — reusa .panelBackdrop/.panelCard/.panelTitle de más abajo,
@@ -352,46 +198,16 @@
     margin-top: 20px;
 }
 
-.confirmCancelButton,
-.confirmDeleteButton {
-    flex: 1;
-    padding: 13px 16px;
-    font-size: 0.98rem;
-    font-weight: bold;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-}
-
 .confirmCancelButton {
-    color: #e5e5e5;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-}
-
-.confirmCancelButton:hover {
-    background: rgba(255, 255, 255, 0.08);
+    composes: confirmCancelButton from '../picker-shared/picker-shared.css';
 }
 
 .confirmDeleteButton {
-    color: #ffffff;
-    background: #e04040;
-}
-
-.confirmDeleteButton:hover:not(:disabled) {
-    background: #c43333;
-}
-
-.confirmDeleteButton:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+    composes: confirmDeleteButton from '../picker-shared/picker-shared.css';
 }
 
 .hint {
-    margin-top: 8px;
-    font-size: 0.95rem;
-    color: #b3b3b3;
-    text-align: center;
+    composes: hint from '../picker-shared/picker-shared.css';
 }
 
 .error {
@@ -411,66 +227,22 @@
 /* ── Footer ────────────────────────────────────────────────────────────── */
 
 .footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    padding: 12px 24px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.footerButtonPrimary,
-.footerButtonSecondary {
-    padding: 9px 16px;
-    font-size: 0.85rem;
-    font-weight: bold;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: transform 0.15s ease, filter 0.15s ease, background 0.15s ease;
+    composes: footer from '../picker-shared/picker-shared.css';
 }
 
 .footerButtonPrimary {
-    color: #3a2a06;
-    background: linear-gradient(180deg, #ffc65c, #ffb02e);
-    box-shadow: 0 10px 24px -10px rgba(255, 176, 46, 0.55);
-}
-
-.footerButtonPrimary:hover:not(:disabled) {
-    filter: brightness(1.05);
-}
-
-.footerButtonPrimary:active:not(:disabled) {
-    transform: scale(0.98);
-}
-
-.footerButtonPrimary:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
+    composes: footerButtonPrimary from '../picker-shared/picker-shared.css';
 }
 
 .footerButtonSecondary {
-    color: #e5e5e5;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-}
-
-.footerButtonSecondary:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.08);
-}
-
-.footerButtonSecondary:active:not(:disabled) {
-    transform: scale(0.98);
-}
-
-.footerButtonSecondary:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
+    composes: footerButtonSecondary from '../picker-shared/picker-shared.css';
 }
 
 /* ── Paneles superpuestos (nueva plantilla / asignar) ─────────────────────
    Mismo patrón que .confirmBackdrop/.confirmCard de project-picker.css (modal de confirmación de
    borrado) — un panel angosto centrado sobre un scrim, para un flujo de un solo propósito en vez
-   del grid principal. */
+   del grid principal. Sin equivalente en project-picker.css (ese picker no tiene estos paneles) —
+   se queda local. */
 
 /* 14/08/2026 — white-space: normal explícito: este modal ahora vive anidado adentro del div
    `rightContent` de la barra del editor (ver render-gui.jsx, necesario para que ExitEditorGuard
@@ -757,58 +529,8 @@
 
 /* 14/08/2026 — mismo criterio y mismo corte (1400px) que el breakpoint de access-gate.css/
    project-picker.css: por debajo de ese ancho ya no es una notebook/monitor, es una netbook de
-   11" del aula — mermar un poco todo (header, footer, botones, grid). Al final del archivo a
-   propósito, mismo motivo documentado en project-picker.css. */
-@media (max-width: 1400px) {
-    /* 14/08/2026 — mismo cambio que project-picker.css (mismo .card padre, "Mis Proyectos" y
-       "Mis plantillas" son la misma caja con distintas opciones): se achica bastante
-       (1160px→880px) para no irse a las orillas en una netbook; sigue siendo grilla de 6 columnas,
-       cada columna más angosta — por eso el texto/padding de cada card también se achica acá. Nada
-       de esto se toca en pantallas grandes. */
-    .card {
-        max-width: 880px;
-    }
-
-    .header {
-        padding: 10px 20px;
-    }
-
-    .searchInput {
-        padding: 8px 12px 8px 34px;
-        font-size: 0.85rem;
-    }
-
-    .content {
-        padding: 18px 22px;
-    }
-
-    .grid {
-        gap: 14px;
-    }
-
-    .title {
-        font-size: 1.2rem;
-    }
-
-    .thumbPlaceholder {
-        font-size: 1.8rem;
-    }
-
-    .templateTitle {
-        font-size: 0.75rem;
-    }
-
-    .templateStory {
-        font-size: 0.64rem;
-    }
-
-    .footer {
-        padding: 10px 18px;
-    }
-
-    .footerButtonPrimary,
-    .footerButtonSecondary {
-        padding: 8px 14px;
-        font-size: 0.8rem;
-    }
-}
+   11" del aula — mermar un poco todo. Los overrides de las clases compartidas (card, header,
+   searchInput, content, grid, title, thumbPlaceholder, itemTitle/itemSubtitle, footer,
+   footerButtonPrimary/Secondary) ya viven en el @media de picker-shared.css — acá no queda ningún
+   override propio de este picker por debajo de ese ancho. Al final del archivo a propósito, mismo
+   motivo documentado en project-picker.css. */
