@@ -54,6 +54,29 @@ const ProjectFetcherHOC = function (WrappedComponent) {
             }
         }
         componentDidUpdate (prevProps) {
+            // 15/08/2026 — bug real reportado en producción: elegir OTRA plantilla ya guardada
+            // desde "Mis plantillas" (docente), o "Empezar"/"Continuar" una tarea asignada desde
+            // "Tareas asignadas" (alumno), no abría el proyecto nuevo — quedaba mostrando el que
+            // ya estaba abierto. Causa: este HOC solo despachaba setProjectId() en el constructor
+            // (arriba); nuestro router (render-gui.jsx) cambia el projectId/templateId de la URL
+            // SIN desmontar/remontar este componente (misma posición en el árbol, React solo
+            // actualiza props), así que el constructor nunca se volvía a ejecutar y el id nuevo
+            // nunca llegaba a Redux. En el caso del alumno el síntoma era parcial y confuso: la
+            // franja de tarea (título/relato/misión) sí se actualizaba, porque esa la arma
+            // StudentEditorRoute con su propio useEffect que sí reacciona al cambio de projectId
+            // — pero el VM/los bloques de Scratch, que dependen 100% de este HOC, se quedaban
+            // congelados en el proyecto anterior.
+            // El reducer (project-state.js, case SET_PROJECT_ID) ya soporta perfectamente que se
+            // vuelva a despachar con un id distinto estando en SHOWING_WITH_ID — solo faltaba
+            // volver a llamarlo acá cuando la prop cambia.
+            if (
+                prevProps.projectId !== this.props.projectId &&
+                this.props.projectId !== '' &&
+                this.props.projectId !== null &&
+                typeof this.props.projectId !== 'undefined'
+            ) {
+                this.props.setProjectId(this.props.projectId.toString());
+            }
             if (prevProps.projectHost !== this.props.projectHost) {
                 storage.setProjectHost(this.props.projectHost);
             }
