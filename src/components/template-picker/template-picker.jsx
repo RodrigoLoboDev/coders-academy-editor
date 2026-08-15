@@ -587,11 +587,14 @@ AssignPanel.propTypes = {
  *
  * "Crear plantilla nueva" se sacó — para eso ya está "Archivo → Nuevo" del propio editor (mismo
  * mecanismo nativo de scratch-gui que ya existía, en vez de duplicar un flujo de creación
- * separado). Una plantilla nueva nace sin id ni story/objective; el primer guardado (blur/Enter
- * en el campo de título, o "Guardar ahora") la crea de verdad contra la API — ver
- * EditorTitleAutosave en render-gui.jsx. Relato y misión se completan después, si se quiere,
- * únicamente desde "Editar info" en el menú "⋮" de una plantilla ya guardada — nunca en la
- * creación.
+ * separado, ver onClickNewProject en render-gui.jsx). Una plantilla nueva nace sin id ni story/
+ * objective; el primer guardado real ("Guardar ahora" o al salir con cambios sin guardar vía
+ * ExitEditorGuard) la crea de verdad contra la API. 15/08/2026 — el título ya NO autoguarda solo
+ * con escribirlo (EditorTitleAutosave, eliminado — causaba copias vacías cada vez que se abría
+ * una plantilla en blanco después de la primera de la sesión); el nombre se sigue escribiendo
+ * igual en el input, solo que el guardado real espera a una de las dos vías de arriba. Relato y
+ * misión se completan después, si se quiere, únicamente desde "Editar info" en el menú "⋮" de una
+ * plantilla ya guardada — nunca en la creación.
  */
 const TemplatePicker = ({token, onSelectTemplate, onClose}) => {
     const [templates, setTemplates] = useState(null);

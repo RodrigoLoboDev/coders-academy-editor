@@ -15,7 +15,6 @@ import Divider from '../components/divider/divider.jsx';
 import TaskBanner from '../components/task-banner/task-banner.jsx';
 import ExitEditorGuard from '../components/exit-editor-guard/exit-editor-guard.jsx';
 import SettingsMenu from '../components/settings-menu/settings-menu.jsx';
-import EditorTitleAutosave from '../components/editor-title-autosave/editor-title-autosave.jsx';
 import SaveToast from '../components/save-toast/save-toast.jsx';
 import fetchSharedScratchAssets from '../lib/fetch-shared-scratch-assets';
 import {clearCodeSession, codeSessionMsRemaining} from '../lib/editor-access-code-session';
@@ -283,7 +282,6 @@ const StudentEditorRoute = ({WrappedGui}) => {
                                 </button>
                             </ExitEditorGuard>
                         </SettingsMenu>
-                        <EditorTitleAutosave />
                         <SaveToast />
                         <ExitEditorGuard onExit={() => navigate(PATHS.editor('nuevo'))}>
                             <button ref={newProjectTriggerRef} style={{display: 'none'}} type="button" />
@@ -344,8 +342,15 @@ const TeacherEditorRoute = ({WrappedGui}) => {
     const {templateId} = useParams();
     // Mismo sentinela que usa StudentEditorRoute para "nuevo" ('0', defaultProjectId en
     // reducers/project-state.js) — carga el proyecto en blanco local de scratch-gui en vez de
-    // pedirle uno a la API. La plantilla real recién se crea en el primer guardado (blur/Enter en
-    // el título, o "Guardar ahora"), ver EditorTitleAutosave.
+    // pedirle uno a la API. La plantilla real recién se crea en el primer guardado real: "Guardar
+    // ahora" (link junto al título o menú Archivo) o al salir con cambios sin guardar
+    // (ExitEditorGuard). 15/08/2026 — antes también se autoguardaba con blur/Enter en el título
+    // (EditorTitleAutosave, eliminado): causaba copias vacías cada vez que se abría un proyecto en
+    // blanco después del primero de la sesión (TitledHOC resetea el título a "Proyecto sin
+    // título" en cada carga en blanco, y ese reset por sí solo disparaba el autoguardado). El
+    // título en sí se sigue escribiendo/mostrando igual (ProjectTitleInput nativo de scratch-gui,
+    // sin relación con esto) — para renombrar un proyecto/plantilla ya guardado está el "⋮" →
+    // Renombrar de Mis Proyectos/Mis plantillas, no hace falta re-abrirlo para eso.
     const effectiveTemplateId = templateId === 'nuevo' ? '0' : templateId;
     const [showTemplatesModal, setShowTemplatesModal] = useState(false);
     // 15/08/2026 — mismo puente que StudentEditorRoute, ver ese comentario para el detalle
@@ -361,7 +366,7 @@ const TeacherEditorRoute = ({WrappedGui}) => {
                 // termine dentro del <Provider> redux interno que arma AppStateHOC alrededor de
                 // GUI — position:fixed lo hace ver como si cubriera toda la pantalla igual, pero
                 // sin eso ExitEditorGuard (usado adentro, al elegir otra plantilla) no encontraría
-                // el store y rompería. Mismo truco que ya usa ExitEditorGuard/EditorTitleAutosave.
+                // el store y rompería. Mismo truco que ya usa ExitEditorGuard/SaveToast.
                 const teacherRightContent = (
                     <div style={sessionInfoStyle}>
                         <span style={sessionNameStyle}>{teacher.name}</span>
@@ -384,7 +389,6 @@ const TeacherEditorRoute = ({WrappedGui}) => {
                                 </button>
                             </ExitEditorGuard>
                         </SettingsMenu>
-                        <EditorTitleAutosave />
                         <SaveToast />
                         <ExitEditorGuard onExit={() => navigate(PATHS.template('nuevo'))}>
                             <button ref={newTemplateTriggerRef} style={{display: 'none'}} type="button" />

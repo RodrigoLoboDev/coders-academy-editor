@@ -11,12 +11,12 @@ const TOAST_DURATION_MS = 2500;
  * propia alerta de guardado exitoso (alertId 'saveSuccess', ver lib/alerts/index.jsx), pero es de
  * tipo INLINE — se muestra chica, adentro de <SaveStatus> en la barra de menú, fácil de no ver.
  * En vez de duplicar la lógica de "guardó bien" (ese estado ya lo actualiza correctamente
- * project-saver-hoc.jsx sin importar quién disparó el guardado — clic en "Guardar ahora",
- * autoguardado del título, o "Guardar cambios" de ExitEditorGuard), este componente solo OBSERVA
- * esa misma lista de alertas y muestra un toast real, flotante, cuando aparece.
+ * project-saver-hoc.jsx sin importar quién disparó el guardado — clic en "Guardar ahora" o
+ * "Guardar cambios" de ExitEditorGuard), este componente solo OBSERVA esa misma lista de alertas
+ * y muestra un toast real, flotante, cuando aparece.
  *
  * Sin UI propia visible hasta que hay algo que mostrar — se monta vía `rightContent` (mismo truco
- * que ExitEditorGuard/EditorTitleAutosave) para vivir dentro del <Provider> interno del editor.
+ * que ExitEditorGuard) para vivir dentro del <Provider> interno del editor.
  */
 const SaveToastComponent = ({alertsList}) => {
     const [visible, setVisible] = useState(false);
