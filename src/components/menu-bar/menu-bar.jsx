@@ -178,6 +178,21 @@ class MenuBar extends React.Component {
         document.removeEventListener('keydown', this.handleKeyPress);
     }
     handleClickNew () {
+        // 15/08/2026 — bug real reportado en producción: "Archivo → Nuevo" no mostraba ningún
+        // aviso de cambios sin guardar (el confirm() nativo de abajo solo se dispara si
+        // canCreateNew es false, y encima es un diálogo feo del navegador, no nuestro modal), y
+        // aunque hubiera guardado antes, la URL se quedaba en el proyecto/plantilla anterior — si
+        // era una tarea asignada, la franja de título/relato/misión quedaba pegada arriba con un
+        // proyecto en blanco debajo. Con onClickNewProject (ver gui.jsx/render-gui.jsx) evitamos
+        // todo el mecanismo nativo de acá abajo: el mismo ExitEditorGuard que ya protege "Nuevo
+        // proyecto"/"Cargar proyecto"/"Empezar tarea" se encarga del aviso Y de navegar a la URL
+        // limpia ('nuevo'), que de paso ya dispara la recarga real del VM (ver el fix de
+        // ProjectFetcherHOC del mismo día) y limpia la franja de tarea.
+        if (this.props.onClickNewProject) {
+            this.props.onClickNewProject();
+            this.props.onRequestCloseFile();
+            return;
+        }
         // if the project is dirty, and user owns the project, we will autosave.
         // but if they are not logged in and can't save, user should consider
         // downloading or logging in first.
@@ -690,6 +705,7 @@ MenuBar.propTypes = {
     onClickLogo: PropTypes.func,
     onClickMode: PropTypes.func,
     onClickNew: PropTypes.func,
+    onClickNewProject: PropTypes.func,
     onClickCreateNew: PropTypes.func,
     onClickRemix: PropTypes.func,
     onClickSave: PropTypes.func,

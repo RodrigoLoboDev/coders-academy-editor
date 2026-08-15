@@ -106,6 +106,7 @@ const GUIComponent = props => {
         onActivateSoundsTab,
         onActivateTab,
         onClickLogo,
+        onClickNewProject,
         onExtensionButtonClick,
         onProjectTelemetryEvent,
         onRequestCloseBackdropLibrary,
@@ -250,6 +251,7 @@ const GUIComponent = props => {
                     onClickAbout={onClickAbout}
                     onClickAccountNav={onClickAccountNav}
                     onClickLogo={onClickLogo}
+                    onClickNewProject={onClickNewProject}
                     onCloseAccountNav={onCloseAccountNav}
                     onLogOut={onLogOut}
                     onOpenRegistration={onOpenRegistration}
@@ -435,6 +437,11 @@ GUIComponent.propTypes = {
     onActivateTab: PropTypes.func,
     onClickAccountNav: PropTypes.func,
     onClickLogo: PropTypes.func,
+    // 15/08/2026 — override opcional de "Archivo → Nuevo" (ver menu-bar.jsx handleClickNew). Solo
+    // se reenvía de acá para abajo hasta MenuBar, que es quien decide si usarlo — sin esta prop,
+    // MenuBar sigue con su comportamiento nativo (confirm() del navegador + acción interna
+    // requestNewProject, sin tocar la URL).
+    onClickNewProject: PropTypes.func,
     onCloseAccountNav: PropTypes.func,
     onExtensionButtonClick: PropTypes.func,
     onLogOut: PropTypes.func,

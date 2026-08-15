@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import ReactDOM from 'react-dom';
 import {BrowserRouter, Routes, Route, Navigate, useNavigate, useParams} from 'react-router-dom';
 
@@ -220,6 +220,12 @@ const StudentEditorRoute = ({WrappedGui}) => {
     const effectiveProjectId = projectId === 'nuevo' ? '0' : projectId;
     const apiScratchProjectsHost = student ? `${process.env.API_URL}/scratch-projects/${student.id}` : null;
     const [showProjectsModal, setShowProjectsModal] = useState(false);
+    // 15/08/2026 — "Archivo → Nuevo" (menú nativo de scratch-gui) necesita el mismo aviso de
+    // cambios sin guardar que ya protege "Nuevo proyecto"/"Cargar proyecto"/"Empezar tarea" del
+    // picker — se le pega el click a un botón invisible envuelto en ExitEditorGuard en vez de
+    // duplicar su lógica (chequeo de projectChanged, guardar/descartar, vm.stopAll()). Ver
+    // onClickNewProject en gui.jsx/menu-bar.jsx para el otro lado de este puente.
+    const newProjectTriggerRef = useRef(null);
 
     // Fase 4 del plan (docs/plan-fases-scratch-plataforma.md, monorepo privado) — fetch propio y
     // liviano (solo metadata, no el projectJson pesado que ya trae fetch-project-from-server.js
@@ -279,6 +285,9 @@ const StudentEditorRoute = ({WrappedGui}) => {
                         </SettingsMenu>
                         <EditorTitleAutosave />
                         <SaveToast />
+                        <ExitEditorGuard onExit={() => navigate(PATHS.editor('nuevo'))}>
+                            <button ref={newProjectTriggerRef} style={{display: 'none'}} type="button" />
+                        </ExitEditorGuard>
                         {showProjectsModal && (
                             <ProjectPicker
                                 studentId={student.id}
@@ -315,6 +324,7 @@ const StudentEditorRoute = ({WrappedGui}) => {
                             )
                         }
                         onClickLogo={onClickLogo}
+                        onClickNewProject={() => newProjectTriggerRef.current && newProjectTriggerRef.current.click()}
                         onUpdateProjectThumbnail={saveThumbnailToServer}
                     />
                 );
@@ -338,6 +348,9 @@ const TeacherEditorRoute = ({WrappedGui}) => {
     // el título, o "Guardar ahora"), ver EditorTitleAutosave.
     const effectiveTemplateId = templateId === 'nuevo' ? '0' : templateId;
     const [showTemplatesModal, setShowTemplatesModal] = useState(false);
+    // 15/08/2026 — mismo puente que StudentEditorRoute, ver ese comentario para el detalle
+    // completo del porqué (bug de "Archivo → Nuevo" sin aviso de cambios sin guardar).
+    const newTemplateTriggerRef = useRef(null);
 
     return (
         <RequireTeacher>
@@ -373,6 +386,9 @@ const TeacherEditorRoute = ({WrappedGui}) => {
                         </SettingsMenu>
                         <EditorTitleAutosave />
                         <SaveToast />
+                        <ExitEditorGuard onExit={() => navigate(PATHS.template('nuevo'))}>
+                            <button ref={newTemplateTriggerRef} style={{display: 'none'}} type="button" />
+                        </ExitEditorGuard>
                         {showTemplatesModal && (
                             <TemplatePicker
                                 token={teacher.token}
@@ -395,6 +411,7 @@ const TeacherEditorRoute = ({WrappedGui}) => {
                         projectId={effectiveTemplateId}
                         rightContent={teacherRightContent}
                         onClickLogo={onClickLogo}
+                        onClickNewProject={() => newTemplateTriggerRef.current && newTemplateTriggerRef.current.click()}
                         onUpdateProjectThumbnail={saveThumbnailToServer}
                     />
                 );
