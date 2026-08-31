@@ -177,6 +177,13 @@ const ProjectSaverHOC = function (WrappedComponent) {
             return this.storeProject(null)
                 .then(response => {
                     this.props.onCreatedProject(response.id.toString(), this.props.loadingState);
+                    // 31/08/2026 — el primer guardado de un proyecto nunca guardado antes también
+                    // dispara la alerta 'saveSuccess', igual que un guardado normal (ver
+                    // updateProjectToStorage): así <SaveToast> (rightContent, render-gui.jsx)
+                    // también aparece acá. Antes este caso no mostraba ningún aviso de éxito — la
+                    // única señal era la pantalla completa "Creando proyecto" de components/gui.jsx,
+                    // que dejó de bloquear la edición (ver ese archivo) a pedido del usuario.
+                    this.props.onShowSaveSuccessAlert();
                 })
                 .catch(err => {
                     this.props.onShowAlert('creatingError');

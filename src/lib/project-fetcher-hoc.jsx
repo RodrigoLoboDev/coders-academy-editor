@@ -5,6 +5,7 @@ import bindAll from 'lodash.bindall';
 import {connect} from 'react-redux';
 
 import {setProjectUnchanged} from '../reducers/project-changed';
+import {setProjectTitle} from '../reducers/project-title';
 import {
     LoadingStates,
     defaultProjectId,
@@ -116,8 +117,14 @@ const ProjectFetcherHOC = function (WrappedComponent) {
             }
             // Proyecto real, guardado en la API de Coders Academy — ver fetch-project-from-server.js.
             return fetchProjectFromServer(projectId)
-                .then(projectJsonString => {
-                    this.props.onFetchedProjectData(projectJsonString, loadingState);
+                .then(({projectJson, title}) => {
+                    // Despachar el título ANTES de onFetchedProjectData (que dispara la carga del
+                    // VM): así, si el guardado automático llegara a dispararse apenas termina de
+                    // cargar, ya viaja con el nombre real en vez del que hubiera quedado de antes.
+                    if (typeof title === 'string' && title.length > 0) {
+                        this.props.onSetProjectTitle(title);
+                    }
+                    this.props.onFetchedProjectData(projectJson, loadingState);
                 })
                 .catch(err => {
                     this.props.onError(err);
@@ -135,6 +142,7 @@ const ProjectFetcherHOC = function (WrappedComponent) {
                 onError: onErrorProp,
                 onFetchedProjectData: onFetchedProjectDataProp,
                 onProjectUnchanged,
+                onSetProjectTitle: onSetProjectTitleProp,
                 projectHost,
                 projectId,
                 reduxProjectId,
@@ -164,6 +172,7 @@ const ProjectFetcherHOC = function (WrappedComponent) {
         onError: PropTypes.func,
         onFetchedProjectData: PropTypes.func,
         onProjectUnchanged: PropTypes.func,
+        onSetProjectTitle: PropTypes.func,
         projectHost: PropTypes.string,
         projectToken: PropTypes.string,
         projectId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
@@ -189,7 +198,8 @@ const ProjectFetcherHOC = function (WrappedComponent) {
         onFetchedProjectData: (projectData, loadingState) =>
             dispatch(onFetchedProjectData(projectData, loadingState)),
         setProjectId: projectId => dispatch(setProjectId(projectId)),
-        onProjectUnchanged: () => dispatch(setProjectUnchanged())
+        onProjectUnchanged: () => dispatch(setProjectUnchanged()),
+        onSetProjectTitle: title => dispatch(setProjectTitle(title))
     });
     // Allow incoming props to override redux-provided props. Used to mock in tests.
     const mergeProps = (stateProps, dispatchProps, ownProps) => Object.assign(

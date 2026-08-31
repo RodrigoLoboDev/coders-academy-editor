@@ -1,5 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import ReactDOM from 'react-dom';
+import PropTypes from 'prop-types';
+import {connect} from 'react-redux';
 import {BrowserRouter, Routes, Route, Navigate, useNavigate, useParams} from 'react-router-dom';
 
 import AppStateHOC from '../lib/app-state-hoc.jsx';
@@ -7,6 +9,7 @@ import GUI from '../containers/gui.jsx';
 import log from '../lib/log.js';
 import saveThumbnailToServer from '../lib/save-thumbnail-to-server';
 import storage from '../lib/storage';
+import {getIsShowingWithId} from '../reducers/project-state';
 import AccessGate from '../components/access-gate/access-gate.jsx';
 import ProjectPicker from '../components/project-picker/project-picker.jsx';
 import TemplatePicker from '../components/template-picker/template-picker.jsx';
@@ -143,6 +146,42 @@ const PATHS = {
     editor: id => `/editor/${id}`,
     template: id => `/docente/plantilla/${id}`
 };
+
+/*
+ * 31/08/2026 — bug real encontrado auditando el guardado: el primer guardado de un proyecto/
+ * plantilla nunca guardado antes (URL en el sentinela 'nuevo') crea el registro en la API y
+ * Redux pasa a tener el id real (loadingState SHOWING_WITH_ID, ver project-state.js DONE_CREATING_NEW),
+ * pero la URL del navegador se queda en 'nuevo' — nada la actualizaba. Si el alumno/docente
+ * recargaba la página (o volvía a "Editor libre"/"Empezar tarea" y entraba de nuevo) después de
+ * ese primer guardado, StudentEditorRoute/TeacherEditorRoute volvían a mapear 'nuevo' al proyecto
+ * en blanco de siempre, dejando el que se acababa de guardar huérfano — visible en "Mis
+ * Proyectos"/"Mis plantillas", pero invisible desde el editor, un "Proyecto sin título" fantasma
+ * más en la lista.
+ *
+ * Este componente no renderiza nada — vive en `rightContent` (adentro del <Provider> redux
+ * interno de GUI, mismo truco que <SaveToast>/<ExitEditorGuard>) solo para reemplazar la URL con
+ * `history.replace` apenas Redux confirma que el proyecto que se estaba mostrando sin id pasó a
+ * tener uno. `replace` (no `push`) para no ensuciar el historial con una entrada "nuevo" que ya no
+ * corresponde a nada.
+ */
+const ProjectUrlSyncComponent = ({isShowingWithId, onSync, projectId, routeProjectId}) => {
+    useEffect(() => {
+        if (routeProjectId === 'nuevo' && isShowingWithId && projectId && projectId !== '0') {
+            onSync(projectId);
+        }
+    }, [isShowingWithId, onSync, projectId, routeProjectId]);
+    return null;
+};
+ProjectUrlSyncComponent.propTypes = {
+    isShowingWithId: PropTypes.bool,
+    onSync: PropTypes.func.isRequired,
+    projectId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    routeProjectId: PropTypes.string.isRequired
+};
+const ProjectUrlSync = connect(state => ({
+    isShowingWithId: getIsShowingWithId(state.scratchGui.projectState.loadingState),
+    projectId: state.scratchGui.projectState.projectId
+}))(ProjectUrlSyncComponent);
 
 /*
  * Pantalla inicial: si ya hay sesión de alumno o docente guardada (refresh, o volver con
@@ -283,6 +322,10 @@ const StudentEditorRoute = ({WrappedGui}) => {
                             </ExitEditorGuard>
                         </SettingsMenu>
                         <SaveToast />
+                        <ProjectUrlSync
+                            routeProjectId={projectId}
+                            onSync={id => navigate(PATHS.editor(id), {replace: true})}
+                        />
                         <ExitEditorGuard onExit={() => navigate(PATHS.editor('nuevo'))}>
                             <button ref={newProjectTriggerRef} style={{display: 'none'}} type="button" />
                         </ExitEditorGuard>
@@ -390,6 +433,10 @@ const TeacherEditorRoute = ({WrappedGui}) => {
                             </ExitEditorGuard>
                         </SettingsMenu>
                         <SaveToast />
+                        <ProjectUrlSync
+                            routeProjectId={templateId}
+                            onSync={id => navigate(PATHS.template(id), {replace: true})}
+                        />
                         <ExitEditorGuard onExit={() => navigate(PATHS.template('nuevo'))}>
                             <button ref={newTemplateTriggerRef} style={{display: 'none'}} type="button" />
                         </ExitEditorGuard>

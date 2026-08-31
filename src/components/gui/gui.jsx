@@ -86,6 +86,11 @@ const GUIComponent = props => {
         debugModalVisible,
         enableCommunity,
         intl,
+        // 31/08/2026 — ya no se usa para renderizar (ver el comentario más abajo, donde antes se
+        // montaba <Loader messageId="gui.loader.creating">); se lo sigue sacando de las props acá
+        // para que no termine esparcido como atributo desconocido sobre el <Box> de más abajo
+        // ({...componentProps}).
+        // eslint-disable-next-line no-unused-vars
         isCreating,
         isFullScreen,
         isPlayerOnly,
@@ -191,9 +196,17 @@ const GUIComponent = props => {
                 {loading ? (
                     <Loader />
                 ) : null}
-                {isCreating ? (
-                    <Loader messageId="gui.loader.creating" />
-                ) : null}
+                {/*
+                    31/08/2026 — se saca la pantalla completa "Creando proyecto" para `isCreating`
+                    a pedido del usuario: tapaba el editor en el primer guardado de un proyecto
+                    nunca guardado antes, cuando el alumno esperaba quedarse editando y ver solo un
+                    aviso de guardado (ver <SaveToast>, ahora también disparado en ese caso — ver
+                    createNewProjectToStorage en lib/project-saver-hoc.jsx). `isCreating` cubre
+                    CREATING_NEW/FETCHING_NEW_DEFAULT/LOADING_VM_NEW_DEFAULT (getIsAnyCreatingNewState,
+                    reducers/project-state.js); los dos últimos ya están cubiertos por `loading`
+                    (fetchingProject/isLoading más arriba), así que sacar este bloque solo afecta a
+                    CREATING_NEW, que es exactamente el caso que se quería destapar.
+                */}
                 {isRendererSupported ? null : (
                     <WebGlModal isRtl={isRtl} />
                 )}
