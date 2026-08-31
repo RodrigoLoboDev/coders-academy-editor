@@ -159,6 +159,24 @@ const reducer = function (state, action) {
         return state;
     case DONE_LOADING_VM_TO_SAVE:
         if (state.loadingState === LoadingState.LOADING_VM_FILE_UPLOAD) {
+            // 31/08/2026 — bug real reportado en producción: subir un .sb3 ("Archivo → Cargar
+            // desde tu ordenador") sobre un proyecto NUNCA guardado antes (`/editor/nuevo`, acá
+            // `state.projectId` todavía es el sentinela `defaultProjectId`, no un id real)
+            // disparaba igual esta rama de "auto-guardar" — project-saver-hoc.jsx terminaba
+            // haciendo un PATCH contra ese id fantasma, que la API siempre rechaza (no existe
+            // ningún proyecto con id '0'). El sprite/fondo/código sí se cargaban bien en el VM
+            // (eso pasa antes, en sb-file-uploader-hoc.jsx) — el error aparecía recién al
+            // intentar guardar solo, sin que el alumno tocara nada.
+            // Fix: sin un id real todavía, no hay nada que "actualizar" — se muestra como
+            // proyecto sin guardar (mismo estado que un proyecto en blanco recién editado),
+            // consistente con el resto de la app (nunca autoguarda; el guardado es siempre
+            // manual, "Guardar ahora"/"Archivo → Guardar").
+            if (state.projectId === defaultProjectId || state.projectId === null) {
+                return Object.assign({}, state, {
+                    loadingState: LoadingState.SHOWING_WITHOUT_ID,
+                    projectId: defaultProjectId
+                });
+            }
             return Object.assign({}, state, {
                 loadingState: LoadingState.AUTO_UPDATING
             });

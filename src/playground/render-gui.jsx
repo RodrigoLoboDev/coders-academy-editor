@@ -9,7 +9,7 @@ import GUI from '../containers/gui.jsx';
 import log from '../lib/log.js';
 import saveThumbnailToServer from '../lib/save-thumbnail-to-server';
 import storage from '../lib/storage';
-import {getIsShowingWithId} from '../reducers/project-state';
+import {LoadingState, LoadingStates} from '../reducers/project-state';
 import AccessGate from '../components/access-gate/access-gate.jsx';
 import ProjectPicker from '../components/project-picker/project-picker.jsx';
 import TemplatePicker from '../components/template-picker/template-picker.jsx';
@@ -163,23 +163,43 @@ const PATHS = {
  * `history.replace` apenas Redux confirma que el proyecto que se estaba mostrando sin id pasó a
  * tener uno. `replace` (no `push`) para no ensuciar el historial con una entrada "nuevo" que ya no
  * corresponde a nada.
+ *
+ * 31/08/2026 — bug real encontrado el mismo día en producción: mirar `isShowingWithId` en general
+ * (en vez de la transición puntual "se acaba de crear un proyecto") rompía "Archivo → Nuevo" desde
+ * un proyecto YA guardado. `navigate(PATHS.editor('nuevo'))` actualiza la URL de React Router en un
+ * render; recién en el siguiente, `ProjectFetcherHOC` reacciona al cambio de prop y despacha
+ * `setProjectId('0')`. En el render intermedio, `routeProjectId` ya es 'nuevo' pero Redux todavía
+ * no salió del proyecto anterior (`isShowingWithId` sigue `true`, `projectId` es el id viejo) — el
+ * efecto de acá disparaba `onSync(idViejo)`, navegando DE VUELTA al proyecto que se estaba
+ * cerrando justo cuando el proyecto en blanco empezaba a cargar, dejando la pantalla de carga
+ * trabada para siempre. Fix: en vez de un estado general, mirar la transición puntual real
+ * (CREATING_NEW → SHOWING_WITH_ID, la única que dispara un id nuevo) con un `ref` al loadingState
+ * anterior — ese flujo nunca pasa por CREATING_NEW, así que la carrera ya no puede darse.
  */
-const ProjectUrlSyncComponent = ({isShowingWithId, onSync, projectId, routeProjectId}) => {
+const ProjectUrlSyncComponent = ({loadingState, onSync, projectId, routeProjectId}) => {
+    const prevLoadingStateRef = useRef(loadingState);
     useEffect(() => {
-        if (routeProjectId === 'nuevo' && isShowingWithId && projectId && projectId !== '0') {
+        const prevLoadingState = prevLoadingStateRef.current;
+        prevLoadingStateRef.current = loadingState;
+        if (
+            routeProjectId === 'nuevo' &&
+            prevLoadingState === LoadingState.CREATING_NEW &&
+            loadingState === LoadingState.SHOWING_WITH_ID &&
+            projectId && projectId !== '0'
+        ) {
             onSync(projectId);
         }
-    }, [isShowingWithId, onSync, projectId, routeProjectId]);
+    }, [loadingState, onSync, projectId, routeProjectId]);
     return null;
 };
 ProjectUrlSyncComponent.propTypes = {
-    isShowingWithId: PropTypes.bool,
+    loadingState: PropTypes.oneOf(LoadingStates),
     onSync: PropTypes.func.isRequired,
     projectId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     routeProjectId: PropTypes.string.isRequired
 };
 const ProjectUrlSync = connect(state => ({
-    isShowingWithId: getIsShowingWithId(state.scratchGui.projectState.loadingState),
+    loadingState: state.scratchGui.projectState.loadingState,
     projectId: state.scratchGui.projectState.projectId
 }))(ProjectUrlSyncComponent);
 

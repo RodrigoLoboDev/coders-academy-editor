@@ -159,6 +159,19 @@ test('onLoadedProject(LOADING_VM_FILE_UPLOAD, true, true) prepares to save', () 
     expect(resultState.projectId).toBe('100');
 });
 
+test('onLoadedProject(LOADING_VM_FILE_UPLOAD, true, true), when there is no real project yet ' +
+    '(defaultProjectId), results in state SHOWING_WITHOUT_ID instead of trying to auto-save ' +
+    'against a project id that does not exist', () => {
+    const initialState = {
+        projectId: '0',
+        loadingState: LoadingState.LOADING_VM_FILE_UPLOAD
+    };
+    const action = onLoadedProject(initialState.loadingState, true, true);
+    const resultState = projectStateReducer(initialState, action);
+    expect(resultState.loadingState).toBe(LoadingState.SHOWING_WITHOUT_ID);
+    expect(resultState.projectId).toBe('0');
+});
+
 test('onLoadedProject(LOADING_VM_FILE_UPLOAD, false, true) results in state SHOWING_WITHOUT_ID', () => {
     const initialState = {
         projectId: '0',
