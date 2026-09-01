@@ -9,6 +9,7 @@ import log from '../lib/log';
 import dataURItoBlob from '../lib/data-uri-to-blob';
 import saveProjectToServer from '../lib/save-project-to-server';
 import saveAssetToServer from '../lib/save-asset-to-server';
+import uploadAssetsWithRetry from '../lib/upload-assets-with-retry';
 
 import {
     showAlertWithTimeout,
@@ -249,11 +250,20 @@ const ProjectSaverHOC = function (WrappedComponent) {
             return this.props.onUpdateProjectData(projectId, savedVMState, requestParams)
                 .then(response => {
                     const id = response.id.toString();
-                    return Promise.all(dirtyAssets.map(
+                    // 01/09/2026 — bug real reproducido en vivo: mandar TODOS los assets sucios
+                    // juntos con Promise.all (proyecto recién cargado desde un .sb3 con varios
+                    // disfraces/sonidos nuevos) a veces hacía fallar el guardado entero — la API
+                    // sube audio a Cloudinary como 'video' internamente, con un límite de subidas
+                    // concurrentes más bajo que el de imágenes; 6-8 sonidos en simultáneo lo
+                    // superaba y alguno volvía 500. uploadAssetsWithRetry limita cuántas subidas
+                    // van en vuelo a la vez y reintenta cada asset unas pocas veces antes de
+                    // rendirse — ver upload-assets-with-retry.js para el detalle completo.
+                    return uploadAssetsWithRetry(
+                        dirtyAssets,
                         asset => saveAssetToServer(id, asset).then(() => {
                             asset.clean = true;
                         })
-                    )).then(() => response);
+                    ).then(() => response);
                 })
                 .then(response => {
                     this.props.onSetProjectUnchanged();
