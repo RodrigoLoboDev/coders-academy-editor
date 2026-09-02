@@ -1,3 +1,5 @@
+@import "../../css/colors.css";
+
 .centered {
     display: flex;
     align-items: center;
@@ -63,6 +65,15 @@
     flex-shrink: 0;
 }
 
+/* 02/09/2026 — en desktop hay lugar de sobra en el header (nada compite por espacio, a diferencia
+   del editor real que tiene menú de archivo/cuenta/etc. al lado) — el wordmark puede ir más grande
+   sin apretar nada. En mobile se queda en el tamaño chico de siempre. */
+@media screen and (min-width: 768px) {
+    .brandLogo {
+        height: 22px;
+    }
+}
+
 .projectTitle {
     flex: 1;
     min-width: 0;
@@ -73,6 +84,10 @@
     font-size: 1rem;
     padding-left: 4px;
     border-left: 1px solid rgba(255, 255, 255, 0.15);
+    /* 02/09/2026 — antes blanco, igual que el wordmark de la izquierda: costaba distinguir "esto es
+       la marca" de "esto es el proyecto" de un vistazo. $looks-secondary es el azul eléctrico
+       propio de Coders Academy (ver colors.css) — ya se usa como acento en el resto del editor. */
+    color: $looks-secondary;
 }
 
 .shareButton {
@@ -116,4 +131,25 @@
 
 :global([data-theme="dark"]) .subtitle {
     color: #9aa6c2;
+}
+
+/* 02/09/2026 — el stage de Scratch es 4:3 (más ancho que alto): en un celular en vertical queda
+   angosto y hundido en el medio de la pantalla. No existe una Screen Orientation API confiable acá
+   (Safari/iOS no la soporta nunca, y en Android Chrome solo funciona con el elemento en
+   fullscreen) — se rota el viewport entero con CSS en su lugar, truco estándar para forzar
+   landscape sin esa API. Rota TODA la vista (no solo el stage) para que el header/botón de
+   compartir/fullscreen sigan usables, no solo el juego. getBoundingClientRect() (que scratch-vm
+   usa para mapear clicks/touches, ver containers/stage.jsx) ya devuelve coordenadas post-transform,
+   así que la interacción táctil no se rompe con este rotate. */
+@media screen and (max-width: 768px) and (orientation: portrait) {
+    .playerWrapper {
+        position: fixed;
+        top: 100%;
+        left: 0;
+        width: 100vh;
+        height: 100vw;
+        transform: rotate(-90deg);
+        transform-origin: left top;
+        overflow: hidden;
+    }
 }
