@@ -353,6 +353,7 @@ const StudentEditorRoute = ({WrappedGui}) => {
                             <ProjectPicker
                                 studentId={student.id}
                                 token={student.token}
+                                currentProjectId={effectiveProjectId}
                                 onClose={() => setShowProjectsModal(false)}
                                 onCreateNew={() => {
                                     setShowProjectsModal(false);

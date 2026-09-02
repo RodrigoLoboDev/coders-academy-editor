@@ -139,7 +139,7 @@ ConfirmDeleteModal.propTypes = {
  * — esos tres triggers (Nuevo proyecto, Cargar proyecto, Empezar/Continuar tarea) pasan por
  * ExitEditorGuard, mismo guardián que ya protege "Editar plantilla" del lado docente.
  */
-const ProjectPicker = ({studentId, token, onSelectProject, onCreateNew, onClose}) => {
+const ProjectPicker = ({studentId, token, currentProjectId, onSelectProject, onCreateNew, onClose}) => {
     // Fase 4 del plan (docs/plan-fases-scratch-plataforma.md, monorepo privado) — pestaña nueva
     // "Tareas asignadas" al lado de "Mis Proyectos", mismo picker (header/footer/grid) en vez de
     // un componente aparte, para no duplicar el chrome del modal.
@@ -250,6 +250,14 @@ const ProjectPicker = ({studentId, token, onSelectProject, onCreateNew, onClose}
     const confirmDelete = () => {
         if (!deleteTarget) return;
         setIsDeleting(true);
+        // 01/09/2026 — bug real reportado en producción: borrar acá el proyecto que está abierto
+        // en el editor (mismo id que la URL actual) borraba la fila del lado del servidor, pero
+        // el editor se quedaba mostrando su contenido igual — un "proyecto fantasma" que ya no
+        // existe, y que si el alumno tocara "Guardar ahora" ahí mismo intentaría actualizar un id
+        // que el servidor ya no tiene. Se resuelve el mismo problema que ya resuelve "Nuevo
+        // proyecto" (onCreateNew, navega a /editor/nuevo) — si el proyecto borrado es el que está
+        // abierto, se sale de él exactamente igual.
+        const wasCurrentProject = deleteTarget.id === currentProjectId;
         fetch(`${process.env.API_URL}/scratch-projects/${studentId}/${deleteTarget.id}`, {
             method: 'DELETE',
             headers: authHeaders
@@ -259,6 +267,7 @@ const ProjectPicker = ({studentId, token, onSelectProject, onCreateNew, onClose}
                 setProjects(prev => prev.filter(p => p.id !== deleteTarget.id));
                 setSelectedId(prev => (prev === deleteTarget.id ? null : prev));
                 setDeleteTarget(null);
+                if (wasCurrentProject) onCreateNew();
             })
             .catch(() => setError('No se pudo borrar el proyecto. Probá de nuevo.'))
             .finally(() => setIsDeleting(false));
@@ -486,6 +495,7 @@ const ProjectPicker = ({studentId, token, onSelectProject, onCreateNew, onClose}
 };
 
 ProjectPicker.propTypes = {
+    currentProjectId: PropTypes.string,
     onClose: PropTypes.func.isRequired,
     onCreateNew: PropTypes.func.isRequired,
     onSelectProject: PropTypes.func.isRequired,

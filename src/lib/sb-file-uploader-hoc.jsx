@@ -9,6 +9,7 @@ import sharedMessages from './shared-messages';
 import {
     LoadingStates,
     getIsLoadingUpload,
+    getIsShowingWithId,
     getIsShowingWithoutId,
     onLoadedProject,
     requestProjectUpload
@@ -90,6 +91,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
         handleChange (e) {
             const {
                 intl,
+                isShowingWithId,
                 isShowingWithoutId,
                 loadingState,
                 projectChanged,
@@ -103,8 +105,19 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                 // we must confirm with the user that they really intend to
                 // replace it. (If they don't own the project and haven't
                 // changed it, no need to confirm.)
+                //
+                // 01/09/2026 — bug real reportado en producción: esta condición original de
+                // scratch-gui solo pedía confirmación para un proyecto SIN id (`isShowingWithoutId`)
+                // que ya tuviera cambios sin guardar — pensada para cuando `userOwnsProject` (login
+                // real de scratch.mit.edu) ya cubría el caso de "estás viendo un proyecto tuyo ya
+                // guardado", algo que acá no existe. Resultado: abrir un proyecto YA guardado
+                // (`isShowingWithId`, con o sin cambios) y cargar un .sb3 — el mismo archivo de
+                // nuevo, o uno completamente distinto — reemplazaba su contenido y lo autoguardaba
+                // sin avisar nada, pisando el proyecto abierto sin poder deshacerlo. Ahora se pide
+                // confirmación siempre que haya un proyecto ya guardado abierto, sin importar si
+                // tiene cambios pendientes — cargar un archivo ahí SIEMPRE reemplaza algo real.
                 let uploadAllowed = true;
-                if (userOwnsProject || (projectChanged && isShowingWithoutId)) {
+                if (userOwnsProject || isShowingWithId || (projectChanged && isShowingWithoutId)) {
                     uploadAllowed = confirm( // eslint-disable-line no-alert
                         intl.formatMessage(sharedMessages.replaceProjectWarning)
                     );
@@ -187,6 +200,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                 cancelFileUpload,
                 closeFileMenu: closeFileMenuProp,
                 isLoadingUpload,
+                isShowingWithId,
                 isShowingWithoutId,
                 loadingState,
                 onLoadingFinished,
@@ -215,6 +229,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
         closeFileMenu: PropTypes.func,
         intl: intlShape.isRequired,
         isLoadingUpload: PropTypes.bool,
+        isShowingWithId: PropTypes.bool,
         isShowingWithoutId: PropTypes.bool,
         loadingState: PropTypes.oneOf(LoadingStates),
         onLoadingFinished: PropTypes.func,
@@ -232,6 +247,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
         const user = state.session && state.session.session && state.session.session.user;
         return {
             isLoadingUpload: getIsLoadingUpload(loadingState),
+            isShowingWithId: getIsShowingWithId(loadingState),
             isShowingWithoutId: getIsShowingWithoutId(loadingState),
             loadingState: loadingState,
             projectChanged: state.scratchGui.projectChanged,
