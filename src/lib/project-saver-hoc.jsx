@@ -263,20 +263,35 @@ const ProjectSaverHOC = function (WrappedComponent) {
                     if (id && this.props.onUpdateProjectThumbnail) {
                         this.storeProjectThumbnail(id);
                     }
-                    // bug real reproducido en vivo: mandar TODOS los assets sucios juntos con
-                    // Promise.all (proyecto recién cargado desde un .sb3 con varios disfraces/
-                    // sonidos nuevos) a veces hacía fallar el guardado entero — la API sube audio
-                    // a Cloudinary como 'video' internamente, con un límite de subidas
-                    // concurrentes más bajo que el de imágenes; 6-8 sonidos en simultáneo lo
-                    // superaba y alguno volvía 500. uploadAssetsWithRetry limita cuántas subidas
-                    // van en vuelo a la vez y reintenta cada asset unas pocas veces antes de
-                    // rendirse — ver upload-assets-with-retry.js para el detalle completo.
-                    return uploadAssetsWithRetry(
+                    // 01/09/2026 — segunda parte del mismo bug: aunque el thumbnail ya se
+                    // guardaba bien acá arriba, si algún asset agotaba sus reintentos (mandar
+                    // TODOS los assets sucios juntos con Promise.all — proyecto recién cargado
+                    // desde un .sb3 con varios disfraces/sonidos nuevos — a veces hacía fallar el
+                    // guardado entero; la API sube audio a Cloudinary como 'video' internamente,
+                    // con un límite de subidas concurrentes más bajo que el de imágenes) la
+                    // promesa de storeProject() rechazaba IGUAL, aunque el proyecto ya estuviera
+                    // creado con su id real. Eso disparaba el aviso "No se ha podido crear el
+                    // proyecto" con el proyecto ya guardado, y — más grave — createNewProjectToStorage
+                    // nunca llegaba a llamar onCreatedProject(id): Redux se quedaba sin el id real
+                    // (por eso la URL seguía en 'nuevo'), y un segundo "Guardar ahora" creaba OTRO
+                    // proyecto nuevo en vez de actualizar el que ya existía.
+                    //
+                    // Fix: la subida de assets queda fire-and-forget de verdad (no se espera ni
+                    // se propaga su resultado) — uploadAssetsWithRetry ya reintenta cada asset
+                    // varias veces con backoff; si aun así alguno falla, se loguea y ese asset
+                    // queda sucio (asset.clean sigue false) para reintentarse solo en el próximo
+                    // guardado. El éxito de storeProject() depende únicamente de que el proyecto
+                    // en sí (JSON + bloques) se haya guardado, que es lo único que de verdad puede
+                    // dejar al alumno con trabajo perdido.
+                    uploadAssetsWithRetry(
                         dirtyAssets,
                         asset => saveAssetToServer(id, asset).then(() => {
                             asset.clean = true;
                         })
-                    ).then(() => response);
+                    ).catch(err => {
+                        log.error('No se pudieron subir todos los assets del proyecto', err);
+                    });
+                    return response;
                 })
                 .then(response => {
                     this.props.onSetProjectUnchanged();
