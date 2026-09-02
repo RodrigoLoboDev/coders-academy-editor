@@ -94,13 +94,12 @@ const getStageDimensions = (stageSize, isFullScreen) => {
             stageDimensions.height = stageDimensions.width * .75;
         }
 
-        // Nunca más chico que el tamaño estándar — en ventanas muy bajas, mejor quedarse en
-        // 480x360 (el mínimo de Scratch) que en algo todavía más chico.
-        if (stageDimensions.width < stageDimensions.widthDefault) {
-            stageDimensions.width = stageDimensions.widthDefault;
-            stageDimensions.height = stageDimensions.heightDefault;
-        }
-
+        // 02/09/2026 — antes, si el resultado quedaba más chico que 480x360, se forzaba de vuelta
+        // al tamaño estándar completo. Rompía celulares angostos en vertical (ej. iPhone, ~390px
+        // de ancho): el cálculo de arriba ya lo había achicado correctamente a algo que entra en
+        // pantalla, y este piso lo volvía a agrandar a un ancho mayor al de la propia pantalla —
+        // el stage quedaba desbordado y descentrado. Achicar de más en ventanas muy bajas es
+        // preferible a desbordar la pantalla.
         stageDimensions.scale = stageDimensions.width / stageDimensions.widthDefault;
     } else {
         stageDimensions.scale = STAGE_DISPLAY_SCALES[stageSize];

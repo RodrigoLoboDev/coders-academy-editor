@@ -2,6 +2,7 @@ import React, {useCallback, useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 
 import logoWordmark from '../menu-bar/scratch-logo.svg';
+import OrientationAutoFullscreen from './orientation-auto-fullscreen.jsx';
 import styles from './public-player.css';
 
 // 02/09/2026 — botón de compartir: en celulares (donde existe la Web Share API) abre la hoja
@@ -120,6 +121,7 @@ const PublicPlayer = ({WrappedGui, projectId, onClickLogo}) => {
                 <WrappedGui
                     isPlayerOnly
                     canSave={false}
+                    playerExtras={<OrientationAutoFullscreen />}
                     projectHost={apiScratchProjectsPublicHost}
                     assetHost={apiScratchProjectsPublicHost}
                     projectId={projectId}

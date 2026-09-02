@@ -125,6 +125,7 @@ const GUIComponent = props => {
         onTelemetryModalCancel,
         onTelemetryModalOptIn,
         onTelemetryModalOptOut,
+        playerExtras,
         rightContent,
         showComingSoon,
         soundsTabVisible,
@@ -181,6 +182,17 @@ const GUIComponent = props => {
                 {alertsVisible ? (
                     <Alerts className={styles.alertsContainer} />
                 ) : null}
+                {
+                    /* 02/09/2026 — punto de inyección para contenido conectado a Redux que solo
+                       tiene sentido en modo isPlayerOnly (/jugar/:id, ver public-player.jsx) — no
+                       se puede usar `rightContent` (ver más abajo) porque ese solo se renderiza
+                       dentro de <MenuBar>, que este modo no monta. Mismo motivo por el que no se
+                       puede usar la prop `children` de arriba: esa hace un return temprano que
+                       reemplaza TODO el render de <GUI>, no solo agrega algo adentro del stage.
+                       Usado hoy por <OrientationAutoFullscreen>
+                       (orientation-auto-fullscreen.jsx). */
+                }
+                {playerExtras}
             </StageWrapper>
         ) : (
             <Box
@@ -478,6 +490,8 @@ GUIComponent.propTypes = {
     onTelemetryModalOptIn: PropTypes.func,
     onTelemetryModalOptOut: PropTypes.func,
     onToggleLoginOpen: PropTypes.func,
+    // 02/09/2026 — ver el comentario de más arriba, donde se renderiza adentro de <StageWrapper>.
+    playerExtras: PropTypes.node,
     renderLogin: PropTypes.func,
     // Sesión 32 — contenido libre que se agrega al final de la barra (nombre del alumno/docente +
     // acciones de sesión), reemplaza al badge flotante que vivía fuera de <WrappedGui> en

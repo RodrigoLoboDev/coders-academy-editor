@@ -140,23 +140,16 @@
     color: #9aa6c2;
 }
 
-/* 02/09/2026 — el stage de Scratch es 4:3 (más ancho que alto): en un celular en vertical queda
-   angosto y hundido en el medio de la pantalla. No existe una Screen Orientation API confiable acá
-   (Safari/iOS no la soporta nunca, y en Android Chrome solo funciona con el elemento en
-   fullscreen) — se rota el viewport entero con CSS en su lugar, truco estándar para forzar
-   landscape sin esa API. Rota TODA la vista (no solo el stage) para que el header/botón de
-   compartir/fullscreen sigan usables, no solo el juego. getBoundingClientRect() (que scratch-vm
-   usa para mapear clicks/touches, ver containers/stage.jsx) ya devuelve coordenadas post-transform,
-   así que la interacción táctil no se rompe con este rotate. */
-@media screen and (max-width: 768px) and (orientation: portrait) {
-    .playerWrapper {
-        position: fixed;
-        top: 100%;
-        left: 0;
-        width: 100vh;
-        height: 100vw;
-        transform: rotate(-90deg);
-        transform-origin: left top;
-        overflow: hidden;
-    }
-}
+/* 02/09/2026 — se probó (y se sacó) forzar landscape rotando el viewport entero con CSS
+   (`transform: rotate(-90deg)` sobre .playerWrapper). Probado en un iPhone real: quedó roto —
+   controles (bandera verde/stop/pantalla completa) no visibles, stage descentrado, botón de
+   compartir aplastado. Causa real: `window.innerWidth/innerHeight` (que layout-constants.js/
+   screen-utils.js usan para calcular el tamaño del stage) NUNCA se actualizan con este truco — el
+   navegador sigue reportando las dimensiones reales (verticales) del teléfono, la rotación es
+   puramente visual vía CSS. Todo el cálculo dinámico de tamaño terminaba corriendo con los números
+   equivocados. Reemplazado por auto-fullscreen en rotación real (ver
+   orientation-auto-fullscreen.jsx) — reutiliza el modo fullscreen que scratch-gui ya tiene
+   probado, que sí lee `window.innerWidth/innerHeight` correctamente porque ahí la rotación es real
+   (el usuario giró el teléfono de verdad, el navegador lo sabe). En vertical (antes de girar), el
+   stage ahora se achica prolijamente al ancho de pantalla en vez de forzar el tamaño estándar de
+   Scratch (ver el fix del "piso" de 480x360 en screen-utils.js, misma fecha). */
