@@ -250,10 +250,23 @@ const ProjectSaverHOC = function (WrappedComponent) {
             return this.props.onUpdateProjectData(projectId, savedVMState, requestParams)
                 .then(response => {
                     const id = response.id.toString();
-                    // 01/09/2026 — bug real reproducido en vivo: mandar TODOS los assets sucios
-                    // juntos con Promise.all (proyecto recién cargado desde un .sb3 con varios
-                    // disfraces/sonidos nuevos) a veces hacía fallar el guardado entero — la API
-                    // sube audio a Cloudinary como 'video' internamente, con un límite de subidas
+                    // 01/09/2026 — bug real: si algún asset agotaba sus reintentos (ver más abajo)
+                    // y esto pasaba DESPUÉS de guardar el thumbnail, no había problema — pero el
+                    // orden era al revés: el thumbnail se guardaba recién en el .then() siguiente,
+                    // que nunca se alcanzaba si uploadAssetsWithRetry terminaba rechazando. Un
+                    // proyecto que sí se había creado bien (con la mayoría de sus assets subidos)
+                    // quedaba mostrando la carita de gato genérica en "Mis Proyectos" en vez de
+                    // una vista previa real, además de ver el aviso de error aunque el proyecto
+                    // existiera. Se guarda el thumbnail ACÁ, apenas se conoce el id — no depende
+                    // de que los assets terminen de subir (ya era fire-and-forget, no bloqueaba
+                    // nada; solo estaba en el orden equivocado).
+                    if (id && this.props.onUpdateProjectThumbnail) {
+                        this.storeProjectThumbnail(id);
+                    }
+                    // bug real reproducido en vivo: mandar TODOS los assets sucios juntos con
+                    // Promise.all (proyecto recién cargado desde un .sb3 con varios disfraces/
+                    // sonidos nuevos) a veces hacía fallar el guardado entero — la API sube audio
+                    // a Cloudinary como 'video' internamente, con un límite de subidas
                     // concurrentes más bajo que el de imágenes; 6-8 sonidos en simultáneo lo
                     // superaba y alguno volvía 500. uploadAssetsWithRetry limita cuántas subidas
                     // van en vuelo a la vez y reintenta cada asset unas pocas veces antes de
@@ -267,10 +280,6 @@ const ProjectSaverHOC = function (WrappedComponent) {
                 })
                 .then(response => {
                     this.props.onSetProjectUnchanged();
-                    const id = response.id.toString();
-                    if (id && this.props.onUpdateProjectThumbnail) {
-                        this.storeProjectThumbnail(id);
-                    }
                     this.reportTelemetryEvent('projectDidSave');
                     return response;
                 })
