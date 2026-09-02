@@ -31,7 +31,7 @@ import DragLayer from '../../containers/drag-layer.jsx';
 import ConnectionModal from '../../containers/connection-modal.jsx';
 import TelemetryModal from '../telemetry-modal/telemetry-modal.jsx';
 
-import layout, {STAGE_SIZE_MODES} from '../../lib/layout-constants';
+import layout, {STAGE_SIZE_MODES, STAGE_DISPLAY_SIZES} from '../../lib/layout-constants';
 import {resolveStageSize} from '../../lib/screen-utils';
 import {themeMap} from '../../lib/themes';
 
@@ -169,7 +169,13 @@ const GUIComponent = props => {
                 isRendererSupported={isRendererSupported}
                 isRtl={isRtl}
                 loading={loading}
-                stageSize={STAGE_SIZE_MODES.large}
+                // 02/09/2026 — antes STAGE_SIZE_MODES.large (480x360 fijo, el tamaño estándar de
+                // Scratch, chico en un monitor moderno sin la paleta de bloques al lado
+                // "compitiendo" por espacio). playerLarge calcula el stage dinámicamente según la
+                // ventana, mismo criterio que el fullscreen real de scratch-gui — ver
+                // getStageDimensions en screen-utils.js. Solo afecta a isPlayerOnly (/jugar/:id,
+                // ver public-player.jsx), el editor normal sigue con resolveStageSize de arriba.
+                stageSize={STAGE_DISPLAY_SIZES.playerLarge}
                 vm={vm}
             >
                 {alertsVisible ? (

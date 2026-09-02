@@ -1,7 +1,50 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 
+import logoWordmark from '../menu-bar/scratch-logo.svg';
 import styles from './public-player.css';
+
+// 02/09/2026 — botón de compartir: en celulares (donde existe la Web Share API) abre la hoja
+// nativa de compartir del sistema operativo con el link de este proyecto — mismo patrón que ya
+// usaba el portal de familias (apps/web/components/portal/ScratchPanel.tsx, useCanShare/
+// shareProject, sacado de ahí en la limpieza de esa sesión). En desktop (sin navigator.share) cae
+// a copiar el link al portapapeles, con una confirmación breve en el propio botón.
+const ShareButton = ({title}) => {
+    const [copied, setCopied] = useState(false);
+
+    const handleShare = useCallback(async () => {
+        const url = window.location.href;
+        if (navigator.share) {
+            try {
+                await navigator.share({title: `🎮 ${title} — un proyecto de Coders Academy`, url});
+            } catch {
+                // cancelado por el usuario, no es un error
+            }
+            return;
+        }
+        try {
+            await navigator.clipboard.writeText(url);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            // sin Web Share ni Clipboard (navegador viejo/permiso denegado) — no hay mucho más
+            // que hacer acá, el usuario siempre puede copiar la URL de la barra de direcciones.
+        }
+    }, [title]);
+
+    return (
+        <button
+            className={styles.shareButton}
+            onClick={handleShare}
+        >
+            {copied ? '✓ ¡Copiado!' : '🔗 Compartir'}
+        </button>
+    );
+};
+
+ShareButton.propTypes = {
+    title: PropTypes.string.isRequired
+};
 
 /*
  * Vista pública de solo lectura (Fase 5, docs/scratch-editor-integration.md sección 8) —
@@ -59,8 +102,13 @@ const PublicPlayer = ({WrappedGui, projectId, onClickLogo}) => {
     return (
         <div className={styles.playerWrapper}>
             <div className={styles.header}>
-                <span className={styles.brand}>🍎 Coders Academy</span>
+                <img
+                    alt="Coders Academy | Editor"
+                    className={styles.brandLogo}
+                    src={logoWordmark}
+                />
                 <span className={styles.projectTitle}>{title}</span>
+                <ShareButton title={title} />
             </div>
             <div className={styles.stageArea}>
                 <WrappedGui

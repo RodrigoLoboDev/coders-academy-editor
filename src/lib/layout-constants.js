@@ -34,7 +34,16 @@ const STAGE_DISPLAY_SIZES = keyMirror({
     /**
      * Small stage (ignores browser width)
      */
-    small: null
+    small: null,
+
+    /**
+     * 02/09/2026 — vista pública de solo lectura (/jugar/:id, ver public-player.jsx). A diferencia
+     * de "large" (que siempre renderiza a 480x360 fijo, el tamaño estándar de Scratch, chico en un
+     * monitor moderno), esta calcula el stage dinámicamente según el espacio disponible de la
+     * ventana — mismo criterio que el bloque isFullScreen de getStageDimensions (screen-utils.js),
+     * pero sin forzar el chrome de fullscreen real. Solo la usa el modo isPlayerOnly de gui.jsx.
+     */
+    playerLarge: null
 });
 
 // zoom level to start with

@@ -41,25 +41,56 @@
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
+/* 02/09/2026 — mismo tratamiento visual que la barra del editor real (menu-bar.css: fondo negro
+   fijo, sin variar con el tema; ver el comentario de esa sesión ahí para el porqué del #000000 en
+   vez de la variable de color compartida) — antes esta barra tenía su propio azul (#1a1aad) y un
+   🍎 + "Coders Academy" en texto plano, sin relación visual con el resto de la app. */
 .header {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 10px 16px;
-    background: #1a1aad;
+    height: 3rem;
+    padding: 0 16px;
+    background: #000000;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     color: #ffffff;
+    flex-shrink: 0;
+    box-sizing: border-box;
+}
+
+.brandLogo {
+    height: 17px;
     flex-shrink: 0;
 }
 
-.brand {
-    font-weight: bold;
-    font-size: 0.9rem;
-    opacity: 0.85;
-}
-
 .projectTitle {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-weight: bold;
     font-size: 1rem;
+    padding-left: 4px;
+    border-left: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.shareButton {
+    flex-shrink: 0;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    font-family: inherit;
+    font-weight: bold;
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    white-space: nowrap;
+}
+
+.shareButton:hover {
+    background: rgba(255, 255, 255, 0.16);
 }
 
 .stageArea {
@@ -68,7 +99,9 @@
     align-items: center;
     justify-content: center;
     overflow: auto;
-    background: #e8e8f5;
+    background: #0f1629;
+    padding: 16px;
+    box-sizing: border-box;
 }
 
 /* Fase 6 — modo oscuro (ver src/lib/dark-mode.js) */
@@ -83,8 +116,4 @@
 
 :global([data-theme="dark"]) .subtitle {
     color: #9aa6c2;
-}
-
-:global([data-theme="dark"]) .stageArea {
-    background: #0f1629;
 }

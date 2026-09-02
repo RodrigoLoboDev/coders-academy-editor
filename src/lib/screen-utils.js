@@ -16,7 +16,12 @@ const STAGE_DIMENSION_DEFAULTS = {
     fullScreenSpacingBorderAdjustment: 12,
     // referencing css/units.css,
     // menuHeightAdjustment = $stage-menu-height
-    menuHeightAdjustment: 44
+    menuHeightAdjustment: 44,
+    // 02/09/2026 — vista pública /jugar/:id (STAGE_DISPLAY_SIZES.playerLarge, ver
+    // layout-constants.js): altura del header propio de public-player.css (3rem = 48px) más un
+    // margen para no pegar el stage contra los bordes de la ventana.
+    playerHeaderHeight: 48,
+    playerVerticalMargin: 48
 };
 
 /**
@@ -71,6 +76,29 @@ const getStageDimensions = (stageSize, isFullScreen) => {
         if (stageDimensions.width > window.innerWidth) {
             stageDimensions.width = window.innerWidth;
             stageDimensions.height = stageDimensions.width * .75;
+        }
+
+        stageDimensions.scale = stageDimensions.width / stageDimensions.widthDefault;
+    } else if (stageSize === STAGE_DISPLAY_SIZES.playerLarge) {
+        // Mismo cálculo que el bloque isFullScreen de arriba (stage dinámico según ventana), pero
+        // usando la altura del header propio de /jugar en vez del header angosto de scratch-gui —
+        // esta página no entra al fullscreen real de scratch-gui, ya vive en su propia pantalla.
+        stageDimensions.height = window.innerHeight -
+            STAGE_DIMENSION_DEFAULTS.playerHeaderHeight -
+            STAGE_DIMENSION_DEFAULTS.playerVerticalMargin;
+
+        stageDimensions.width = stageDimensions.height + (stageDimensions.height / 3);
+
+        if (stageDimensions.width > window.innerWidth - STAGE_DIMENSION_DEFAULTS.playerVerticalMargin) {
+            stageDimensions.width = window.innerWidth - STAGE_DIMENSION_DEFAULTS.playerVerticalMargin;
+            stageDimensions.height = stageDimensions.width * .75;
+        }
+
+        // Nunca más chico que el tamaño estándar — en ventanas muy bajas, mejor quedarse en
+        // 480x360 (el mínimo de Scratch) que en algo todavía más chico.
+        if (stageDimensions.width < stageDimensions.widthDefault) {
+            stageDimensions.width = stageDimensions.widthDefault;
+            stageDimensions.height = stageDimensions.heightDefault;
         }
 
         stageDimensions.scale = stageDimensions.width / stageDimensions.widthDefault;
