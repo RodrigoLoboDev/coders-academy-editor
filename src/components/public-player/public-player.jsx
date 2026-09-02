@@ -107,7 +107,13 @@ const PublicPlayer = ({WrappedGui, projectId, onClickLogo}) => {
                     className={styles.brandLogo}
                     src={logoWordmark}
                 />
-                <span className={styles.projectTitle}>{title}</span>
+                <span className={styles.projectTitle}>
+                    <span
+                        aria-hidden="true"
+                        className={styles.projectTitleIcon}
+                    >{'🎮'}</span>
+                    {title}
+                </span>
                 <ShareButton title={title} />
             </div>
             <div className={styles.stageArea}>

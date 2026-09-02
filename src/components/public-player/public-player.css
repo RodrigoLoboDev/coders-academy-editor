@@ -90,6 +90,13 @@
     color: $looks-secondary;
 }
 
+/* 02/09/2026 — mando de videojuego al lado del nombre del proyecto: sin él, un padre que entra
+   directo a este link (sin pasar por el editor) no tiene ninguna pista visual de que ese texto es
+   "el nombre del juego" y no, por ejemplo, el nombre de la sección. */
+.projectTitleIcon {
+    margin-right: 4px;
+}
+
 .shareButton {
     flex-shrink: 0;
     cursor: pointer;
