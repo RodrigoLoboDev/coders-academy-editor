@@ -14,6 +14,7 @@ import {
     requestProjectUpload
 } from '../reducers/project-state';
 import {setProjectTitle} from '../reducers/project-title';
+import {setProjectChanged} from '../reducers/project-changed';
 import {
     openLoadingProject,
     closeLoadingProject
@@ -246,6 +247,18 @@ const SBFileUploaderHOC = function (WrappedComponent) {
         // loading screen and file menu
         onLoadingFinished: (loadingState, success) => {
             dispatch(onLoadedProject(loadingState, ownProps.canSave, success));
+            // 01/09/2026 — bug real reportado en producción: cargar un .sb3 sobre un proyecto
+            // nunca guardado (ver project-state.js, DONE_LOADING_VM_TO_SAVE → SHOWING_WITHOUT_ID
+            // en vez de autoguardar con un id falso) no mostraba "Guardar ahora" después. Causa:
+            // el dispatch de arriba, al mover el loadingState a un estado "mostrando proyecto",
+            // dispara como efecto colateral ProjectFetcherHOC.componentDidUpdate →
+            // onProjectUnchanged() — pensado para cuando se abre un proyecto ya guardado (ahí sí
+            // no hay nada que guardar), pero acá borra la marca de "cambiado" justo después de
+            // cargar contenido nuevo que en realidad SÍ hay que guardar. Se despacha después a
+            // propósito, para que sea la última palabra sobre projectChanged en esta secuencia.
+            if (ownProps.canSave && success) {
+                dispatch(setProjectChanged());
+            }
             dispatch(closeLoadingProject());
             dispatch(closeFileMenu());
         },
