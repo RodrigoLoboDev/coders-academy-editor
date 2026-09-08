@@ -12,6 +12,7 @@ import soundIconRtl from '../components/library-item/lib-icon--sound-rtl.svg';
 
 import soundLibraryContent from '../lib/libraries/sounds.json';
 import soundTags from '../lib/libraries/sound-tags';
+import fetchSharedScratchAssets from '../lib/fetch-shared-scratch-assets';
 
 import {connect} from 'react-redux';
 
@@ -20,7 +21,28 @@ const messages = defineMessages({
         defaultMessage: 'Choose a Sound',
         description: 'Heading for the sound library',
         id: 'gui.soundLibrary.chooseASound'
+    },
+    codersAcademyTag: {
+        defaultMessage: 'Coders Academy',
+        description: 'Tag for the institutional shared sound library',
+        id: 'gui.libraryTags.codersAcademy'
     }
+});
+
+// Un SharedScratchAsset (assetType "sound") no trae rate/sampleCount (la API no decodifica audio,
+// solo guarda el archivo) — no importa: loadSound (scratch-vm) los pisa con los reales del buffer
+// decodificado apenas el audio termina de cargar (ver runtime.audioEngine.decodeSoundPlayer en
+// import/load-sound.js), son solo un placeholder inicial. Mismo criterio de ícono/rawURL que ya
+// usa el contenido stock más abajo (no hay thumbnail real de audio, todo sonido muestra el mismo
+// ícono genérico).
+const sharedAssetToSoundItem = (asset, icon) => ({
+    _md5: `${asset.md5}.${asset.dataFormat}`,
+    name: asset.name,
+    format: '',
+    rate: 0,
+    sampleCount: 0,
+    rawURL: icon,
+    tags: ['coders-academy']
 });
 
 class SoundLibrary extends React.PureComponent {
@@ -50,10 +72,16 @@ class SoundLibrary extends React.PureComponent {
          * function to call when the sound ends
          */
         this.handleStop = null;
+
+        this.state = {sharedItems: []};
     }
     componentDidMount () {
         this.audioEngine = new AudioEngine();
         this.playingSoundPromise = null;
+        fetchSharedScratchAssets().then(assets => {
+            const sounds = assets.filter(a => a.assetType === 'sound');
+            this.setState({sharedItems: sounds});
+        });
     }
     componentWillUnmount () {
         this.stopPlayingSound();
@@ -150,6 +178,8 @@ class SoundLibrary extends React.PureComponent {
         });
     }
     render () {
+        const icon = this.props.isRtl ? soundIconRtl : soundIcon;
+
         // @todo need to use this hack to avoid library using md5 for image
         const soundLibraryThumbnailData = soundLibraryContent.map(sound => {
             const {
@@ -158,18 +188,23 @@ class SoundLibrary extends React.PureComponent {
             } = sound;
             return {
                 _md5: md5ext,
-                rawURL: this.props.isRtl ? soundIconRtl : soundIcon,
+                rawURL: icon,
                 ...otherData
             };
         });
 
+        const sharedSoundThumbnailData = this.state.sharedItems.map(
+            asset => sharedAssetToSoundItem(asset, icon));
+
+        const codersAcademyTag = {tag: 'coders-academy', intlLabel: messages.codersAcademyTag};
+
         return (
             <LibraryComponent
                 showPlayButton
-                data={soundLibraryThumbnailData}
+                data={sharedSoundThumbnailData.concat(soundLibraryThumbnailData)}
                 id="soundLibrary"
                 setStopHandler={this.setStopHandler}
-                tags={soundTags}
+                tags={[codersAcademyTag].concat(soundTags)}
                 title={this.props.intl.formatMessage(messages.libraryTitle)}
                 onItemMouseEnter={this.handleItemMouseEnter}
                 onItemMouseLeave={this.handleItemMouseLeave}
