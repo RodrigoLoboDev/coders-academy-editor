@@ -125,6 +125,12 @@ const distConfig = baseConfig.clone()
         })
     );
 
+// Los entries blocksonly/compatibilitytesting/player son herramientas internas de dev de
+// `scratch-gui` que no se sirven en producción. Cada uno es un bundle de ~19 MB que Terser minifica
+// con su source map — compilarlos en el build de producción llevaba el pico de memoria a ~8.6 GB
+// y Vercel mataba el proceso (SIGKILL, OOM). Siguen disponibles en `npm start`.
+const buildDevTools = process.env.NODE_ENV !== 'production';
+
 // build the examples and debugging tools in `build/`
 const buildConfig = baseConfig.clone()
     .enableDevServer(process.env.PORT || 8601)
@@ -138,9 +144,11 @@ const buildConfig = baseConfig.clone()
         },
         entry: {
             gui: './src/playground/index.jsx',
-            blocksonly: './src/playground/blocks-only.jsx',
-            compatibilitytesting: './src/playground/compatibility-testing.jsx',
-            player: './src/playground/player.jsx'
+            ...(buildDevTools ? {
+                blocksonly: './src/playground/blocks-only.jsx',
+                compatibilitytesting: './src/playground/compatibility-testing.jsx',
+                player: './src/playground/player.jsx'
+            } : {})
         },
         output: {
             path: path.resolve(__dirname, 'build')
@@ -156,27 +164,6 @@ const buildConfig = baseConfig.clone()
         // dev, no se sirven en producción — quedan con su título descriptivo tal cual estaba.
         title: 'Coders Academy — Crear'
     }))
-    .addPlugin(new HtmlWebpackPlugin({
-        ...commonHtmlWebpackPluginOptions,
-        chunks: ['blocksonly'],
-        filename: 'blocks-only.html',
-        template: 'src/playground/index.ejs',
-        title: 'Coders Academy Editor: Blocks Only Example'
-    }))
-    .addPlugin(new HtmlWebpackPlugin({
-        ...commonHtmlWebpackPluginOptions,
-        chunks: ['compatibilitytesting'],
-        filename: 'compatibility-testing.html',
-        template: 'src/playground/index.ejs',
-        title: 'Coders Academy Editor: Compatibility Testing'
-    }))
-    .addPlugin(new HtmlWebpackPlugin({
-        ...commonHtmlWebpackPluginOptions,
-        chunks: ['player'],
-        filename: 'player.html',
-        template: 'src/playground/index.ejs',
-        title: 'Coders Academy Editor: Player Example'
-    }))
     .addPlugin(new CopyWebpackPlugin({
         patterns: [
             {
@@ -191,11 +178,40 @@ const buildConfig = baseConfig.clone()
         ]
     }));
 
+if (buildDevTools) {
+    buildConfig
+        .addPlugin(new HtmlWebpackPlugin({
+            ...commonHtmlWebpackPluginOptions,
+            chunks: ['blocksonly'],
+            filename: 'blocks-only.html',
+            template: 'src/playground/index.ejs',
+            title: 'Coders Academy Editor: Blocks Only Example'
+        }))
+        .addPlugin(new HtmlWebpackPlugin({
+            ...commonHtmlWebpackPluginOptions,
+            chunks: ['compatibilitytesting'],
+            filename: 'compatibility-testing.html',
+            template: 'src/playground/index.ejs',
+            title: 'Coders Academy Editor: Compatibility Testing'
+        }))
+        .addPlugin(new HtmlWebpackPlugin({
+            ...commonHtmlWebpackPluginOptions,
+            chunks: ['player'],
+            filename: 'player.html',
+            template: 'src/playground/index.ejs',
+            title: 'Coders Academy Editor: Player Example'
+        }));
+}
+
 // Skip building `dist/` unless explicitly requested
 // It roughly doubles build time and isn't needed for `scratch-gui` development
 // If you need non-production `dist/` for local dev, such as for `scratch-www` work, you can run something like:
 // `BUILD_MODE=dist npm run build`
-const buildDist = process.env.NODE_ENV === 'production' || process.env.BUILD_MODE === 'dist';
+// A diferencia del original, `NODE_ENV=production` ya no lo activa: `dist/` es el paquete npm
+// de `scratch-gui` (librería para scratch-www), esta app no lo usa — Vercel solo sirve `build/`.
+// Compilar las dos configs a la vez duplicaba el pico de memoria y el build de Vercel moría
+// con SIGKILL (OOM).
+const buildDist = process.env.BUILD_MODE === 'dist';
 
 module.exports = buildDist ?
     [buildConfig.get(), distConfig.get()] :
