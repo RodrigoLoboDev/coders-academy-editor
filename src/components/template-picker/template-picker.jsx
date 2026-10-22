@@ -342,7 +342,7 @@ const AssignPanel = ({token, templateId, templateTitle, onClose}) => {
         }
         setIsSearching(true);
         const timeoutId = setTimeout(() => {
-            fetch(`${process.env.API_URL}/students/search?q=${encodeURIComponent(query.trim())}`)
+            fetch(`${process.env.API_URL}/students/admin-search?q=${encodeURIComponent(query.trim())}`, {headers: authHeaders})
                 .then(response => {
                     if (!response.ok) throw new Error(response.status);
                     return response.json();
@@ -352,6 +352,7 @@ const AssignPanel = ({token, templateId, templateTitle, onClose}) => {
                 .finally(() => setIsSearching(false));
         }, 300);
         return () => clearTimeout(timeoutId);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [query]);
 
     const doAssign = body => {

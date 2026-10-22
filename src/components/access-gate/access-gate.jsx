@@ -200,7 +200,7 @@ const AccessGate = ({onSelectStudent, onTeacherLogin}) => {
         setIsSearching(true);
         setSearchError(null);
         const timeoutId = setTimeout(() => {
-            fetch(`${process.env.API_URL}/students/search?q=${encodeURIComponent(query.trim())}`)
+            fetch(`${process.env.API_URL}/students/search?q=${encodeURIComponent(query.trim())}&accessCode=${encodeURIComponent(getCodeSessionCode() || '')}`)
                 .then(response => {
                     if (!response.ok) throw new Error(response.status);
                     return response.json();
