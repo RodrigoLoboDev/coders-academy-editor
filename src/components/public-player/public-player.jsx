@@ -97,6 +97,16 @@ const PublicPlayer = ({WrappedGui, projectId, onClickLogo}) => {
     const [authorFirstName, setAuthorFirstName] = useState(null);
     const layout = usePlayerLayout();
 
+    // 21/11/2026 — el CSS global del playground (index.css) fija `min-width: 1024px` y
+    // `min-height: 640px` en html, body y .app (pensado para el editor): en un celular esta página
+    // medía 1024px de ancho y el escenario quedaba corrido y cortado. Este atributo activa las reglas
+    // de public-player.css que anulan esos mínimos solo mientras se muestra /jugar/:id (todos sus
+    // estados: cargando, no encontrado y listo).
+    useEffect(() => {
+        document.documentElement.setAttribute('data-public-player', '');
+        return () => document.documentElement.removeAttribute('data-public-player');
+    }, []);
+
     useEffect(() => {
         fetch(`${process.env.API_URL}/scratch-projects/public/${projectId}`)
             .then(response => {

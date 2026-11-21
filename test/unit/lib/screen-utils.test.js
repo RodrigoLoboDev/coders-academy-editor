@@ -53,21 +53,21 @@ describe('getPlayerStageSize', () => {
     test('vertical: el escenario ocupa el ancho (menos el aire) y deja lugar a controles y tarjeta', () => {
         const [w, h] = IPHONE_PORTRAIT;
         const size = getPlayerStageSize(w, h);
-        expect(size.width).toBe(w - 16);
+        expect(size.width).toBe(w - 18);
         // lo que queda debajo del escenario alcanza para barra del logo + controles + tarjeta
         expect(h - size.height).toBeGreaterThanOrEqual(44 + 64 + 160);
     });
 
     test('vertical con poco alto: se achica en vez de desbordar', () => {
         const size = getPlayerStageSize(360, 400);
-        expect(size.width).toBeLessThan(360 - 16);
+        expect(size.width).toBeLessThan(360 - 18);
         expect(size.height).toBeGreaterThan(0);
     });
 
     test('celular horizontal: el escenario usa todo el alto y deja lugar a la columna lateral', () => {
         const [w, h] = IPHONE_LANDSCAPE;
         const size = getPlayerStageSize(w, h);
-        expect(size.height).toBe(h - 16);
+        expect(size.height).toBe(h - 18);
         expect(w - size.width).toBeGreaterThanOrEqual(208 + 64);
     });
 
@@ -75,13 +75,13 @@ describe('getPlayerStageSize', () => {
         const [w, h] = IPHONE_SE_LANDSCAPE;
         const size = getPlayerStageSize(w, h);
         expect(w - size.width).toBeGreaterThanOrEqual(208 + 64);
-        expect(size.height).toBeLessThan(h - 16);
+        expect(size.height).toBeLessThan(h - 18);
     });
 
     test('desktop: aprovecha el alto debajo de la barra y de los controles', () => {
         const [w, h] = NETBOOK;
         const size = getPlayerStageSize(w, h);
-        expect(size.height).toBe(h - 64 - 64 - 32);
+        expect(size.height).toBe(h - 64 - 64 - 36);
     });
 });
 
@@ -97,9 +97,9 @@ describe('getStageDimensions con playerLarge', () => {
     test('lee el tamaño de la ventana y redondea', () => {
         [window.innerWidth, window.innerHeight] = IPHONE_PORTRAIT;
         const dims = getStageDimensions(STAGE_DISPLAY_SIZES.playerLarge, false);
-        expect(dims.width).toBe(374);
-        expect(dims.height).toBe(Math.round(374 * 0.75));
-        expect(dims.scale).toBeCloseTo(374 / 480, 5);
+        expect(dims.width).toBe(372);
+        expect(dims.height).toBe(Math.round(372 * 0.75));
+        expect(dims.scale).toBeCloseTo(372 / 480, 5);
     });
 
     test('el editor normal no cambia: large sigue siendo 480x360', () => {

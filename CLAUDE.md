@@ -133,6 +133,14 @@ ventana en Redux (`playerViewport`) porque el `Stage` solo se redibuja si cambia
 La línea "Hecho por …" usa `authorFirstName` de la API (solo nombre de pila; si falta, no se muestra).
 Los tests de tamaños están en `test/unit/lib/screen-utils.test.js`.
 
+**Ojo con el CSS global:** `src/playground/index.css` fija `min-width: 1024px` y `min-height: 640px` en
+`html`, `body` y `.app` (pensado para el editor). En un celular eso hacía que `/jugar` midiera 1024px de
+ancho y el escenario quedara cortado (el primer rediseño del 21/11/2026 no lo anuló y no se vio en
+escritorio). `public-player.jsx` pone `data-public-player` en `<html>` y `public-player.css` anula esos
+mínimos solo en esta vista. El escenario mide 2px más que lo calculado (borde de 1px por lado,
+`content-box`), por eso `playerMargin` es 18 y no 16. Probar siempre en un iframe/viewport real de
+celular (390x844 y 844x390): una ventana de Chrome no baja de ~500px de ancho.
+
 ## Estado actual (04/08/2026)
 
 Fase 0 del plan (validar que el motor compila y corre) cerrada. Repo recién creado y separado del

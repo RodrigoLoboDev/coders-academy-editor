@@ -20,7 +20,7 @@ const STAGE_DIMENSION_DEFAULTS = {
     // 21/11/2026 — vista pública /jugar/:id (STAGE_DISPLAY_SIZES.playerLarge, ver layout-constants.js
     // y getPlayerLayout más abajo). Espacio que public-player.css reserva alrededor del escenario en
     // cada disposición; mantener en sync con ese archivo y con stage-header.css (.player-controls*).
-    playerMargin: 16, // aire alrededor del escenario (el borde de 1px del stage queda dentro)
+    playerMargin: 18, // 16px de aire alrededor del escenario + 2px del borde (1px por lado, content-box) del stage
     playerControlsSize: 64, // fila (o columna) de bandera verde + stop: 3rem de botón + 8px de aire por lado
     playerStackHeaderHeight: 44, // vertical: barra del logo
     playerStackInfoHeight: 160, // vertical: tarjeta con título, alumno y compartir

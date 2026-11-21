@@ -36,6 +36,17 @@
     font-size: 1rem;
 }
 
+/* 21/11/2026 — anula los `min-width: 1024px` / `min-height: 640px` que playground/index.css pone en
+   html, body y .app (el contenedor donde se monta la app, único hijo directo de body con contenido).
+   Sin esto, en un celular la página mide 1024px y se desborda. Lo activa public-player.jsx con el
+   atributo data-public-player en <html>; no afecta al editor normal. */
+:global(html[data-public-player]),
+:global(html[data-public-player] body),
+:global(html[data-public-player] body > div) {
+    min-width: 0;
+    min-height: 0;
+}
+
 /* 21/11/2026 — rediseño de /jugar/:id para celular. Tres disposiciones, elegidas por JS según el
    tamaño de la ventana (getPlayerLayout en screen-utils.js, atributo data-player-layout):
    - stack (vertical): barra del logo, escenario de punta a punta, controles (los pone el motor,
@@ -106,6 +117,7 @@
 
 .brandLogo {
     height: 17px;
+    max-width: 100%;
     flex-shrink: 0;
 }
 
@@ -196,6 +208,12 @@
 
 .authorName {
     color: #8a95ff;
+}
+
+/* la columna del celular horizontal es angosta: el nombre del alumno pasa a otra línea en vez de cortarse */
+.playerWrapper[data-player-layout="side"] .author {
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 /* 21/11/2026 — 48px de alto (mínimo táctil); $looks-secondary-dark y no $looks-secondary porque con
