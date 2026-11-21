@@ -141,6 +141,28 @@ mínimos solo en esta vista. El escenario mide 2px más que lo calculado (borde 
 `content-box`), por eso `playerMargin` es 18 y no 16. Probar siempre en un iframe/viewport real de
 celular (390x844 y 844x390): una ventana de Chrome no baja de ~500px de ancho.
 
+### Vista previa al compartir el link (21/11/2026)
+
+El sitio es una app que se arma en el navegador (un solo `index.html`), y los bots de WhatsApp o las
+redes no ejecutan JavaScript: sin esto todos los proyectos se veían con el mismo título genérico. Por eso
+`vercel.json` manda `/jugar/:id` a la función `api/jugar.js`, que trae el `index.html` real y el
+proyecto de la API pública y devuelve el mismo HTML con las etiquetas `og:`/`twitter:` (título del
+proyecto, miniatura y una descripción **fija**; los proyectos no tienen campo de descripción). Para una
+persona no cambia nada. Reglas a no romper:
+
+- **Todo lo que viene de la API se escapa** (`escapeHtml` en `api/_jugar-meta.js`): el título lo escribe
+  el alumno y un `"><script>` quedaría inyectado en la página de quien abra el link. Hay tests que lo fijan.
+- **El nombre del alumno NO va en la vista previa** (decisión de Rodrigo): se guarda en la caché de
+  WhatsApp y de las redes. La función ignora `authorFirstName` a propósito.
+- **La imagen** es la miniatura de Cloudinary con una transformación en la URL (1200x630, JPEG, relleno
+  azul, sin recortar) porque el PNG original pesa ~270 KB; sin miniatura se usa la `og-image` de la
+  landing (`https://www.codersacademy.com.ar/og-image`).
+- **Nunca debe romper la página:** si la API tarda más de 3 s, falla o el proyecto no existe o no está
+  publicado, devuelve las etiquetas genéricas (caché de 30 s; con datos, 5 min + stale-while-revalidate).
+- El archivo de lógica empieza con `_` porque Vercel convierte en endpoint todo archivo de `api/` que no.
+- WhatsApp guarda la vista previa por días: para probar, usar un link nunca compartido (por ejemplo con
+  `?v=2`). La función usa `API_URL` si está en Vercel y, si no, la API de producción.
+
 ## Estado actual (04/08/2026)
 
 Fase 0 del plan (validar que el motor compila y corre) cerrada. Repo recién creado y separado del

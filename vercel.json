@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/jugar/:id", "destination": "/api/jugar?id=:id" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
