@@ -14,6 +14,7 @@ import styles from './stage-wrapper.css';
 const StageWrapperComponent = function (props) {
     const {
         isFullScreen,
+        isPlayerOnly,
         isRtl,
         isRendererSupported,
         loading,
@@ -25,7 +26,8 @@ const StageWrapperComponent = function (props) {
         <Box
             className={classNames(
                 styles.stageWrapper,
-                {[styles.fullScreen]: isFullScreen}
+                {[styles.fullScreen]: isFullScreen},
+                {[styles.playerStage]: isPlayerOnly}
             )}
             dir={isRtl ? 'rtl' : 'ltr'}
         >
@@ -54,6 +56,7 @@ const StageWrapperComponent = function (props) {
 
 StageWrapperComponent.propTypes = {
     isFullScreen: PropTypes.bool,
+    isPlayerOnly: PropTypes.bool,
     isRendererSupported: PropTypes.bool.isRequired,
     isRtl: PropTypes.bool.isRequired,
     loading: PropTypes.bool,

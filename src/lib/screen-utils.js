@@ -17,11 +17,17 @@ const STAGE_DIMENSION_DEFAULTS = {
     // referencing css/units.css,
     // menuHeightAdjustment = $stage-menu-height
     menuHeightAdjustment: 44,
-    // 02/09/2026 — vista pública /jugar/:id (STAGE_DISPLAY_SIZES.playerLarge, ver
-    // layout-constants.js): altura del header propio de public-player.css (3rem = 48px) más un
-    // margen para no pegar el stage contra los bordes de la ventana.
-    playerHeaderHeight: 48,
-    playerVerticalMargin: 48
+    // 21/11/2026 — vista pública /jugar/:id (STAGE_DISPLAY_SIZES.playerLarge, ver layout-constants.js
+    // y getPlayerLayout más abajo). Espacio que public-player.css reserva alrededor del escenario en
+    // cada disposición; mantener en sync con ese archivo y con stage-header.css (.player-controls*).
+    playerMargin: 16, // aire alrededor del escenario (el borde de 1px del stage queda dentro)
+    playerControlsSize: 64, // fila (o columna) de bandera verde + stop: 3rem de botón + 8px de aire por lado
+    playerStackHeaderHeight: 44, // vertical: barra del logo
+    playerStackInfoHeight: 160, // vertical: tarjeta con título, alumno y compartir
+    playerDesktopBarHeight: 64, // escritorio: barra de arriba con logo, título, alumno y compartir
+    playerSidePanelWidth: 208, // celular horizontal: columna con logo, título, alumno y compartir
+    // Un celular horizontal mide como mucho ~430px de alto; una tablet o notebook, bastante más.
+    playerSideMaxHeight: 500
 };
 
 /**
@@ -49,6 +55,66 @@ const resolveStageSize = (stageSizeMode, isFullSize, hasEnoughHeight = true) => 
         return STAGE_DISPLAY_SIZES.large;
     }
     return STAGE_DISPLAY_SIZES.largeConstrained;
+};
+
+/**
+ * Disposición de la vista pública /jugar/:id según el tamaño de la ventana (21/11/2026):
+ * - 'stack': ventana más alta que ancha (celular o tablet en vertical): escenario de punta a punta,
+ *   y debajo los controles y la tarjeta con el título, el alumno y compartir. El escenario es 4:3,
+ *   así que acá manda el ANCHO y lo que sobra queda arriba y abajo.
+ * - 'side': ventana apaisada y baja (celular en horizontal): el escenario ocupa todo el alto y las
+ *   bandas de los costados llevan los controles y el título/alumno/compartir.
+ * - 'desktop': ventana apaisada y alta (notebook, tablet en horizontal): barra de arriba con todo
+ *   el texto y escenario grande debajo.
+ * Usada tanto por getPlayerStageSize (abajo) como por public-player.jsx (clase de la disposición).
+ * @param {number} width - ancho de la ventana (window.innerWidth).
+ * @param {number} height - alto de la ventana (window.innerHeight).
+ * @return {string} 'stack' | 'side' | 'desktop'
+ */
+const getPlayerLayout = (width, height) => {
+    if (width <= height) return 'stack';
+    if (height <= STAGE_DIMENSION_DEFAULTS.playerSideMaxHeight) return 'side';
+    return 'desktop';
+};
+
+/**
+ * Tamaño del escenario en la vista pública /jugar/:id para una ventana dada (siempre 4:3). Función
+ * pura, separada de getStageDimensions para poder probarla con tamaños de celulares reales.
+ * @param {number} width - ancho de la ventana.
+ * @param {number} height - alto de la ventana.
+ * @return {{width: number, height: number}} - tamaño sin redondear.
+ */
+const getPlayerStageSize = (width, height) => {
+    const d = STAGE_DIMENSION_DEFAULTS;
+    const layout = getPlayerLayout(width, height);
+    let stageWidth;
+    let stageHeight;
+
+    if (layout === 'stack') {
+        stageWidth = width - d.playerMargin;
+        stageHeight = stageWidth * 0.75;
+        const maxHeight = height - d.playerStackHeaderHeight - d.playerControlsSize - d.playerStackInfoHeight;
+        // Con muy poco alto disponible se achica (con un piso, para no llegar a 0), nunca desborda a lo ancho.
+        if (stageHeight > maxHeight) stageHeight = Math.max(maxHeight, 90);
+        stageWidth = stageHeight + (stageHeight / 3);
+    } else if (layout === 'side') {
+        stageHeight = height - d.playerMargin;
+        stageWidth = stageHeight + (stageHeight / 3);
+        const maxWidth = width - d.playerSidePanelWidth - d.playerControlsSize - d.playerMargin;
+        if (stageWidth > maxWidth) {
+            stageWidth = maxWidth;
+            stageHeight = stageWidth * 0.75;
+        }
+    } else {
+        stageHeight = height - d.playerDesktopBarHeight - d.playerControlsSize - (2 * d.playerMargin);
+        stageWidth = stageHeight + (stageHeight / 3);
+        if (stageWidth > width - (2 * d.playerMargin)) {
+            stageWidth = width - (2 * d.playerMargin);
+            stageHeight = stageWidth * 0.75;
+        }
+    }
+
+    return {width: stageWidth, height: stageHeight};
 };
 
 /**
@@ -80,26 +146,12 @@ const getStageDimensions = (stageSize, isFullScreen) => {
 
         stageDimensions.scale = stageDimensions.width / stageDimensions.widthDefault;
     } else if (stageSize === STAGE_DISPLAY_SIZES.playerLarge) {
-        // Mismo cálculo que el bloque isFullScreen de arriba (stage dinámico según ventana), pero
-        // usando la altura del header propio de /jugar en vez del header angosto de scratch-gui —
-        // esta página no entra al fullscreen real de scratch-gui, ya vive en su propia pantalla.
-        stageDimensions.height = window.innerHeight -
-            STAGE_DIMENSION_DEFAULTS.playerHeaderHeight -
-            STAGE_DIMENSION_DEFAULTS.playerVerticalMargin;
-
-        stageDimensions.width = stageDimensions.height + (stageDimensions.height / 3);
-
-        if (stageDimensions.width > window.innerWidth - STAGE_DIMENSION_DEFAULTS.playerVerticalMargin) {
-            stageDimensions.width = window.innerWidth - STAGE_DIMENSION_DEFAULTS.playerVerticalMargin;
-            stageDimensions.height = stageDimensions.width * .75;
-        }
-
-        // 02/09/2026 — antes, si el resultado quedaba más chico que 480x360, se forzaba de vuelta
-        // al tamaño estándar completo. Rompía celulares angostos en vertical (ej. iPhone, ~390px
-        // de ancho): el cálculo de arriba ya lo había achicado correctamente a algo que entra en
-        // pantalla, y este piso lo volvía a agrandar a un ancho mayor al de la propia pantalla —
-        // el stage quedaba desbordado y descentrado. Achicar de más en ventanas muy bajas es
-        // preferible a desbordar la pantalla.
+        // Vista pública /jugar/:id: el tamaño depende de la disposición (ver getPlayerLayout). Sin
+        // piso de 480x360: achicar de más en una ventana muy baja es preferible a desbordar la
+        // pantalla (con el piso, un celular angosto en vertical quedaba desbordado y descentrado).
+        const playerSize = getPlayerStageSize(window.innerWidth, window.innerHeight);
+        stageDimensions.width = playerSize.width;
+        stageDimensions.height = playerSize.height;
         stageDimensions.scale = stageDimensions.width / stageDimensions.widthDefault;
     } else {
         stageDimensions.scale = STAGE_DISPLAY_SCALES[stageSize];
@@ -136,6 +188,8 @@ const stageSizeToTransform = ({width, height, widthDefault, heightDefault}) => {
 };
 
 export {
+    getPlayerLayout,
+    getPlayerStageSize,
     getStageDimensions,
     resolveStageSize,
     stageSizeToTransform

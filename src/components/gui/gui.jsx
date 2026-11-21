@@ -167,14 +167,15 @@ const GUIComponent = props => {
             return isPlayerOnly ? (
             <StageWrapper
                 isFullScreen={isFullScreen}
+                isPlayerOnly
                 isRendererSupported={isRendererSupported}
                 isRtl={isRtl}
                 loading={loading}
                 // 02/09/2026 — antes STAGE_SIZE_MODES.large (480x360 fijo, el tamaño estándar de
                 // Scratch, chico en un monitor moderno sin la paleta de bloques al lado
                 // "compitiendo" por espacio). playerLarge calcula el stage dinámicamente según la
-                // ventana, mismo criterio que el fullscreen real de scratch-gui — ver
-                // getStageDimensions en screen-utils.js. Solo afecta a isPlayerOnly (/jugar/:id,
+                // ventana y la disposición (vertical, celular horizontal o escritorio) — ver
+                // getPlayerStageSize en screen-utils.js. Solo afecta a isPlayerOnly (/jugar/:id,
                 // ver public-player.jsx), el editor normal sigue con resolveStageSize de arriba.
                 stageSize={STAGE_DISPLAY_SIZES.playerLarge}
                 vm={vm}
@@ -189,8 +190,8 @@ const GUIComponent = props => {
                        dentro de <MenuBar>, que este modo no monta. Mismo motivo por el que no se
                        puede usar la prop `children` de arriba: esa hace un return temprano que
                        reemplaza TODO el render de <GUI>, no solo agrega algo adentro del stage.
-                       Usado hoy por <OrientationAutoFullscreen>
-                       (orientation-auto-fullscreen.jsx). */
+                       Usado hoy por <PlayerViewportWatcher>
+                       (player-viewport-watcher.jsx). */
                 }
                 {playerExtras}
             </StageWrapper>

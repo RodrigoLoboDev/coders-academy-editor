@@ -111,6 +111,28 @@ existen. Lo que sí es estable, y hay que respetar siempre:
 - Dev server: `npm start` (webpack-dev-server, puerto default `8601`).
 - Build de producción: `npm run build` (ver `webpack.config.js` — `buildConfig`/`distConfig`).
 
+## Vista pública `/jugar/:id` (rediseño del 21/11/2026)
+
+Página sin login que ve un padre o un compañero al abrir el link de un proyecto publicado. Código en
+`src/components/public-player/`. Tres disposiciones, elegidas por JS según el tamaño de la ventana
+(`getPlayerLayout` en `src/lib/screen-utils.js`, que también calcula el tamaño del escenario con
+`getPlayerStageSize`):
+
+- **`stack`** (ventana más alta que ancha): escenario de punta a punta, controles debajo y tarjeta con
+  título, alumno y compartir. El escenario es siempre 4:3: en vertical manda el ancho y lo que sobra
+  queda arriba y abajo, no a los costados.
+- **`side`** (celular horizontal, alto ≤ 500px): escenario a todo el alto, controles en columna a la
+  derecha y columna izquierda con logo, título, alumno y compartir.
+- **`desktop`** (apaisado y alto): barra de arriba con todo el texto y escenario grande debajo.
+
+Reglas a no romper: los tamaños fijos de `public-player.css` y `stage-header.css` (barra 44px, tarjeta
+160px, columna 208px, controles 64px) están reservados en `STAGE_DIMENSION_DEFAULTS` de
+`screen-utils.js` — se cambian en los dos lados. Los controles son de 48px (mínimo táctil). Ya no se usa
+el pantalla completa de scratch-gui en esta vista; `player-viewport-watcher.jsx` guarda el tamaño de la
+ventana en Redux (`playerViewport`) porque el `Stage` solo se redibuja si cambia alguna de sus props.
+La línea "Hecho por …" usa `authorFirstName` de la API (solo nombre de pila; si falta, no se muestra).
+Los tests de tamaños están en `test/unit/lib/screen-utils.test.js`.
+
 ## Estado actual (04/08/2026)
 
 Fase 0 del plan (validar que el motor compila y corre) cerrada. Repo recién creado y separado del

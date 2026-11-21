@@ -33,3 +33,18 @@
 :global([data-theme="dark"]) .stage-wrapper.full-screen {
     background-color: #1f1f1f;
 }
+
+/* 21/11/2026 — vista pública /jugar/:id (isPlayerOnly): los controles (bandera verde y stop) van
+   DEBAJO del escenario en vertical y en escritorio, y en una columna a la DERECHA en un celular
+   horizontal. El header con los controles está primero en el DOM, así que se invierte el sentido
+   del flex. La disposición la marca public-player.jsx con `data-player-layout` (ver
+   getPlayerLayout en screen-utils.js). */
+.stage-wrapper.player-stage {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+}
+
+:global([data-player-layout="side"]) .stage-wrapper.player-stage {
+    flex-direction: row-reverse;
+}

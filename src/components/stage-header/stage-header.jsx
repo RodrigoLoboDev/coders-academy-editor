@@ -106,32 +106,41 @@ const StageHeaderComponent = function (props) {
                 </Box>
             </Box>
         );
+    } else if (isPlayerOnly) {
+        // 21/11/2026 — vista pública /jugar/:id: solo bandera verde y stop, grandes para el dedo (ver
+        // .player-controls en stage-header.css), sin botones de tamaño de escenario ni pantalla
+        // completa — public-player.jsx arma su propia disposición vertical/horizontal.
+        header = (
+            <Box className={styles.playerControlsWrapper}>
+                <Controls
+                    className={styles.playerControls}
+                    vm={vm}
+                />
+            </Box>
+        );
     } else {
-        const stageControls =
-            isPlayerOnly ? (
-                []
-            ) : (
-                <div className={styles.stageSizeToggleGroup}>
-                    <ToggleButtons
-                        buttons={[
-                            {
-                                handleClick: onSetStageSmall,
-                                icon: smallStageIcon,
-                                iconClassName: styles.stageButtonIcon,
-                                isSelected: stageSizeMode === STAGE_SIZE_MODES.small,
-                                title: props.intl.formatMessage(messages.smallStageSizeMessage)
-                            },
-                            {
-                                handleClick: onSetStageLarge,
-                                icon: largeStageIcon,
-                                iconClassName: styles.stageButtonIcon,
-                                isSelected: stageSizeMode === STAGE_SIZE_MODES.large,
-                                title: props.intl.formatMessage(messages.largeStageSizeMessage)
-                            }
-                        ]}
-                    />
-                </div>
-            );
+        const stageControls = (
+            <div className={styles.stageSizeToggleGroup}>
+                <ToggleButtons
+                    buttons={[
+                        {
+                            handleClick: onSetStageSmall,
+                            icon: smallStageIcon,
+                            iconClassName: styles.stageButtonIcon,
+                            isSelected: stageSizeMode === STAGE_SIZE_MODES.small,
+                            title: props.intl.formatMessage(messages.smallStageSizeMessage)
+                        },
+                        {
+                            handleClick: onSetStageLarge,
+                            icon: largeStageIcon,
+                            iconClassName: styles.stageButtonIcon,
+                            isSelected: stageSizeMode === STAGE_SIZE_MODES.large,
+                            title: props.intl.formatMessage(messages.largeStageSizeMessage)
+                        }
+                    ]}
+                />
+            </div>
+        );
         header = (
             <Box className={styles.stageHeaderWrapper}>
                 <Box className={styles.stageMenuWrapper}>

@@ -1,5 +1,5 @@
 /* eslint-env jest */
-import modeReducer from '../../../src/reducers/mode';
+import modeReducer, {setPlayerViewport} from '../../../src/reducers/mode';
 
 const SET_FULL_SCREEN = 'scratch-gui/mode/SET_FULL_SCREEN';
 const SET_PLAYER = 'scratch-gui/mode/SET_PLAYER';
@@ -50,4 +50,17 @@ test('set player mode', () => {
     };
     /* modeReducer(state, action) */
     expect(modeReducer(previousState, action)).toEqual(newState);
+});
+
+test('set player viewport', () => {
+    const previousState = {
+        showBranding: false,
+        isFullScreen: false,
+        isPlayerOnly: true,
+        hasEverEnteredEditor: true,
+        playerViewport: ''
+    };
+    const newState = Object.assign({}, previousState, {playerViewport: '390x844'});
+    /* modeReducer(state, action) */
+    expect(modeReducer(previousState, setPlayerViewport('390x844'))).toEqual(newState);
 });

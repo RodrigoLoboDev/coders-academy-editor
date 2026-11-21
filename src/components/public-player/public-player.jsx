@@ -2,8 +2,37 @@ import React, {useCallback, useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 
 import logoWordmark from '../menu-bar/scratch-logo.svg';
-import OrientationAutoFullscreen from './orientation-auto-fullscreen.jsx';
+import {getPlayerLayout} from '../../lib/screen-utils.js';
+import PlayerViewportWatcher from './player-viewport-watcher.jsx';
 import styles from './public-player.css';
+
+// 21/11/2026 — disposición según el tamaño de la ventana ('stack' vertical, 'side' celular
+// horizontal, 'desktop'; ver getPlayerLayout en screen-utils.js). Se vuelve a medir al girar el
+// celular, con el mismo retraso que player-viewport-watcher.jsx (iOS actualiza `innerWidth` tarde).
+const SETTLE_DELAY_MS = 300;
+
+const usePlayerLayout = () => {
+    const [layout, setLayout] = useState(() => getPlayerLayout(window.innerWidth, window.innerHeight));
+
+    useEffect(() => {
+        let settleTimeoutId = null;
+        const measure = () => setLayout(getPlayerLayout(window.innerWidth, window.innerHeight));
+        const handleChange = () => {
+            measure();
+            clearTimeout(settleTimeoutId);
+            settleTimeoutId = setTimeout(measure, SETTLE_DELAY_MS);
+        };
+        window.addEventListener('resize', handleChange);
+        window.addEventListener('orientationchange', handleChange);
+        return () => {
+            clearTimeout(settleTimeoutId);
+            window.removeEventListener('resize', handleChange);
+            window.removeEventListener('orientationchange', handleChange);
+        };
+    }, []);
+
+    return layout;
+};
 
 // 02/09/2026 — botón de compartir: en celulares (donde existe la Web Share API) abre la hoja
 // nativa de compartir del sistema operativo con el link de este proyecto — mismo patrón que ya
@@ -63,6 +92,10 @@ ShareButton.propTypes = {
 const PublicPlayer = ({WrappedGui, projectId, onClickLogo}) => {
     const [status, setStatus] = useState('loading'); // 'loading' | 'ready' | 'not-found'
     const [title, setTitle] = useState(null);
+    // Nombre de pila del alumno (la API nunca manda el apellido). Falta en proyectos de una API
+    // vieja: en ese caso simplemente no se muestra la línea "Hecho por".
+    const [authorFirstName, setAuthorFirstName] = useState(null);
+    const layout = usePlayerLayout();
 
     useEffect(() => {
         fetch(`${process.env.API_URL}/scratch-projects/public/${projectId}`)
@@ -72,6 +105,7 @@ const PublicPlayer = ({WrappedGui, projectId, onClickLogo}) => {
             })
             .then(project => {
                 setTitle(project.title);
+                setAuthorFirstName(project.authorFirstName || null);
                 setStatus('ready');
             })
             .catch(() => setStatus('not-found'));
@@ -101,27 +135,40 @@ const PublicPlayer = ({WrappedGui, projectId, onClickLogo}) => {
     const apiScratchProjectsPublicHost = `${process.env.API_URL}/scratch-projects/public`;
 
     return (
-        <div className={styles.playerWrapper}>
+        <div
+            className={styles.playerWrapper}
+            data-player-layout={layout}
+        >
             <div className={styles.header}>
                 <img
                     alt="Coders Academy | Editor"
                     className={styles.brandLogo}
                     src={logoWordmark}
                 />
-                <span className={styles.projectTitle}>
-                    <span
-                        aria-hidden="true"
-                        className={styles.projectTitleIcon}
-                    >{'🎮'}</span>
-                    {title}
-                </span>
+            </div>
+            <div className={styles.info}>
+                <div className={styles.infoText}>
+                    <h1 className={styles.projectTitle}>
+                        <span
+                            aria-hidden="true"
+                            className={styles.projectTitleIcon}
+                        >{'🎮'}</span>
+                        {title}
+                    </h1>
+                    {authorFirstName ? (
+                        <p className={styles.author}>
+                            {'Hecho por '}
+                            <strong className={styles.authorName}>{authorFirstName}</strong>
+                        </p>
+                    ) : null}
+                </div>
                 <ShareButton title={title} />
             </div>
             <div className={styles.stageArea}>
                 <WrappedGui
                     isPlayerOnly
                     canSave={false}
-                    playerExtras={<OrientationAutoFullscreen />}
+                    playerExtras={<PlayerViewportWatcher />}
                     projectHost={apiScratchProjectsPublicHost}
                     assetHost={apiScratchProjectsPublicHost}
                     projectId={projectId}

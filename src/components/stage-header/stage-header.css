@@ -87,3 +87,37 @@
 :global([data-theme="dark"]) .stage-header-wrapper-overlay {
     background-color: #1f1f1f;
 }
+
+/* 21/11/2026 — vista pública /jugar/:id (isPlayerOnly): bandera verde y stop de 3rem (48px, el
+   mínimo táctil) en vez de los 2rem del editor. El tamaño de la fila (o columna) —3rem + 8px de aire
+   por lado— está en STAGE_DIMENSION_DEFAULTS.playerControlsSize (screen-utils.js): mantener en sync.
+   `> img` porque el elemento raíz de GreenFlag y StopAll es un <img> con su propio tamaño. */
+.player-controls-wrapper {
+    display: flex;
+    justify-content: center;
+    padding: 8px;
+}
+
+.player-controls {
+    gap: 16px;
+}
+
+.player-controls > img {
+    box-sizing: border-box;
+    width: 3rem;
+    height: 3rem;
+    padding: 0.5rem;
+    border-radius: 12px;
+    background-color: rgba(255, 255, 255, 0.1);
+    touch-action: manipulation;
+}
+
+/* celular horizontal: los controles pasan a una columna al costado del escenario */
+:global([data-player-layout="side"]) .player-controls-wrapper {
+    flex-direction: column;
+    justify-content: center;
+}
+
+:global([data-player-layout="side"]) .player-controls {
+    flex-direction: column;
+}
