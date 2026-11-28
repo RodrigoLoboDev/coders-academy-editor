@@ -170,9 +170,14 @@ Hecho:
   `isTotallyNormal`, la broma del 1 de abril) y sin sus props ni conexión a Redux.
 - **`menu-bar/scratch-logo.svg` se queda**: pese al nombre ya es el wordmark "Coders Academy | Editor".
 
+- **Modo Caturday eliminado por completo (28/11/2026):** `reducers/time-travel.js`, su registro en
+  `reducers/gui.js`, `useCatBlocks` (`containers/blocks.jsx`, `lib/blocks.js`) y la plomería `isTotallyNormal`
+  (`gui.jsx`, `containers/gui.jsx`, `menu-bar.jsx`). `lib/blocks.js` ya no hace `require('cat-blocks')`, que era
+  una segunda copia de scratch-blocks dentro de `gui.js`. `blocksId` de `gui.jsx` queda en `'original'`.
+
 Pendiente / a propósito sin tocar:
-- `reducers/time-travel.js` y el valor `useCatBlocks` de `containers/blocks.jsx`: las usan los bloques de
-  gato del modo Caturday. Sin menú son inalcanzables; se pueden borrar en otro paso (toca `gui.js` reducers).
+- La dependencia `cat-blocks` sigue en `package.json` (ya sin uso ni en el bundle): quitarla obliga a
+  regenerar `package-lock.json` con npm; hacerlo en una máquina con Node, no a mano.
 - `coming-soon/aww-cat.png`, `cool-cat.png`: gato en mensajes "próximamente"; no se ven en el flujo normal.
 - Otros íconos de Scratch con estilo propio (bandera verde, stop, categorías) no se tocaron: no son marca.
 - Política de marca (CLAUDE.md): **no usar el nombre ni el logo "Scratch" en la UI**. Reemplazar el gato

@@ -447,8 +447,8 @@ class MenuBar extends React.Component {
                         borrado y Turbo Mode, ninguno pedido para esta barra. Los containers
                         DeletionRestorer/TurboMode siguen existiendo para otros usos, solo se
                         sacó la entrada de este menú. */}
-                        {/* 28/11/2026 — menú "Modo" (Normal / Caturday, broma del 1 de abril de Scratch,
-                        solo visible con isTotallyNormal) eliminado junto con los modos 1990/1920/220022BC. */}
+                        {/* 28/11/2026 — menú "Modo" (Normal / Caturday, broma del 1 de abril de Scratch)
+                        eliminado junto con los modos 1990/1920/220022BC y todo el soporte de Caturday. */}
                     </div>
                     {this.props.canEditTitle ? (
                         <div className={classNames(styles.menuBarItem, styles.growable)}>
@@ -591,7 +591,6 @@ MenuBar.propTypes = {
     isShared: PropTypes.bool,
     isShowingProject: PropTypes.bool,
     isShowingWithoutId: PropTypes.bool,
-    isTotallyNormal: PropTypes.bool,
     isUpdating: PropTypes.bool,
     locale: PropTypes.string.isRequired,
     logo: PropTypes.string,

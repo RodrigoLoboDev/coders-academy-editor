@@ -97,7 +97,6 @@ const GUIComponent = props => {
         isRtl,
         isShared,
         isTelemetryEnabled,
-        isTotallyNormal,
         loading,
         logo,
         renderLogin,
@@ -276,7 +275,6 @@ const GUIComponent = props => {
                     className={styles.menuBarPosition}
                     enableCommunity={enableCommunity}
                     isShared={isShared}
-                    isTotallyNormal={isTotallyNormal}
                     logo={logo}
                     renderLogin={renderLogin}
                     showComingSoon={showComingSoon}
@@ -461,7 +459,6 @@ GUIComponent.propTypes = {
     isPlayerOnly: PropTypes.bool,
     isRtl: PropTypes.bool,
     isShared: PropTypes.bool,
-    isTotallyNormal: PropTypes.bool,
     loading: PropTypes.bool,
     logo: PropTypes.string,
     onActivateCostumesTab: PropTypes.func,
@@ -527,15 +524,14 @@ GUIComponent.defaultProps = {
     enableCommunity: false,
     isCreating: false,
     isShared: false,
-    isTotallyNormal: false,
     loading: false,
     showComingSoon: false,
     stageSizeMode: STAGE_SIZE_MODES.large
 };
 
 const mapStateToProps = state => ({
-    // This is the button's mode, as opposed to the actual current state
-    blocksId: state.scratchGui.timeTravel.year.toString(),
+    // 28/11/2026 — blocksId ya no sale del reducer timeTravel (modo Caturday eliminado): queda el default
+    // 'original' y la key de <Blocks> sigue cambiando con el tema (`${blocksId}/${theme}`).
     stageSizeMode: state.scratchGui.stageSize.stageSize,
     theme: state.scratchGui.theme.theme
 });
