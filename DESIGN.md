@@ -154,17 +154,27 @@ editor (mismo patrón que `public-player.css`), página sin scroll (`overflow: h
 `min-height: 0` en los contenedores flex para que scrolleen por dentro, y probar en 1366×590 y 1100×443.
 En viewports de poca altura (< 560 px) usar por defecto el modo "escenario chico".
 
-## 5. Íconos y logos propios [PROPUESTO]
+## 5. Íconos y logos propios [DECIDIDO, escrito sin desplegar]
 
-Inventario de lo que hoy es de Scratch y se quiere reemplazar (en `src/components/`):
+Decisiones de Rodrigo (28/11/2026): `</>` para "agregar objeto", ícono de imagen para "agregar fondo",
+**borrar los modos viejos de Scratch**, y **el gato queda** como objeto por defecto de un proyecto nuevo
+(es contenido del proyecto, no interfaz).
 
-- `menu-bar/scratch-logo.svg`, `cat_logo.svg`, `nineties_logo.svg`, `oldtimey-logo.svg`,
-  `prehistoric-logo.svg`: logos de modos de Scratch; el UI visible ya dice "Coders Academy | Editor".
-  Los modos 90s / oldtimey / prehistoric no se usan en clase: candidatos a borrar.
-- `action-menu/icon--sprite.svg` y fondo (botones azules de "agregar objeto/fondo", cara de gato con
-  destello): reemplazar por íconos propios.
-- `coming-soon/aww-cat.png`, `cool-cat.png`: imágenes del gato en mensajes de "próximamente".
-- Gato como objeto por defecto de un proyecto nuevo: es contenido del proyecto, no UI; se decide aparte.
+Hecho:
+- `action-menu/icon--sprite.svg` → Lucide `code-xml` (`</>`); `icon--backdrop.svg` → Lucide `image`.
+  Trazo blanco fijo de 2 px, viewBox 24, 20×20 (se cargan como `<img>`, no heredan `currentColor`).
+  `icon--sprite.svg` también es el ícono de respaldo de extensiones sin `iconURL` (`extension-library.jsx`).
+- Borrados: `nineties-mode/`, `oldtimey-mode/`, `prehistoric-mode/` (nadie los importaba) y los logos
+  `cat_logo.svg`, `nineties_logo.svg`, `oldtimey-logo.svg`, `prehistoric-logo.svg`.
+- `menu-bar.jsx`: sin `handleSetMode`, sin el menú "Modo" (Normal / Caturday; solo existía con
+  `isTotallyNormal`, la broma del 1 de abril) y sin sus props ni conexión a Redux.
+- **`menu-bar/scratch-logo.svg` se queda**: pese al nombre ya es el wordmark "Coders Academy | Editor".
+
+Pendiente / a propósito sin tocar:
+- `reducers/time-travel.js` y el valor `useCatBlocks` de `containers/blocks.jsx`: las usan los bloques de
+  gato del modo Caturday. Sin menú son inalcanzables; se pueden borrar en otro paso (toca `gui.js` reducers).
+- `coming-soon/aww-cat.png`, `cool-cat.png`: gato en mensajes "próximamente"; no se ven en el flujo normal.
+- Otros íconos de Scratch con estilo propio (bandera verde, stop, categorías) no se tocaron: no son marca.
 - Política de marca (CLAUDE.md): **no usar el nombre ni el logo "Scratch" en la UI**. Reemplazar el gato
   de los botones ayuda a cumplirla.
 
