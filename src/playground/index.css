@@ -8,7 +8,12 @@ body,
 
     /* Setting min height/width makes the UI scroll below those sizes */
     min-width: 1024px;
-    min-height: 640px; /* Min height to fit sprite/backdrop button */
+    /* 28/11/2026 — era 640px ("para que entren los botones de agregar objeto/fondo"). En una netbook
+       de 11,6" (1366x768) el navegador deja ~590px útiles, y con Windows al 125% ~443px: con 640px
+       la página entera scrolleaba y quedaban fuera de pantalla el panel de objetos, los botones de
+       agregar y el zoom del área de código. Ahora el alto lo reparten los paneles (cada uno scrollea
+       por dentro). Piso de diseño: 440px, ver DESIGN.md. */
+    min-height: 420px;
 }
 
 /* @todo: move globally? Safe / side FX, for blocks particularly? */

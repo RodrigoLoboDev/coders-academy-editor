@@ -100,6 +100,30 @@
     font-size: 0.85rem;
 }
 
+/*
+    28/11/2026 — pantallas bajas (netbook de 11,6", sobre todo con Windows al 125%: ~443px útiles).
+    Con el alto normal solo se ven 4 de las 9 categorías y el resto hay que scrollearlo. Esta versión
+    compacta (item de 54px → 37px) muestra 7 de 9; probada en vivo en 1100x443. El ancho de la barra
+    (80px) NO se toca: está validado contra mBlock (ver DESIGN.md). !important porque las reglas de
+    scratch-blocks se inyectan en runtime y con igual especificidad pueden ganar.
+*/
+@media (max-height: 640px) {
+    .blocks :global(.scratchCategoryMenuItem) {
+        padding-top: 3px !important;
+        padding-bottom: 3px !important;
+    }
+
+    .blocks :global(.scratchCategoryItemBubble) {
+        width: 16px !important;
+        height: 16px !important;
+        margin-bottom: 0 !important;
+    }
+
+    .blocks :global(.scratchCategoryMenuItemLabel) {
+        font-size: 0.78rem;
+    }
+}
+
 .blocks :global(.blocklyMinimalBody) {
     min-width: auto;
     min-height: auto;

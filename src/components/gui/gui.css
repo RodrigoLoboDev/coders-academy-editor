@@ -57,6 +57,15 @@
 
     display: flex;
     flex-direction: column;
+
+    /*
+        28/11/2026 — antes la página entera scrolleaba (min-height 640px de playground/index.css) y con
+        eso se llegaba al fondo de Disfraces y Sonidos. Al bajar ese mínimo, el editor de sonido (efectos
+        y grabar) y el lienzo de dibujo (herramientas y zoom) medían más que el alto disponible en una
+        netbook y quedaban recortados sin forma de llegar. Ahora scrollea este contenedor, y solo cuando
+        hace falta: en la pestaña Código el contenido entra justo y no aparece barra (medido a 1100x443).
+    */
+    overflow-y: auto;
 }
 
 .tab-list {
