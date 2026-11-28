@@ -111,6 +111,32 @@ Notas:
 - `gui.js` pesa **~18 MB** sin comprimir: relevante para la carga en las netbooks y en celular con datos.
 - Chrome no baja de ~500 px de ancho; para celular se probó con iframes del mismo sitio.
 
+## 3d. Peso y carga [MEDIDO, 28/11/2026]
+
+| Qué | Valor |
+|---|---|
+| `gui.js` sin comprimir | 19,1 MB (minimizado, producción) |
+| `gui.js` con gzip / **Brotli** (lo que baja Chrome/Edge) | 6,1 MB / **5,5 MB** |
+| Visita repetida | `304 Not Modified`, 0 bytes, ~0,23 s (`max-age=0, must-revalidate` + ETag) |
+| Composición | casi todo es código de Scratch; fuentes y SVG embebidos suman ~2 MB; un solo archivo, sin hash en el nombre, sin dividir (`shouldSplitChunks: false`) |
+
+Estimación de primera visita para 5,5 MB: ~9 s a 5 Mbps, ~22 s a 2 Mbps. **Cada deploy cambia el ETag y
+obliga a todas las netbooks a volver a bajarlo**: con 30 alumnos abriendo a la vez en el mismo wifi son
+~165 MB juntos.
+
+Reglas:
+- **No desplegar el editor justo antes de una clase.** Si se hace, abrir el editor una vez en cada netbook
+  con tiempo (queda cacheado) o hacerlo de a pocas.
+- Mientras baja el JS el `<body>` estaba vacío (pantalla blanca). Desde el 28/11/2026 `index.ejs` trae una
+  pantalla de carga de HTML+CSS puro (`#boot-splash`) que `index.jsx` quita al montar la app; a los 20 s
+  muestra "Está tardando más de lo normal… recargá la página". No usar nada que dependa de JS ahí.
+- Cualquier dependencia nueva pesada se mide contra este número antes de aceptarla.
+
+Opciones evaluadas y **no hechas** (costo/riesgo alto para la ganancia): dividir en chunks y un bundle solo
+para `/jugar` (quita el editor completo de la vista pública; es un cambio de build grande y no se puede
+probar sin compilar en Vercel); nombres con hash + `immutable` (no reduce la primera descarga). Si los padres
+se quejan de la carga en celular con datos, el candidato es el bundle de solo reproductor.
+
 ## 4. Presupuesto de alto [PROPUESTO]
 
 Para que entre en 440 px útiles sin scroll de página, el alto se reparte así (de arriba a abajo):

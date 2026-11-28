@@ -24,10 +24,25 @@ const appTarget = document.createElement('div');
 appTarget.className = styles.app;
 document.body.appendChild(appTarget);
 
+// 28/11/2026 — quita la pantalla de carga de index.ejs (#boot-splash) cuando la app ya está montada.
+// Dos requestAnimationFrame para que el primer cuadro de la app se pinte antes y no haya parpadeo.
+const removeBootSplash = () => {
+    const splash = document.getElementById('boot-splash');
+    if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
+};
+const scheduleRemoveBootSplash = () => {
+    if (typeof window.requestAnimationFrame === 'function') {
+        window.requestAnimationFrame(() => window.requestAnimationFrame(removeBootSplash));
+    } else {
+        removeBootSplash();
+    }
+};
+
 if (supportedBrowser()) {
     // require needed here to avoid importing unsupported browser-crashing code
     // at the top level
     require('./render-gui.jsx').default(appTarget);
+    scheduleRemoveBootSplash();
 
 } else {
     BrowserModalComponent.setAppElement(appTarget);
@@ -35,4 +50,5 @@ if (supportedBrowser()) {
     const handleBack = () => {};
     // eslint-disable-next-line react/jsx-no-bind
     ReactDOM.render(<WrappedBrowserModalComponent onBack={handleBack} />, appTarget);
+    scheduleRemoveBootSplash();
 }
