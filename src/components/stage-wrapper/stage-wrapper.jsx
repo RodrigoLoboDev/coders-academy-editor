@@ -13,6 +13,7 @@ import styles from './stage-wrapper.css';
 
 const StageWrapperComponent = function (props) {
     const {
+        children,
         isFullScreen,
         isPlayerOnly,
         isRtl,
@@ -50,11 +51,20 @@ const StageWrapperComponent = function (props) {
             {loading ? (
                 <Loader isFullScreen={isFullScreen} />
             ) : null}
+            {
+                /* 28/11/2026 — sin esto los hijos se descartaban en silencio: gui.jsx le pasa acá
+                   <PlayerViewportWatcher /> (modo /jugar/:id) y nunca se montaba, así que el escenario
+                   salía bien al cargar pero NO se recalculaba al girar el celular ni al cambiar el
+                   tamaño de la ventana (quedaba cortado o chico). Medido en producción: el store no
+                   tenía `playerViewport`; al despacharlo a mano el escenario sí se redibujaba. */
+            }
+            {children}
         </Box>
     );
 };
 
 StageWrapperComponent.propTypes = {
+    children: PropTypes.node,
     isFullScreen: PropTypes.bool,
     isPlayerOnly: PropTypes.bool,
     isRendererSupported: PropTypes.bool.isRequired,

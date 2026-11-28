@@ -84,6 +84,33 @@ Nota: la vista pública `/jugar/:id` ya anula esos mínimos con `data-public-pla
 - Pendiente de verificar tras el deploy: pestañas Disfraces/Sonidos y editores de pintura y sonido a
   443 px de alto (no se midieron todavía).
 
+## 3c. Proyectos publicados `/jugar/:id` — auditoría 28/11/2026 [MEDIDO]
+
+Proyecto de prueba `cmwzn24gk000c01qjnibp2fof`. Escenario siempre 4:3, calculado por `getPlayerStageSize`
+(`src/lib/screen-utils.js`).
+
+| Viewport | Disposición | Escenario | Resultado al cargar |
+|---|---|---|---|
+| 1100×443 (netbook al 125 %) | `side` | 567×425 | ok, sin scroll |
+| 1366×591 (netbook al 100 %) | `desktop` | 567×425 (al recargar: según `innerHeight`) | ok |
+| 1920×896 (monitor) | `desktop` | 976×732 | ok |
+| 390×844 y 360×640 (celular vertical) | `stack` | todo el ancho | ok, controles y tarjeta visibles |
+| 844×390 y 667×375 (celular horizontal) | `side` | a todo el alto | ok |
+
+**Bug encontrado:** el escenario se calcula bien **al cargar** pero **no se recalcula al girar el celular ni
+al cambiar el tamaño de la ventana** (la disposición sí cambia, el escenario queda con el tamaño viejo y
+se corta o queda chico). Causa: `StageWrapperComponent` no renderizaba `children`, así que el
+`<PlayerViewportWatcher>` que `gui.jsx` le pasa nunca se montaba; el store no tenía `playerViewport`. Al
+despachar la acción a mano el escenario sí se redibujaba. Arreglo: renderizar `{children}` en
+`src/components/stage-wrapper/stage-wrapper.jsx` (**escrito, sin desplegar**). Efecto colateral esperado:
+`<Alerts>` (que `gui.jsx` también pasa como hijo) ahora puede mostrarse si hay una alerta activa.
+
+Notas:
+- El texto "Ordena correctamente…" se corta a la derecha dentro del escenario: es contenido del proyecto
+  (un objeto de texto más ancho que el escenario de 480×360), no del layout.
+- `gui.js` pesa **~18 MB** sin comprimir: relevante para la carga en las netbooks y en celular con datos.
+- Chrome no baja de ~500 px de ancho; para celular se probó con iframes del mismo sitio.
+
 ## 4. Presupuesto de alto [PROPUESTO]
 
 Para que entre en 440 px útiles sin scroll de página, el alto se reparte así (de arriba a abajo):
